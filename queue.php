@@ -44,7 +44,7 @@ class Queue {
 		return $result['published_at'];
 	}
 
-    public function getLastPublishedDate() {
+    public function getLastPublishedDate($type) {
 	    global $db;
         $result = $db->query("SELECT * FROM entry WHERE published IS NOT NULL AND queue = $type ORDER BY published_at DESC LIMIT 1;")->fetchArray();
 		return $result['published_at'];

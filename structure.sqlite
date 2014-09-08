@@ -53,7 +53,8 @@ CREATE TABLE "tag" (
   "title" varchar(255) NOT NULL,
   "slug" varchar(255) DEFAULT NULL,
   "list" tinyint(1)  DEFAULT '1', 
-  "count" INTEGER DEFAULT 0
+  "count" INTEGER DEFAULT 0,
+  "thumb" varchar(255) DEFAULT NULL
 );
 CREATE INDEX "image_entry_id" ON "image" ("entry_id","kind");
 CREATE INDEX "image_entry" ON "image" ("entry_id");

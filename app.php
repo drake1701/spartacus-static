@@ -3,13 +3,14 @@
  * @author		Dennis Rogers
  * @address		www.drogers.net
  */
+error_reporting(E_ERROR | E_WARNING | E_PARSE);
 $db = new SQLite3("spartacus");
 date_default_timezone_set("UTC");
 $site_dir = "_site/";
 $theme_dir = "theme/";
 $assets_dir = "assets/";
 $rebuild = false;
-
+$baseurl = "http://localhost:8000/"; //"http://spartacuswallpaper.com/";
 
 function tag($tagName, $content, $html){
     $tagName = str_replace("{{", "", str_replace("}}", "", $tagName));
@@ -20,7 +21,8 @@ function tag_all($tagName, $object, $html){
     $tagName = str_replace("{{", "", str_replace("}}", "", $tagName));
     preg_match_all("#\{\{$tagName (\S*)\}\}#", $html, $tags);
     foreach($tags[0] as $i => $tag){
-        $html = tag($tag, $object[$tags[1][$i]], $html);
+        if(isset($object[$tags[1][$i]]))
+            $html = tag($tag, $object[$tags[1][$i]], $html);
     }
     return $html;
 }
@@ -35,29 +37,31 @@ function tags_parse($html){
 }
 
 function tag_parse($tagName, $arg = null){
-    global $db, $theme_dir, $assets_dir;
+    global $db, $theme_dir, $assets_dir, $baseurl;
     switch($tagName){
         case "kinds":
             $result = $db->query("SELECT * FROM image_kind WHERE position IS NOT NULL ORDER BY position ASC;");
             $html = "";
             while($kind = $result->fetchArray()){
-                $html .= "<li><a href='/tag/{$kind['path']}'>{$kind['label']}</a></li>";
+                $html .= "<li><a href='{$baseurl}tag/{$kind['path']}'>{$kind['label']}</a></li>";
             }
             return $html;
         case "tag_years":
             $result = $db->query("SELECT SUBSTR(published_at, 0, 5) as year FROM entry GROUP BY year ORDER BY published_at DESC;");
             $html = "";
             while($row = $result->fetchArray()){
-                $html .= "<li><a href='/tag/{$row['year']}'>{$row['year']}</a></li>";
+                $html .= "<li><a href='{$baseurl}tag/{$row['year']}'>{$row['year']}</a></li>";
             }
             return $html;
         case "tag_20":
             $result = $db->query("SELECT title, slug, count(*) as count FROM tag t  JOIN entry_tag e ON e.tag_id = t.id WHERE list = 1 GROUP BY tag_id ORDER BY count DESC LIMIT 20;");
             $html = "";
             while($tag = $result->fetchArray()){
-                $html .= "<li><a href='/tag/{$tag['slug']}' title='{$tag['count']} entries'>{$tag['title']}</a></li>";
+                $html .= "<li><a href='{$baseurl}tag/{$tag['slug']}' title='{$tag['count']} entries'>{$tag['title']}</a></li>";
             }
             return $html;
+        case "baseurl":
+            return $baseurl;
         case "date_year":
             return date("Y");
         default:

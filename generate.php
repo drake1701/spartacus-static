@@ -5,7 +5,7 @@
  */
 require_once("app.php");
 
-if($argv[1]){
+if(isset($argv[1])){
     $rebuild = true;
 }
 
@@ -19,7 +19,7 @@ if(!is_dir($site_dir))
     mkdir($site_dir, 0777);
     
 if(!is_dir($site_dir."gallery"))
-    exec("ln -s /Volumes/TARDIS/Sites/spartacuswallpaper/web/images/ {$site_dir}gallery");
+    exec("ln -s /Volumes/Work/Sites/spartacuswallpaper/web/images/ {$site_dir}gallery");
 recurse_copy($assets_dir, $site_dir);
 
 // generate banner css
@@ -74,27 +74,29 @@ while($entry = $result->fetchArray()){
             break;
         }
     }
-    $entry['preview'] = "/gallery/preview/".$images['preview']['filename'];
+    $entry['preview'] = $baseurl."gallery/preview/".$images['preview']['filename'];
+    $entry['url'] = $baseurl.$entry['url_path'];
     $kinds = "";
     foreach($images as $image){
         if($image['position'] > 0)
-            $kinds .= "<li><a href='/gallery/{$image['dir']}/{$image['filename']}' title='{$image['label']}'>{$image['label']}</a></li>";
+            $kinds .= "<li><a href='{$baseurl}gallery/{$image['dir']}/{$image['filename']}' title='{$image['label']}'>{$image['label']}</a></li>";
     }
     $entry['kinds'] = $kinds;
     
     $tagResult = $db->query("SELECT * FROM entry_tag e JOIN tag t ON e.tag_id = t.id WHERE entry_id = {$entry['id']};");
     $tags = "";
     while($tag = $tagResult->fetchArray()){
-        $tags .= "<li><a href='/tag/{$tag['slug']}' title='{$tag['title']}'>{$tag['title']}</a></li>";
+        $tags .= "<li><a href='{$baseurl}tag/{$tag['slug']}' title='{$tag['title']}'>{$tag['title']}</a></li>";
         $changedTags[] = $tag['slug'];
     }
     $entry['tags'] = $tags;
     
+    $html = tag("head", tag_all("entry", $entry, file_get_contents($theme_dir."layout/entry_head.phtml")), $html);
     $html = tag("content", tag_all("entry", $entry, file_get_contents($theme_dir."layout/entry.phtml")), $html);
     
     $html = tags_parse($html);
     write_file($entry['url_path'], $html);
-    $db->query("UPDATE entry SET published = 1 WHERE id = {$entry['id']};");
+//    $db->query("UPDATE entry SET published = 1 WHERE id = {$entry['id']};");
 }
 
 // build index
@@ -125,16 +127,21 @@ $html = tag("content", $content, $html);
 $html = tags_parse($html);
 file_put_contents($site_dir."index.html", $html);
 
-// build tags page
-$tagResult = $db->query("SELECT t.id, title, slug, count(*) as count, i.path as thumb FROM tag t  JOIN entry_tag e ON e.tag_id = t.id JOIN image i ON i.entry_id = e.entry_id WHERE slug IN('".implode("','", $changedTags)."') AND list = 1 AND i.kind = 7 GROUP BY tag_id ORDER BY title ASC, e.id DESC;");
+// udpate tags
+if($rebuild){
+    $tagResult = $db->query("SELECT t.title, t.slug, t.id, count(*) as count, i.path AS thumb FROM tag t JOIN entry_tag e ON e.tag_id = t.id JOIN image i ON i.entry_id = e.entry_id WHERE list = 1 AND i.kind = 7 GROUP BY tag_id;");
+} else {
+    $tagResult = $db->query("SELECT t.title, t.slug, t.id, count(*) as count, i.path AS thumb FROM tag t JOIN entry_tag e ON e.tag_id = t.id JOIN image i ON i.entry_id = e.entry_id WHERE slug IN('".implode("','", $changedTags)."') AND list = 1 AND i.kind = 7 GROUP BY tag_id;");
+}
 
+// build tag pages
 $html = get_layout();
 $tagLayout = file_get_contents($theme_dir."layout/tag.phtml");
 $columnCount = 3;
 $i = 0;
-$viewAll = "";
 while($tag = $tagResult->fetchArray()){
-
+    $db->query("UPDATE tag SET count = ".$tag['count'].", thumb='".$tag['thumb']."' WHERE id = ".$tag['id'].";");
+    
     $tagEntryResult = $db->query("SELECT title, url_path, published_at, i.path AS thumb FROM entry e JOIN image i ON i.entry_id = e.id JOIN entry_tag t ON t.entry_id = e.id WHERE i.kind = 7 AND t.tag_id = {$tag['id']} AND published IS NOT NULL ORDER BY published_at DESC;");
     $j = 0;
     $tagPage = "";
@@ -157,8 +164,14 @@ while($tag = $tagResult->fetchArray()){
     $tagHtml = tag("content", $tagPage, $tagHtml);
     $tagHtml = tag("title", $tag['title']." | ", $tagHtml);
     $tagHtml = tags_parse($tagHtml);
-    write_file("tag/".$tag['slug'], $tagHtml);
+    write_file("tag/".$tag['slug'], $tagHtml);    
+}
 
+// build tags index page
+$tagResult = $db->query("SELECT title, slug, count, thumb FROM tag t WHERE list = 1 AND count > 0 ORDER BY title ASC;");
+
+$viewAll = "";
+while($tag = $tagResult->fetchArray()){
     if ($i % $columnCount == 0){
         $viewAll .= '<ul class="entry-grid">';
     }
@@ -169,6 +182,9 @@ while($tag = $tagResult->fetchArray()){
     if (++$i % $columnCount == 0){
         $viewAll .= '</ul>';
     }
+}
+if ($i % $columnCount != 0){
+    $viewAll .= '</ul>';
 }
 $html = tag("content", $viewAll, $html);
 $html = tag("title", "Tag Index | ", $html);
@@ -202,7 +218,7 @@ while($year >= 2000) {
     $tagHtml = tag("title", $year." | ", $tagHtml);
     $tagHtml = tags_parse($tagHtml);
     write_file("tag/".$year, $tagHtml);
-    if(!$build)
+    if(!$rebuild)
         break;
     $year--;
 }

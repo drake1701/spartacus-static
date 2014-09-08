@@ -20,13 +20,14 @@
     <link href="<?php echo $assets_dir ?>css/global.css" media="screen" rel="stylesheet" type="text/css" />
 </head>
 <body style="width:80%; margin:0 auto;">
-<?php if($_GET['action']): ?>
+<br/>
+<?php if(!empty($_GET['action'])): ?>
 <?php switch($_GET['action']): 
           case "edit": ?>
     <?php case "newprocess" ?>
     <?php /* !new and edit form */ ?>
     <?php 
-    if($_GET['id']){
+    if(!empty($_GET['id'])){
         $id = (Integer)$_GET['id'];
         $entry = $db->query("SELECT * FROM entry WHERE id = $id LIMIT 1;")->fetchArray();
         $tags = $db->query("SELECT GROUP_CONCAT(slug) as tags FROM tag t JOIN entry_tag e on e.tag_id = t.id WHERE e.entry_id = $id;")->fetchArray();
@@ -189,11 +190,50 @@
         }
     }
     break; ?>
+    <?php case 'reorder': 
+        /* !reordering */
+        $data = $_POST;
+        foreach($data['entry_id'] as $queueId => $postIds) {
+            $queueDate = $queue->getLastPublishedDate($queueId);
+            foreach($postIds as $postId) {
+                $query = "UPDATE entry SET ";
+                $data = array();
+                $data['id'] = $postId;
+                $data['modified_at'] = date('Y-m-d H:i:s');
+                $data['published_at'] = date('Y-m-d H:i:s', strtotime($queue->getNext($queueDate, $queueId)));
+                $queueDate = $queue->getNext($queueDate, $queueId);
+                foreach($data as $key => $value){
+                    $query .= "$key = :$key, ";
+                }
+                $query = trim($query, ", ");
+                $query .= " WHERE id = :id;";
+                $update = $db->prepare($query);
+                foreach($data as $key => $value){
+                    $update->bindValue(":$key", $value);
+                }
+                $update->execute();
+            }
+        }
+    echo '<h2><em>Reordering Successful.</em></h2>';
+    break; ?>
+    <?php 
+    case 'delete':
+    /* !deleting */
+    if($_GET['id']){
+        $query = "DELETE FROM entry WHERE id = :id;";
+        $delete = $db->prepare($query);
+        $delete->bindValue(":id", $_GET['id']);
+        $delete->execute();
+        echo '<h2><em>Deleted</em></h2>';
+    }
+    break;
+    ?>
 <?php endswitch; ?>
 <?php endif; ?>
+<hr />
 <h1>Entry Queue</h1>
 <?php
-$result = $db->query("SELECT * FROM entry WHERE published IS NULL;");
+$result = $db->query("SELECT * FROM entry WHERE published IS NULL ORDER BY published_at;");
 $columns = array("id", "title", "published_at");
 ?>
 <form action="?<?php echo http_build_query(array('action' => "reorder")); ?>" method="post">
@@ -213,7 +253,8 @@ $columns = array("id", "title", "published_at");
     		<td><?php echo $entry['title'] ?></td>
     		<td><?php echo date("l, M jS, Y", strtotime($entry['published_at'])) ?></td>
     		<td>
-    			<a href="?<?php echo http_build_query(array('action'=>'edit','id'=>$entry['id'])) ?>">Edit</a>
+    			<a href="?<?php echo http_build_query(array('action'=>'edit','id'=>$entry['id'])) ?>">Edit</a>&nbsp;|&nbsp;
+    			<a href="?<?php echo http_build_query(array('action'=>'delete','id'=>$entry['id'])) ?>">Delete</a>
     		</td>
     	</tr>
     <?php endwhile; ?>
