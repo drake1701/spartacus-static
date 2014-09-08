@@ -1,3 +1,6 @@
 .DS_Store
 /_site/
 /images
+/migrate/db.php
+/migrate/spartacus
+/spartacus

@@ -19,7 +19,7 @@ if(!is_dir($site_dir))
     mkdir($site_dir, 0777);
     
 if(!is_dir($site_dir."gallery"))
-    exec("ln -s /Volumes/Work/Sites/spartacuswallpaper/web/images/ {$site_dir}gallery");
+    exec("ln -s /var/www/spartacuswallpaper.com/public/gallery/ {$site_dir}gallery");
 recurse_copy($assets_dir, $site_dir);
 
 // generate banner css

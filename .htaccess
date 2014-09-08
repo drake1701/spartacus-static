@@ -1,0 +1,4 @@
+Satisfy Any
+Order deny,allow
+deny from all
+allow from 173.20.118.123
