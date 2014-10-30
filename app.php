@@ -10,7 +10,7 @@ $site_dir = "_site/";
 $theme_dir = "theme/";
 $assets_dir = "assets/";
 $rebuild = false;
-$baseurl = "http://localhost:8000/"; //"http://spartacuswallpaper.com/";
+$baseurl = "http://static.spartacuswallpaper.com/"; //"http://spartacuswallpaper.com/";
 
 function tag($tagName, $content, $html){
     $tagName = str_replace("{{", "", str_replace("}}", "", $tagName));

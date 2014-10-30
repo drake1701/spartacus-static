@@ -24,15 +24,19 @@ recurse_copy($assets_dir, $site_dir);
 
 // generate banner css
 $banners = glob($assets_dir."images/banners/*/*.jpg");
+while(count($banners) < 31){
+    $banners = array_merge($banners, $banners);
+}
 $html = "";
 foreach($banners as $i => $banner){
+    if($i > 31) break;
     $parts = explode("/", $banner);
     $align = $parts[3];
     array_shift($parts);
     $file = implode("/", $parts);
     $html .= "#banner_$i { background-image: url(/{$file}); }\n";
     if($align == "right"){
-        $html .= "#banner_$i .logo { margin-left: 566px; }\n";
+        $html .= "#banner_$i .logo { right:10px; }\n";
     }
 }
 file_put_contents($site_dir."css/banner.css", $html);
@@ -53,6 +57,7 @@ foreach($pages as $page){
 }
 
 // generate posts
+$db->query("UPDATE entry SET published = NULL WHERE id = '3670';");
 $result = $db->query("SELECT * FROM entry WHERE ".($rebuild ? "" : "published IS NULL AND ")."published_at < datetime('now');");
 $changedTags = array();
 while($entry = $result->fetchArray()){
@@ -82,7 +87,6 @@ while($entry = $result->fetchArray()){
             $kinds .= "<li><a href='{$baseurl}gallery/{$image['dir']}/{$image['filename']}' title='{$image['label']}'>{$image['label']}</a></li>";
     }
     $entry['kinds'] = $kinds;
-    
     $tagResult = $db->query("SELECT * FROM entry_tag e JOIN tag t ON e.tag_id = t.id WHERE entry_id = {$entry['id']};");
     $tags = "";
     while($tag = $tagResult->fetchArray()){
@@ -96,13 +100,13 @@ while($entry = $result->fetchArray()){
     
     $html = tags_parse($html);
     write_file($entry['url_path'], $html);
-//    $db->query("UPDATE entry SET published = 1 WHERE id = {$entry['id']};");
+    $db->query("UPDATE entry SET published = 1 WHERE id = {$entry['id']};");
 }
 
 // build index
 $html = get_layout();
 $content = file_get_contents($theme_dir."index.phtml");
-
+echo "rebuilding home page\n";
 $entryResult = $db->query("SELECT * FROM entry WHERE published IS NOT NULL ORDER BY published_at DESC LIMIT 10;");
 $entries = "";
 $first = 0;
@@ -147,25 +151,27 @@ while($tag = $tagResult->fetchArray()){
     $tagPage = "";
     while($entry = $tagEntryResult->fetchArray()){
         if ($j % $columnCount == 0){
-            $tagPage .= '<ul class="entry-grid">';
+            $tagPage .= '<div class="row entry-grid">';
         }
         $entry['count'] = format_date($entry['published_at'], true);
         $entry['thumb'] = "/gallery/thumb/".$entry['thumb'];
-        $entry['slug'] = $entry['url_path'];
+        $entry['slug'] = $baseurl . $entry['url_path'];
         $tagPage .= tag_all("tag", $entry, $tagLayout);
         if (++$j % $columnCount == 0){
-            $tagPage .= '</ul>';
+            $tagPage .= '</div>';
         }
     }
     if ($j % $columnCount != 0){
-        $tagPage .= '</ul>';
+        $tagPage .= '</div>';
     }
     $tagHtml = get_layout();
     $tagHtml = tag("content", $tagPage, $tagHtml);
     $tagHtml = tag("title", $tag['title']." | ", $tagHtml);
     $tagHtml = tags_parse($tagHtml);
-    write_file("tag/".$tag['slug'], $tagHtml);    
+    write_file("tag/".$tag['slug'], $tagHtml);
+    $i++;  
 }
+echo "updated $i tag pages\n";
 
 // build tags index page
 $tagResult = $db->query("SELECT title, slug, count, thumb FROM tag t WHERE list = 1 AND count > 0 ORDER BY title ASC;");
@@ -173,45 +179,47 @@ $tagResult = $db->query("SELECT title, slug, count, thumb FROM tag t WHERE list 
 $viewAll = "";
 while($tag = $tagResult->fetchArray()){
     if ($i % $columnCount == 0){
-        $viewAll .= '<ul class="entry-grid">';
+        $viewAll .= '<div class="row entry-grid">';
     }
     $tag['count'] .= ($tag['count'] > 1) ? " entries" : " entry";
     $tag['thumb'] = "/gallery/thumb/".$tag['thumb'];
-    $tag['slug'] = "tag/".$tag['slug'];
+    $tag['slug'] = $baseurl . "tag/".$tag['slug'];
     $viewAll .= tag_all("tag", $tag, $tagLayout);
     if (++$i % $columnCount == 0){
-        $viewAll .= '</ul>';
+        $viewAll .= '</div>';
     }
 }
 if ($i % $columnCount != 0){
-    $viewAll .= '</ul>';
+    $viewAll .= '</div>';
 }
 $html = tag("content", $viewAll, $html);
 $html = tag("title", "Tag Index | ", $html);
 $html = tags_parse($html);
 write_file("page/tags", $html);
+echo "update tags index\n";
 
 // do year tags
 $year = date("Y");
 $tagLayout = file_get_contents($theme_dir."layout/tag.phtml");
 while($year >= 2000) {
+    echo "update $year index\n";
     $tagEntryResult = $db->query("SELECT title, url_path, published_at, i.path as thumb FROM entry e JOIN image i ON i.entry_id = e.id WHERE i.kind = 7 AND published_at LIKE('{$year}%') AND published IS NOT NULL ORDER BY published_at DESC;");
     $j = 0;
     $tagPage = "";
     while($entry = $tagEntryResult->fetchArray()){
         if ($j % $columnCount == 0){
-            $tagPage .= '<ul class="entry-grid">';
+            $tagPage .= '<div class="row entry-grid">';
         }
         $entry['count'] = format_date($entry['published_at'], true);
         $entry['thumb'] = "/gallery/thumb/".$entry['thumb'];
-        $entry['slug'] = $entry['url_path'];
+        $entry['slug'] = $baseurl.$entry['url_path'];
         $tagPage .= tag_all("tag", $entry, $tagLayout);
         if (++$j % $columnCount == 0){
-            $tagPage .= '</ul>';
+            $tagPage .= '</div>';
         }
     }
     if ($j % $columnCount != 0){
-        $tagPage .= '</ul>';
+        $tagPage .= '</div>';
     }
     $tagHtml = get_layout();
     $tagHtml = tag("content", $tagPage, $tagHtml);
@@ -231,25 +239,27 @@ while($kind = $kindResult->fetchArray()){
     $tagPage = "";
     while($entry = $tagEntryResult->fetchArray()){
         if ($j % $columnCount == 0){
-            $tagPage .= '<ul class="entry-grid">';
+            $tagPage .= '<div class="row entry-grid">';
         }
         $entry['count'] = format_date($entry['published_at'], true);
         $entry['thumb'] = "/gallery/thumb/".$entry['thumb'];
-        $entry['slug'] = $entry['url_path'];
+        $entry['slug'] = $baseurl . $entry['url_path'];
         $tagPage .= tag_all("tag", $entry, $tagLayout);
         if (++$j % $columnCount == 0){
-            $tagPage .= '</ul>';
+            $tagPage .= '</div>';
         }
     }
     if ($j % $columnCount != 0){
-        $tagPage .= '</ul>';
+        $tagPage .= '</div>';
     }
     $tagHtml = get_layout();
     $tagHtml = tag("content", $tagPage, $tagHtml);
     $tagHtml = tag("title", $kind['label']." | ", $tagHtml);
     $tagHtml = tags_parse($tagHtml);
-    write_file("tag/".$kind['path'], $tagHtml);    
+    write_file("tag/".$kind['path'], $tagHtml);   
+    echo "update {$kind['path']} index\n"; 
 }
+echo "done\n";
 
 
 

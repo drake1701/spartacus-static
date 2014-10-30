@@ -1,10 +1,9 @@
 {{include head.phtml}}
 <body>
-	<div class="wrapper-outer">
+	<div class="container-narrow">
     {{include header.phtml}}
-		<div class="wrapper-inner">
-            {{include sidebar.phtml}}
-			<div class="content">
+		<div class="row-fluid">
+			<div class="content span9">
 				<div class="content-head"></div>
 				<div class="ad-top">
 					<script type="text/javascript"><!--
@@ -17,7 +16,7 @@
 					</script>
 					<script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_ads.js"></script>
 				</div>
-        {{content}}
+                {{content}}
 				<div class="ad-bottom">
 					<script type="text/javascript"><!--
 					google_ad_client = "pub-9622612302631221";
@@ -31,6 +30,9 @@
 					src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
 					</script>
 				</div>
+			</div>
+			<div class="span3">
+            {{include sidebar.phtml}}
 			</div>
 		</div>
 	</div>
