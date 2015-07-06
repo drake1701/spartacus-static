@@ -17,7 +17,7 @@
       jQuery( "#sortable" ).disableSelection();
     });
     </script>
-    <link href="<?php echo $assets_dir ?>css/global.css" media="screen" rel="stylesheet" type="text/css" />
+    <link href="<?php echo $baseurl ?>css/global.css" media="screen" rel="stylesheet" type="text/css" />
 </head>
 <body style="width:80%; margin:0 auto;">
 <br/>
@@ -45,8 +45,8 @@
     }
     ?>
     <h1>Edit</h1>
-    <a href="#" onclick="window.open('<?php echo $site_dir ?>gallery/widescreen/<?php echo $entry['filename'] ?>', '','toolbar=no, scrollbars=yes, resizable=yes, top=10, left=10, width=960, height=600');">
-	    <img style="float:right;" src="<?php echo $site_dir ?>gallery/preview/<?php echo $entry['filename'] ?>">
+    <a href="#" onclick="window.open('<?php echo $baseurl ?>gallery/widescreen/<?php echo $entry['filename'] ?>', '','toolbar=no, scrollbars=yes, resizable=yes, top=10, left=10, width=960, height=600');">
+	    <img style="float:right;" src="<?php echo $baseurl ?>gallery/preview/<?php echo $entry['filename'] ?>">
     </a>
 <form enctype="application/x-www-form-urlencoded" action="?action=save" method="post">
     <dl class="zend_form">
@@ -104,11 +104,11 @@
         foreach($data as $key => $value){
             $update->bindValue(":$key", $value);
         }
-        $update->execute();
-        ?>
-        <h2><em>Entry saved successfully.</em></h2>
-        <?php
+        execute($update);
+        echo "<h2><em>Entry saved successfully.</em></h2>";
+        $data['id'] = $db->lastInsertRowID();
     } else {
+        /* ! entry creation */
         $data['created_at'] = $data['modified_at'] = date('Y-m-d H:i:s');
         $data['published_at'] = date('Y-m-d H:i:s', strtotime($queue->getLastQueuedDate($data['queue'])));        
         unset($data['id']);
@@ -122,11 +122,10 @@
         foreach($data as $key => $value){
             $insert->bindValue(":$key", $value);
         }
-        $insert->execute();
-        ?>
-        <h2><em>Entry created successfully.</em></h2>
-        <?php        
+        execute($insert);
+        echo "<h2><em>Entry created successfully.</em></h2>";
         $data['id'] = $db->lastInsertRowID();
+        
     }
     // !handle tags
 	// Current & New
@@ -141,7 +140,7 @@
 		    $ins = $db->prepare("INSERT INTO tag (title, slug) VALUES (:title, :slug);");
 		    $ins->bindValue(":title", codeToName($slug));
 		    $ins->bindValue(":slug", $slug);
-		    $ins->execute();
+		    execute($ins);
 		    $tag['id'] = $db->lastInsertRowID();
 		}
 		
@@ -155,7 +154,7 @@
 		    $ins = $db->prepare("INSERT INTO entry_tag (entry_id, tag_id) VALUES (:entry_id, :tag_id);");
 		    $ins->bindValue(":tag_id", $tag['id']);
 		    $ins->bindValue(":entry_id", $data['id']);
-		    $ins->execute();		
+		    execute($ins);
 		}
 	}
 	// deletes
@@ -166,7 +165,7 @@
 		if(!in_array($link['slug'], $slugs)){
 		    $del = $db->prepare("DELETE FROM entry_tag WHERE id = :id;");
 		    $del->bindParam(":id", $link['id']);
-		    $del->execute();
+		    execute($del);
 		}
 	}
 	// !handle images
@@ -186,7 +185,7 @@
             $ins->bindValue(":entry_id", $data['id']);
             $ins->bindValue(":path", $data['filename']);
             $ins->bindValue(":kind", $kind['id']);
-            $ins->execute();
+            execute($ins);
         }
     }
     break; ?>
@@ -211,7 +210,7 @@
                 foreach($data as $key => $value){
                     $update->bindValue(":$key", $value);
                 }
-                $update->execute();
+                execute($update);
             }
         }
     echo '<h2><em>Reordering Successful.</em></h2>';
@@ -223,7 +222,7 @@
         $query = "DELETE FROM entry WHERE id = :id;";
         $delete = $db->prepare($query);
         $delete->bindValue(":id", $_GET['id']);
-        $delete->execute();
+        execute($delete);
         echo '<h2><em>Deleted</em></h2>';
     }
     break;
@@ -231,7 +230,8 @@
 <?php endswitch; ?>
 <?php endif; ?>
 <hr />
-<h1>Entry Queue</h1>
+<h1><a href="/">Entry Queue</a></h1>
+<p><a href="/phpliteadmin.php" target="_blank">db</a></p>
 <?php
 $result = $db->query("SELECT * FROM entry WHERE published IS NULL ORDER BY published_at;");
 $columns = array("id", "title", "published_at");
@@ -282,8 +282,21 @@ $columns = array("id", "title", "published_at");
 <?php foreach ($images as $image) : ?>
 	<div class="entry-item">
 		<p class="entry-title"><a href="?<?php echo http_build_query(array('action'=>'newprocess', 'image' => $image)) ?>"><?php echo $image ?></a></p>
-		<div class="entry-image"><a href="?<?php echo http_build_query(array('action'=>'newprocess', 'image' => $image)) ?>"><img src="<?php echo $site_dir ?>gallery/thumb/<?php echo $image ?>" alt="<?php echo codeToName(str_replace(".jpg", '', strtolower($image))) ?>"/></a></div>
+		<div class="entry-image"><a href="?<?php echo http_build_query(array('action'=>'newprocess', 'image' => $image)) ?>"><img src="<?php echo $baseurl ?>gallery/thumb/<?php echo $image ?>" alt="<?php echo codeToName(str_replace(".jpg", '', strtolower($image))) ?>"/></a></div>
 	</div>
 <?php endforeach ?>
 </div>
 </body>
+<?php 
+
+    function execute($statement) {
+        global $db;
+        if($statement->execute())
+            return true;
+        else {
+            echo '<h2><em style="color:#de8b52;">' . $db->lastErrorMsg() . "</em></h2>";
+            die();
+        }
+    }
+    
+?>
