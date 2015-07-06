@@ -44,6 +44,14 @@ float:left;
 font-size:18px;
 font-weight:400;
 margin:0;
+line-height: normal;
+padding-bottom: 5px;
+}
+
+.content-title {
+    font-size: 1.7em;
+    font-weight: normal;
+    margin:20px 0 5px;
 }
 
 .entry-preview-image img {
@@ -66,35 +74,50 @@ margin:0;
 .entry-tags h4 {
 	margin: 5px 0;
 }
-
 .header-banner {
-    border:10px solid #B44E0A;
-    height:140px;
-    padding:10px;
     background-position: 50% 50%;
-    background-size: cover;
-    position: relative;
+}
+
+.header-banner.banner-border {
+    background-color:rgb(160,58,0);
+    background-blend-mode:soft-light;
+    padding: 9px;
+}
+.header-banner.banner-background {
+    border: 1px solid #fff;
+    height: 140px;
+    position:relative;
+}
+.header-banner.banner-feature {
+    height: 160px;
+    margin: -10px;
+}
+.ad-top,.ad-middle,.ad-bottom,.ad-sidebar {
+    overflow:hidden;
 }
 
 .ad-top {
-	position: relative;
-	top: -14px;
-	left: -18px;
+	margin: -14px -20px 10px;
 }
-
 .ad-middle{
 	margin: -20px -20px 20px;
 }
-
 .ad-bottom {
-	margin:  100px -20px -10px;
+	margin:  50px -20px 0px;
+}
+.ad-sidebar {
+    background: #121603;
+    padding: 0 0 15px;
 }
 
 .logo {
-    height:140px;
-    position:absolute;
+    height: 134px;
+    position: absolute;
     left: 10px;
+    top: 3px;
     width:340px;
+    background-color: rgb(180,78,0);
+    background-color: rgba(180,78,0,.7);
 }
 
 .right .logo {
@@ -133,12 +156,14 @@ margin:0;
 	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#2f3519', endColorstr='#121603',GradientType=0 );
     position: relative;
     color:#949A72;
-    float:right;
     font-family:Helvetica;
     margin:15px 0 0;
     padding:35px 8px 8px;
 }
-
+.sidebar .social-contact {
+	width: 136px;
+	margin:0 auto;
+}
 .sidebar .social-contact li {
     display: block;
     text-indent: -9999px;
@@ -191,6 +216,7 @@ text-decoration:none;
 list-style:none outside none;
 margin:0;
 padding:2px 0 12px 5px;
+overflow:auto;
 }
 
 .sidebar ul li {
@@ -204,8 +230,7 @@ padding:2px 0 12px 5px;
 
 .sidebar ul.years li {
 	float:left;
-	margin-right:3px;
-
+	margin-right:10px;
 }
 
 .entry-grid {
@@ -253,7 +278,7 @@ color:#FFF;
 display:block;
 font-size:22px;
 font-weight:100;
-margin:2px 11px;
+margin:2px 6px;
 padding:0 5px;
 text-decoration:none;
 font-family: Times, serif;
@@ -343,6 +368,51 @@ td {
 	border: 1px solid #757d56;
 	padding: 1px 5px;
 }
+@media screen and (min-width: 768px) {
+    .entry-grid .entry-item {
+        width:32%;
+        margin-left:2%;
+    }
+    .entry-grid .entry-item:nth-child(3n+1) {
+    	clear:left;
+    	margin-left:0;
+    }
+}
+
+@media screen and (max-width: 767px) {
+    .entry-grid .entry-item {
+        width:48%;
+        margin-left:2%;
+    }
+    .entry-grid .entry-item:nth-child(2n+1) {
+    	clear:left;
+    	margin-left:0;
+    }
+    .ad-bottom,
+    .ad-sidebar.long {
+    	opacity:0;
+    }
+}
+@media screen and (max-width: 767px) and (min-width: 475px) {
+    .sidebar ul:not(.social-contact):not(.years) {
+    	-webkit-column-count: 3;
+    	-moz-column-count: 3;
+    	column-count: 3;
+    }
+    .sidebar .years {
+    	width:50%;
+    }
+}
+@media screen and (max-width: 600px) and (min-width: 475px) {
+    .sidebar ul:not(.social-contact):not(.years) {
+    	-webkit-column-count: 2;
+    	-moz-column-count: 2;
+    	column-count: 2;
+    }
+    .sidebar .years {
+    	width:70%;
+    }
+}
 @media screen and (max-width: 475px) {
     body {
         padding:0;
@@ -351,14 +421,40 @@ td {
         margin: 0;
         padding: 0;
     }
-    .header-banner {
-        border: none;
-        margin: 0 0 0 -15px;
-        padding:0
+    .header-banner.banner-border {
+    	padding:9px 0;
+    }
+    .header-banner.banner-background {
+    	margin: 0;
+    	border-width:1px 0;
+    }
+    .header-banner.banner-feature {
+    	background-image:none !important;
+    }
+    .top-nav li a {
+    	margin:0 1px;
+    	padding:2px 6px;
     }
     .logo {
         margin: 0 auto;
+        left:0 !important;
+        right:0 !important;
         position: relative;
+        padding:3px;
+        top:10px;
+        width: 300px;
+    	background-color: rgba(170,78,0,.9);
+    }
+    .logo > a {
+    	display:block;
+    	max-width: 320px;
+    }
+    .entry-title {
+    	float:none
+    }
+    .entry-date {
+    	float:none;
+    	font-size:14px;
     }
 }
 

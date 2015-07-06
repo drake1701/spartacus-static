@@ -6,33 +6,35 @@
 			<div class="content span9">
 				<div class="content-head"></div>
 				<div class="ad-top">
-					<script type="text/javascript"><!--
-					google_ad_client = "pub-9622612302631221";
-					/* 728x15, created 12/30/09 */
-					google_ad_slot = "7425641670";
-					google_ad_width = 728;
-					google_ad_height = 15;
-					//-->
-					</script>
-					<script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_ads.js"></script>
+                    <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+                    <!-- Content Top -->
+                    <ins class="adsbygoogle"
+                         style="display:block"
+                         data-ad-client="ca-pub-9622612302631221"
+                         data-ad-slot="8363371851"
+                         data-ad-format="auto"></ins>
+                    <script>
+                    (adsbygoogle = window.adsbygoogle || []).push({});
+                    </script>
 				</div>
+				<h2 class="content-title">{{content_title}}</h2>
                 {{content}}
 				<div class="ad-bottom">
-					<script type="text/javascript"><!--
-					google_ad_client = "pub-9622612302631221";
-					/* 728x90, created 12/30/09 */
-					google_ad_slot = "7751544997";
-					google_ad_width = 728;
-					google_ad_height = 90;
-					//-->
-					</script>
-					<script type="text/javascript"
-					src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
-					</script>
+                    <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+                    <!-- Content Bottom -->
+                    <ins class="adsbygoogle"
+                         style="display:block"
+                         data-ad-client="ca-pub-9622612302631221"
+                         data-ad-slot="6328235454"
+                         data-ad-format="auto"></ins>
+                    <script>
+                    (adsbygoogle = window.adsbygoogle || []).push({});
+                    </script>
 				</div>
 			</div>
-			<div class="span3">
-            {{include sidebar.phtml}}
+			<div class="span3" id="sidebar">
+                {{include sidebar.phtml}}
+                {{include ad-sidebar.phtml}}
 			</div>
 		</div>
 	</div>

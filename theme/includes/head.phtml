@@ -1,20 +1,22 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:fb="http://ogp.me/ns/fb#">
+<!DOCTYPE html>
+<html xmlns:fb="http://ogp.me/ns/fb#">
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-  <title>{{title}}Desktop Backgrounds | Spartacus Wallpaper</title>
-  <link href="{{baseurl}}css/bootstrap.2.2.2.min.css" media="screen" rel="stylesheet" type="text/css" />
-  <link href="{{baseurl}}css/custom.css" media="screen" rel="stylesheet" type="text/css" />
-  <link href="{{baseurl}}css/banner.css" media="screen" rel="stylesheet" type="text/css" />
-  <link rel="shortcut icon" href="/favicon.ico">
-  <script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
-  <script type="text/javascript">
-  //<![CDATA[
-  	jQuery(document).ready(function(){
-      	var date = new Date();
-      	jQuery(".header-banner").attr('id', "banner_"+date.getDate());
-  	});
-  //]]>
-  </script>
-  {{head}}
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="initial-scale=1">
+    <title>{{title}}Desktop Backgrounds | Spartacus Wallpaper</title>
+    <link href="{{baseurl}}css/bootstrap.2.2.2.min.css" media="screen" rel="stylesheet" type="text/css" />
+    <link href="{{baseurl}}css/custom.css" media="screen" rel="stylesheet" type="text/css" />
+    <link href="{{baseurl}}css/banner.css" media="screen" rel="stylesheet" type="text/css" />
+    <link rel="shortcut icon" href="/favicon.ico">
+    <script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+    <script src="{{baseurl}}js/banner.js"></script>
+    <script type="text/javascript">
+    //<![CDATA[
+    	jQuery(document).ready(function(){
+        	if(window.getComputedStyle == undefined || window.getComputedStyle(document.body).backgroundBlendMode == undefined)
+        		jQuery('.header-banner.banner-border').css('background-image', 'none');
+
+        });
+    //]]>
+    </script>
 </head>
