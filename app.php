@@ -4,11 +4,12 @@
  * @address		www.drogers.net
  */
 error_reporting(E_ERROR | E_WARNING | E_PARSE);
-$db = new SQLite3("spartacus");
+$base_dir = '/var/www/static.spartacuswallpaper.com/';
+$db = new SQLite3($base_dir . "/spartacus");
 date_default_timezone_set("UTC");
-$site_dir = "_site/";
-$theme_dir = "theme/";
-$assets_dir = "assets/";
+$site_dir   = $base_dir . "/_site/";
+$theme_dir  = $base_dir . "/theme/";
+$assets_dir = $base_dir . "/assets/";
 $rebuild = false;
 $baseurl = "http://static.spartacuswallpaper.com/"; //"http://spartacuswallpaper.com/";
 
@@ -69,12 +70,16 @@ function tag_parse($tagName, $arg = null){
     }
 }
 
-function get_layout(){
+function get_layout($long = false){
     global $theme_dir;
     $html = file_get_contents($theme_dir."layout/default.phtml");
     preg_match_all("#{{include (\S*)}}#", $html, $tags);
     foreach($tags[0] as $i => $tag){
-        $html = tag($tag, file_get_contents($theme_dir."includes/".$tags[1][$i]), $html);
+        if($long && $tags[1][$i] == "ad-sidebar.phtml") {
+            $html = tag($tag, file_get_contents($theme_dir."includes/long-ad-sidebar.phtml"), $html);
+        } else {
+            $html = tag($tag, file_get_contents($theme_dir."includes/".$tags[1][$i]), $html);
+        }
     }
     return $html;
 }
@@ -82,13 +87,11 @@ function get_layout(){
 function write_file($slug, $content){    
     global $site_dir;
     $slug = str_replace(".html", "", $slug);
-    $dirs = explode("/", $slug);
-    $dir = $site_dir;
-    while(count($dirs)){
-        $dir .= array_shift($dirs)."/";
-        if(!is_dir(trim($dir, "/")))
-            mkdir(trim($dir, "/"));
+    $dir = $site_dir . $slug;
+    if(!is_dir(rtrim($dir, "/"))) {
+        mkdir(rtrim($dir, "/"), 0775, true);
     }
+    
     file_put_contents($site_dir."$slug.html", $content);
     file_put_contents($site_dir."$slug/index.html", $content);
 }
@@ -103,7 +106,7 @@ function del_tree($dir) {
 
 function recurse_copy($src,$dst) { 
     $dir = opendir($src); 
-    @mkdir($dst); 
+    @mkdir($dst, 0775); 
     while(false !== ( $file = readdir($dir)) ) { 
         if (( $file != '.' ) && ( $file != '..' )) { 
             if ( is_dir($src . '/' . $file) ) { 
@@ -130,5 +133,30 @@ function codeToName($code) {
 function format_date($date, $short = false) {
 	$format = $short ? "M jS, 'y" : "l, M jS, Y";
 	return date($format, strtotime($date));
+}
+
+function slog($message, $error = false) {
+    global $base_dir;
+    $logdir = $base_dir . 'var/log/';
+    if($error)
+        $file = $logdir . 'error.log';
+    else
+        $file = $logdir . 'system.log';
+     
+    if(!is_dir(dirname($file))){
+        mkdir(dirname($file), 0777, true);
+    }        
+        
+    if (is_array($message) || is_object($message)) {
+        $message = print_r($message, true);
+    }
+    
+    $message = date('[Y-m-d h:i:s] ') . $message . "\n";
+    
+    echo $message;
+    
+    $fp = fopen($file, 'a');
+    fputs($fp, $message);
+    fclose($fp);
 }
 

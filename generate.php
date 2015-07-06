@@ -5,7 +5,10 @@
  */
 require_once("app.php");
 
+slog('------------------');
+slog('Start Regeneration');
 if(isset($argv[1])){
+    slog('Full Mode');
     $rebuild = true;
 }
 
@@ -22,26 +25,58 @@ if(!is_dir($site_dir."gallery"))
     exec("ln -s /var/www/spartacuswallpaper.com/public/gallery/ {$site_dir}gallery");
 recurse_copy($assets_dir, $site_dir);
 
-// generate banner css
-$banners = glob($assets_dir."images/banners/*/*.jpg");
-while(count($banners) < 31){
-    $banners = array_merge($banners, $banners);
-}
+// ! generate banner css
+$banners = glob($assets_dir."images/banners/left/*.png");
+$banners = array_merge($banners, glob($assets_dir."images/banners/right/*.png"));
 $html = "";
 foreach($banners as $i => $banner){
-    if($i > 31) break;
-    $parts = explode("/", $banner);
-    $align = $parts[3];
-    array_shift($parts);
-    $file = implode("/", $parts);
-    $html .= "#banner_$i { background-image: url(/{$file}); }\n";
+    $parts = array_reverse(explode("/", $banner));
+    $file = $parts[0];
+    $align = $parts[1];
+    $imageUrl = $baseurl . 'images/banners/' . $align . '/' . $file;
+    $topUrl = $baseurl . 'images/banners/top/' . $file;
+    $html .= ".banner_$i, .banner_$i .banner-background { background-image: url({$imageUrl}); }\n";
+    $html .= ".banner_$i .banner-feature { background-image: url({$topUrl}); }\n";
     if($align == "right"){
-        $html .= "#banner_$i .logo { right:10px; }\n";
+        $html .= ".banner_$i .logo { right:10px; left:auto; }\n";
     }
 }
 file_put_contents($site_dir."css/banner.css", $html);
 
-// build pages
+$bannerJs = '
+	jQuery(document).ready(function(){
+  	var date = new Date();
+  	var banner = Math.floor((Math.random() * '.count($banners).'));
+  	jQuery(".header-banner.banner-border").addClass("banner_"+banner);
+	});
+';
+file_put_contents($site_dir."js/banner.js", $bannerJs);
+
+$header = file_get_contents($theme_dir . "includes/header.phtml");
+$testHtml = '
+<script type="text/javascript">
+//<![CDATA[
+	jQuery(document).ready(function(){
+    	var counter = 1;
+        jQuery(".header-banner.banner-border").each(function(){
+            jQuery(this).attr("class", "").addClass("banner_" + counter++).addClass("header-banner").addClass("banner-border");
+        });
+	});
+//]]>
+</script>
+<style type="text/css">
+#sidebar { display:none; }
+.content { width:100% !important; padding:0; }
+.header-banner.banner-border {margin-bottom:10px; }
+</style>
+';
+$testHtml .= str_repeat($header, (count($banners)-2));
+$testPage = get_layout();
+$testPage = tag('content', $testHtml, $testPage);
+$testPage = tags_parse($testPage);
+file_put_contents($site_dir."banner-test.html", $testPage);
+
+// ! build pages
 $pages = glob($theme_dir."page/*");
 
 foreach($pages as $page){
@@ -56,12 +91,12 @@ foreach($pages as $page){
     write_file("page/".$file['filename'], $html);
 }
 
-// generate posts
+// ! generate posts
 $db->query("UPDATE entry SET published = NULL WHERE id = '3670';");
 $result = $db->query("SELECT * FROM entry WHERE ".($rebuild ? "" : "published IS NULL AND ")."published_at < datetime('now');");
 $changedTags = array();
 while($entry = $result->fetchArray()){
-    echo "new post {$entry['url_path']}\n";
+    slog("new post {$entry['url_path']}");
     
     $html = get_layout();
     $html = tag("title", $entry['title']." | ", $html);
@@ -103,10 +138,10 @@ while($entry = $result->fetchArray()){
     $db->query("UPDATE entry SET published = 1 WHERE id = {$entry['id']};");
 }
 
-// build index
-$html = get_layout();
+// ! build index
+$html = get_layout(true);
 $content = file_get_contents($theme_dir."index.phtml");
-echo "rebuilding home page\n";
+slog("rebuilding home page");
 $entryResult = $db->query("SELECT * FROM entry WHERE published IS NOT NULL ORDER BY published_at DESC LIMIT 10;");
 $entries = "";
 $first = 0;
@@ -131,14 +166,14 @@ $html = tag("content", $content, $html);
 $html = tags_parse($html);
 file_put_contents($site_dir."index.html", $html);
 
-// udpate tags
+// ! udpate tags
 if($rebuild){
     $tagResult = $db->query("SELECT t.title, t.slug, t.id, count(*) as count, i.path AS thumb FROM tag t JOIN entry_tag e ON e.tag_id = t.id JOIN image i ON i.entry_id = e.entry_id WHERE list = 1 AND i.kind = 7 GROUP BY tag_id;");
 } else {
     $tagResult = $db->query("SELECT t.title, t.slug, t.id, count(*) as count, i.path AS thumb FROM tag t JOIN entry_tag e ON e.tag_id = t.id JOIN image i ON i.entry_id = e.entry_id WHERE slug IN('".implode("','", $changedTags)."') AND list = 1 AND i.kind = 7 GROUP BY tag_id;");
 }
 
-// build tag pages
+// ! build tag pages
 $html = get_layout();
 $tagLayout = file_get_contents($theme_dir."layout/tag.phtml");
 $columnCount = 3;
@@ -147,23 +182,14 @@ while($tag = $tagResult->fetchArray()){
     $db->query("UPDATE tag SET count = ".$tag['count'].", thumb='".$tag['thumb']."' WHERE id = ".$tag['id'].";");
     
     $tagEntryResult = $db->query("SELECT title, url_path, published_at, i.path AS thumb FROM entry e JOIN image i ON i.entry_id = e.id JOIN entry_tag t ON t.entry_id = e.id WHERE i.kind = 7 AND t.tag_id = {$tag['id']} AND published IS NOT NULL ORDER BY published_at DESC;");
-    $j = 0;
-    $tagPage = "";
+    $tagPage = '<div class="row entry-grid">';
     while($entry = $tagEntryResult->fetchArray()){
-        if ($j % $columnCount == 0){
-            $tagPage .= '<div class="row entry-grid">';
-        }
         $entry['count'] = format_date($entry['published_at'], true);
         $entry['thumb'] = "/gallery/thumb/".$entry['thumb'];
         $entry['slug'] = $baseurl . $entry['url_path'];
         $tagPage .= tag_all("tag", $entry, $tagLayout);
-        if (++$j % $columnCount == 0){
-            $tagPage .= '</div>';
-        }
     }
-    if ($j % $columnCount != 0){
-        $tagPage .= '</div>';
-    }
+    $tagPage .= '</div>';
     $tagHtml = get_layout();
     $tagHtml = tag("content", $tagPage, $tagHtml);
     $tagHtml = tag("title", $tag['title']." | ", $tagHtml);
@@ -171,59 +197,46 @@ while($tag = $tagResult->fetchArray()){
     write_file("tag/".$tag['slug'], $tagHtml);
     $i++;  
 }
-echo "updated $i tag pages\n";
+slog("updated $i tag pages");
 
-// build tags index page
+// ! build tags index page
+$html = get_layout(true);
 $tagResult = $db->query("SELECT title, slug, count, thumb FROM tag t WHERE list = 1 AND count > 0 ORDER BY title ASC;");
 
-$viewAll = "";
+$viewAll = '<div class="row entry-grid">';
 while($tag = $tagResult->fetchArray()){
-    if ($i % $columnCount == 0){
-        $viewAll .= '<div class="row entry-grid">';
-    }
     $tag['count'] .= ($tag['count'] > 1) ? " entries" : " entry";
     $tag['thumb'] = "/gallery/thumb/".$tag['thumb'];
     $tag['slug'] = $baseurl . "tag/".$tag['slug'];
     $viewAll .= tag_all("tag", $tag, $tagLayout);
-    if (++$i % $columnCount == 0){
-        $viewAll .= '</div>';
-    }
 }
-if ($i % $columnCount != 0){
-    $viewAll .= '</div>';
-}
+$viewAll .= '</div>';
+
 $html = tag("content", $viewAll, $html);
 $html = tag("title", "Tag Index | ", $html);
+    $tagHtml = tag("content_title", "Wallpaper by Name", $tagHtml);
 $html = tags_parse($html);
 write_file("page/tags", $html);
-echo "update tags index\n";
+slog("update tags index");
 
-// do year tags
+// ! do year tags
 $year = date("Y");
 $tagLayout = file_get_contents($theme_dir."layout/tag.phtml");
 while($year >= 2000) {
-    echo "update $year index\n";
+    slog("update $year index");
     $tagEntryResult = $db->query("SELECT title, url_path, published_at, i.path as thumb FROM entry e JOIN image i ON i.entry_id = e.id WHERE i.kind = 7 AND published_at LIKE('{$year}%') AND published IS NOT NULL ORDER BY published_at DESC;");
-    $j = 0;
-    $tagPage = "";
+    $tagPage = '<div class="row entry-grid">';
     while($entry = $tagEntryResult->fetchArray()){
-        if ($j % $columnCount == 0){
-            $tagPage .= '<div class="row entry-grid">';
-        }
         $entry['count'] = format_date($entry['published_at'], true);
         $entry['thumb'] = "/gallery/thumb/".$entry['thumb'];
         $entry['slug'] = $baseurl.$entry['url_path'];
         $tagPage .= tag_all("tag", $entry, $tagLayout);
-        if (++$j % $columnCount == 0){
-            $tagPage .= '</div>';
-        }
     }
-    if ($j % $columnCount != 0){
-        $tagPage .= '</div>';
-    }
-    $tagHtml = get_layout();
+    $tagPage .= '</div>';
+    $tagHtml = get_layout(true);
     $tagHtml = tag("content", $tagPage, $tagHtml);
     $tagHtml = tag("title", $year." | ", $tagHtml);
+    $tagHtml = tag("content_title", "Wallpaper from {$year}", $tagHtml);
     $tagHtml = tags_parse($tagHtml);
     write_file("tag/".$year, $tagHtml);
     if(!$rebuild)
@@ -231,35 +244,46 @@ while($year >= 2000) {
     $year--;
 }
 
-// do kind tags
+// ! do kind tags
 $kindResult = $db->query("SELECT * FROM image_kind WHERE exclude != 1;");
 while($kind = $kindResult->fetchArray()){
-    $tagEntryResult = $db->query("SELECT title, url_path, published_at, i.path as thumb FROM entry e JOIN image i ON i.entry_id = e.id WHERE i.kind = {$kind['id']} AND published IS NOT NULL ORDER BY published_at DESC;");
-    $j = 0;
-    $tagPage = "";
+    if($kind['path'] == 'calendar') {
+        $tagEntryResult = $db->query("SELECT title, url_path, published_at, i.path as thumb FROM entry e JOIN image i ON i.entry_id = e.id WHERE queue = 2 AND published IS NOT NULL GROUP BY e.id ORDER BY published_at DESC;");
+    } else {
+        $tagEntryResult = $db->query("SELECT title, url_path, published_at, i.path as thumb FROM entry e JOIN image i ON i.entry_id = e.id WHERE i.kind = {$kind['id']} AND published IS NOT NULL ORDER BY published_at DESC;");
+    }
+    $tagPage = '<div class="row entry-grid">';
     while($entry = $tagEntryResult->fetchArray()){
-        if ($j % $columnCount == 0){
-            $tagPage .= '<div class="row entry-grid">';
-        }
         $entry['count'] = format_date($entry['published_at'], true);
         $entry['thumb'] = "/gallery/thumb/".$entry['thumb'];
         $entry['slug'] = $baseurl . $entry['url_path'];
         $tagPage .= tag_all("tag", $entry, $tagLayout);
-        if (++$j % $columnCount == 0){
-            $tagPage .= '</div>';
-        }
     }
-    if ($j % $columnCount != 0){
-        $tagPage .= '</div>';
-    }
-    $tagHtml = get_layout();
+    $tagPage .= '</div>';
+    $tagHtml = get_layout(true);
     $tagHtml = tag("content", $tagPage, $tagHtml);
     $tagHtml = tag("title", $kind['label']." | ", $tagHtml);
+    $tagHtml = tag("content_title", "Wallpaper with {$kind['label']} Version", $tagHtml);
     $tagHtml = tags_parse($tagHtml);
     write_file("tag/".$kind['path'], $tagHtml);   
-    echo "update {$kind['path']} index\n"; 
+    slog("update {$kind['path']} index"); 
 }
-echo "done\n";
+
+// ! reports
+$result = $db->query("SELECT count(*) as count FROM entry WHERE published IS NULL AND queue = 1;")->fetchArray();
+if($result['count']){
+    slog("Queued Normal Entries: {$result[count]}");
+} else {
+    slog("NO QUEUED ENTRIES REMAINING");
+}
+$result = $db->query("SELECT count(*) as count FROM entry WHERE published IS NULL AND queue = 2;")->fetchArray();
+if($result['count']){
+    slog("Queued Calendar Entries: {$result[count]}");
+} else {
+    slog("NO QUEUED CALENDAR ENTRIES REMAINING");
+}
+
+slog("done");
 
 
 
