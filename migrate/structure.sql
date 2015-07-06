@@ -4,11 +4,6 @@ DROP TABLE "entry_queue";
 DROP TABLE "tag";
 DROP TABLE "image";
 DROP TABLE "image_kind";
-CREATE TABLE "entry_queue" (
-  "id" INTEGER PRIMARY KEY ASC,
-  "queue_type" varchar(255) NOT NULL,
-  "label" varchar(255) NOT NULL
-);
 CREATE TABLE "entry" (
   "id" INTEGER PRIMARY KEY ASC,
   "title" varchar(255) NOT NULL,
@@ -19,8 +14,7 @@ CREATE TABLE "entry" (
   "modified_at" datetime DEFAULT NULL,
   "published_at" datetime DEFAULT NULL,
   "queue" int(11)  DEFAULT NULL,
-  "published" tinyint(4) DEFAULT NULL,
-  CONSTRAINT "queue-fk" FOREIGN KEY ("queue") REFERENCES "entry_queue" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+  "published" tinyint(4) DEFAULT NULL
 );
 CREATE TABLE "entry_tag" (
   "id" INTEGER PRIMARY KEY ASC,

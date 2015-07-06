@@ -6,8 +6,8 @@
  */
 
 require_once('db.php');
-exec('sqlite3 spartacus < structure.sql');
-$st = new PDO('sqlite:spartacus');
+exec('sqlite3 ' . dirname(__FILE__) . '/../spartacus < ' . dirname(__FILE__) . '/structure.sql');
+$st = new PDO('sqlite:' . dirname(__FILE__) . '/../spartacus');
 
 $tables = array('entry','entry_tag','image','image_kind','tag');
 
