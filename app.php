@@ -131,7 +131,7 @@ function codeToName($code) {
 }
 
 function format_date($date, $short = false) {
-	$format = $short ? "M jS, 'y" : "l, M jS, Y";
+	$format = $short ? "M j, Y" : "l, F jS, Y";
 	return date($format, strtotime($date));
 }
 
