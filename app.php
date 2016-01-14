@@ -4,14 +4,14 @@
  * @address		www.drogers.net
  */
 error_reporting(E_ERROR | E_WARNING | E_PARSE);
-$base_dir = '/var/www/static.spartacuswallpaper.com/';
-$db = new SQLite3($base_dir . "/spartacus");
+$base_dir = '/var/www/spartacuswallpaper.com/';
+require_once($base_dir."db.php");
 date_default_timezone_set("UTC");
 $site_dir   = $base_dir . "/_site/";
 $theme_dir  = $base_dir . "/theme/";
 $assets_dir = $base_dir . "/assets/";
 $rebuild = false;
-$baseurl = "http://static.spartacuswallpaper.com/"; //"http://spartacuswallpaper.com/";
+$baseurl = "http://spartacuswallpaper.com/"; //"http://spartacuswallpaper.com/";
 
 function tag($tagName, $content, $html){
     $tagName = str_replace("{{", "", str_replace("}}", "", $tagName));
@@ -151,7 +151,7 @@ function slog($message, $error = false) {
         $message = print_r($message, true);
     }
     
-    $message = date('[Y-m-d h:i:s] ') . $message . "\n";
+    $message = date('[Y-m-d H:i:s] ') . $message . "\n";
     
     echo $message;
     

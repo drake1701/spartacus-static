@@ -22,7 +22,7 @@ if(!is_dir($site_dir))
     mkdir($site_dir, 0777);
     
 if(!is_dir($site_dir."gallery"))
-    exec("ln -s /var/www/spartacuswallpaper.com/public/gallery/ {$site_dir}gallery");
+    exec("ln -s /var/www/spartacuswallpaper.com/gallery/ {$site_dir}gallery");
 recurse_copy($assets_dir, $site_dir);
 
 // ! generate banner css
@@ -92,7 +92,7 @@ foreach($pages as $page){
 }
 
 // ! generate posts
-$db->query("UPDATE entry SET published = NULL WHERE id = '3670';");
+// $db->query("UPDATE entry SET published = NULL WHERE id = '3670';");
 $result = $db->query("SELECT * FROM entry WHERE ".($rebuild ? "" : "published IS NULL AND ")."published_at < datetime('now');");
 $changedTags = array();
 while($entry = $result->fetchArray()){
@@ -110,7 +110,7 @@ while($entry = $result->fetchArray()){
     }
     foreach($images as $image){
         if($image['position'] > 0){
-            $entry['first_image'] = "/gallery/".$image['dir']."/".$image['filename'];
+            $entry['first_image'] = $baseurl."gallery/".$image['dir']."/".$image['filename'];
             break;
         }
     }
@@ -152,7 +152,7 @@ while($entry = $entryResult->fetchArray()){
     $entry['published_at'] = format_date($entry['published_at']);
     $imageResult = $db->query("SELECT i.path as filename FROM image i WHERE entry_id = {$entry['id']} AND kind = 6;");
     $image = $imageResult->fetchArray();    
-    $entry['preview'] = "/gallery/preview/".$image['filename'];
+    $entry['preview'] = $baseurl."gallery/preview/".$image['filename'];
     
     if($first++ == 0) {
         $content = tag("entry_first", tag_all("entry", $entry, $entryLayout), $content);
@@ -185,7 +185,7 @@ while($tag = $tagResult->fetchArray()){
     $tagPage = '<div class="row entry-grid">';
     while($entry = $tagEntryResult->fetchArray()){
         $entry['count'] = format_date($entry['published_at'], true);
-        $entry['thumb'] = "/gallery/thumb/".$entry['thumb'];
+        $entry['thumb'] = $baseurl."gallery/thumb/".$entry['thumb'];
         $entry['slug'] = $baseurl . $entry['url_path'];
         $tagPage .= tag_all("tag", $entry, $tagLayout);
     }
@@ -206,7 +206,7 @@ $tagResult = $db->query("SELECT title, slug, count, thumb FROM tag t WHERE list 
 $viewAll = '<div class="row entry-grid">';
 while($tag = $tagResult->fetchArray()){
     $tag['count'] .= ($tag['count'] > 1) ? " entries" : " entry";
-    $tag['thumb'] = "/gallery/thumb/".$tag['thumb'];
+    $tag['thumb'] = $baseurl."gallery/thumb/".$tag['thumb'];
     $tag['slug'] = $baseurl . "tag/".$tag['slug'];
     $viewAll .= tag_all("tag", $tag, $tagLayout);
 }
@@ -228,7 +228,7 @@ while($year >= 2000) {
     $tagPage = '<div class="row entry-grid">';
     while($entry = $tagEntryResult->fetchArray()){
         $entry['count'] = format_date($entry['published_at'], true);
-        $entry['thumb'] = "/gallery/thumb/".$entry['thumb'];
+        $entry['thumb'] = $baseurl."gallery/thumb/".$entry['thumb'];
         $entry['slug'] = $baseurl.$entry['url_path'];
         $tagPage .= tag_all("tag", $entry, $tagLayout);
     }
@@ -255,7 +255,7 @@ while($kind = $kindResult->fetchArray()){
     $tagPage = '<div class="row entry-grid">';
     while($entry = $tagEntryResult->fetchArray()){
         $entry['count'] = format_date($entry['published_at'], true);
-        $entry['thumb'] = "/gallery/thumb/".$entry['thumb'];
+        $entry['thumb'] = $baseurl."gallery/thumb/".$entry['thumb'];
         $entry['slug'] = $baseurl . $entry['url_path'];
         $tagPage .= tag_all("tag", $entry, $tagLayout);
     }
