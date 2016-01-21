@@ -1,8 +1,9 @@
-<div class="entry-view">
+<div class="entry-view {{entry mobile}}">
 	<h2 class="entry-title"><a href="{{entry url_path}}" title="{{entry title}}">{{entry title}}</a></h2>
 	<p class="entry-date">{{entry published_at}}</p>
-	<a href="{{entry url_path}}" class="entry-preview-image" title="{{entry title}}">
+	<a href="{{entry url_path}}" class="entry-preview-image hidden-xs" title="{{entry title}}">
         <img src="{{entry preview}}" alt="{{entry title}}"/>
     </a>
+    {{entry mobile_images}}
 	<p class="entry-content">{{entry content}}</p>
 </div>

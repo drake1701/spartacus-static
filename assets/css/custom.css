@@ -3,10 +3,13 @@
  * @address		www.drogers.net
  */
 
-.content {
-    float:left;
-    margin:15px 0 15px 15px;
-    padding: 35px 20px 15px;
+img {
+    width: 100%;
+}
+
+#main {
+    margin-top:15px;
+    padding-top: 35px;
 	background: #2f3519;
 	background: -moz-linear-gradient(top,  #2f3519 5%, #121603 100%);
 	background: -webkit-gradient(linear, left top, left bottom, color-stop(5%,#2f3519), color-stop(100%,#121603));
@@ -54,16 +57,22 @@ padding-bottom: 5px;
     margin:20px 0 5px;
 }
 
-.entry-preview-image img {
-    width:100%;
+.entry-images .image {
+    padding: 10px 5px;
+}
+.entry-images {
+    overflow: auto;
+    clear:both;
+    margin: 0 -5px;
+}
+.entry-view .entry-images {
+    margin-top:-15px;
 }
 
 .entry-versions,
 .entry-tags,
 .social-media {
 	font-size:14px;
-    float: left;
-    width: 200px;
 }
 
 .mobile-preview img {
@@ -97,13 +106,13 @@ padding-bottom: 5px;
 }
 
 .ad-top {
-	margin: -14px -20px 10px;
+	margin: -14px -15px 10px;
 }
 .ad-middle{
-	margin: -20px -20px 20px;
+	margin: -20px -15px 20px;
 }
 .ad-bottom {
-	margin:  50px -20px 0px;
+	margin:  50px -15px 0px;
 }
 .ad-sidebar {
     background: #121603;
@@ -124,18 +133,13 @@ padding-bottom: 5px;
 	right:10px;
 }
 
-.social-media {
-	float:right;
-    width:230px;
-}
-
 .social-media li {
     float:left;
 }
 .social-media li a {
     display: block;
     background: url(../images/social-media-icons-small.png) 0 0 no-repeat;
-    width:110px;
+    padding-right:10px;
     height:24px;
     margin-bottom:3px;
     line-height: 26px;
@@ -161,7 +165,6 @@ padding-bottom: 5px;
     padding:35px 8px 8px;
 }
 .sidebar .social-contact {
-	width: 136px;
 	margin:0 auto;
 }
 .sidebar .social-contact li {
@@ -170,7 +173,7 @@ padding-bottom: 5px;
     float:left;
     height: 32px;
     width: 32px;
-    margin: 0 4px 10px -2px;
+    margin: 0 15px 10px -2px;
 }
 .sidebar .social-contact li a {
     display: block;
@@ -235,18 +238,19 @@ overflow:auto;
 
 .entry-grid {
 	list-style: none;
-	margin: 0;
 	padding: 0;
 	overflow: auto;
 }
-
+.entry-grid .entry-images .image {
+    padding:0 5px;
+}
 .entry-grid .entry-item {
 	float:left;
 }
 
 .entry-grid .entry-title {
 	font-size:14px;
-    height: 32px;
+    height: 38px;
     display: table;
 }
 
@@ -299,12 +303,12 @@ overflow:auto;
 padding: 5px;
 }
 
-.container-narrow {
+body > .container-fluid {
 background:none repeat scroll 0 0 #2D2F02;
 margin:0 auto;
 overflow:auto;
 padding:20px;
-max-width:1008px;
+max-width:1048px;
 }
 
 .no-display {
@@ -368,33 +372,9 @@ td {
 	border: 1px solid #757d56;
 	padding: 1px 5px;
 }
-@media screen and (min-width: 768px) {
-    .entry-grid .entry-item {
-        width:32%;
-        margin-left:2%;
-    }
-    .entry-grid .entry-item:nth-child(3n+1) {
-    	clear:left;
-    	margin-left:0;
-    }
-}
-
-@media screen and (max-width: 767px) {
-    .entry-grid .entry-item {
-        width:48%;
-        margin-left:2%;
-    }
-    .entry-grid .entry-item:nth-child(2n+1) {
-    	clear:left;
-    	margin-left:0;
-    }
-    .ad-bottom,
-    .ad-sidebar.long {
-    	opacity:0;
-    }
-}
-@media screen and (max-width: 767px) and (min-width: 475px) {
-    .sidebar ul:not(.social-contact):not(.years) {
+@media screen and (max-width: 990px) {
+    .sidebar ul:not(.social-contact):not(.years),
+    .entry-versions ul {
     	-webkit-column-count: 3;
     	-moz-column-count: 3;
     	column-count: 3;
@@ -402,9 +382,36 @@ td {
     .sidebar .years {
     	width:50%;
     }
+    #sidebar {
+        padding-left:0;
+        padding-right:0;
+    }    
 }
-@media screen and (max-width: 600px) and (min-width: 475px) {
-    .sidebar ul:not(.social-contact):not(.years) {
+@media screen and (min-width: 768px) {
+    .entry-grid .entry-item {
+        width:32%;
+        margin-left:2%;
+    }
+    .entry-grid .entry-item:nth-of-type(3n+1) {
+    	clear:left;
+    	margin-left:0;
+    }
+}
+
+@media screen and (max-width: 767px) {
+    .entry-grid .entry-item {
+        width:100%;
+        margin-left:0;
+    }
+    .ad-middle {
+        display: none;
+    }
+    .ad-bottom,
+    .ad-sidebar.long {
+    	opacity:0;
+    }
+    .sidebar ul:not(.social-contact):not(.years),
+    .entry-versions ul {
     	-webkit-column-count: 2;
     	-moz-column-count: 2;
     	column-count: 2;
@@ -417,9 +424,13 @@ td {
     body {
         padding:0;
     }
-    .container-narrow {
+    body > .container-fluid {
         margin: 0;
         padding: 0;
+    }
+    .content.span9 {
+        padding-left: 5px;
+        padding-right: 5px;
     }
     .header-banner.banner-border {
     	padding:9px 0;
@@ -430,6 +441,8 @@ td {
     }
     .header-banner.banner-feature {
     	background-image:none !important;
+    	width: 100%;
+    	margin: -10px 0;
     }
     .top-nav li a {
     	margin:0 1px;
@@ -442,7 +455,8 @@ td {
         position: relative;
         padding:3px;
         top:10px;
-        width: 300px;
+        width: 310px;
+        height: 138px;
     	background-color: rgba(170,78,0,.9);
     }
     .logo > a {
