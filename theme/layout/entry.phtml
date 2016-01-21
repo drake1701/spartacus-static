@@ -1,29 +1,40 @@
+<!-- Entry ID {{entry id}} -->
 <div class="entry-view">
 	<h2 class="entry-title">{{entry title}}</h2>
 	<p class="entry-date">{{entry published_at}}</p>
 	<a href="{{entry first_image}}" class="entry-preview-image" title="{{entry title}}">
-        <img src="{{entry preview}}" alt="{{entry title}}"/>
+        <img src="{{entry first_image}}" alt="{{entry title}}"/>
+        <span class="visible-xs">Desktop</span>
     </a>
 	<p class="entry-content">{{entry content}}</p>
-	<div class="social-media">
-        <ul>
-            <li><a class="facebook" href="https://www.facebook.com/sharer/sharer.php?u={{entry url}}&title={{entry title}}">Share</a></li>
-            <li><a class="twitter" href="http://twitter.com/intent/tweet?url={{entry url}}&text={{entry title}}+-+{{entry preview}}&hashtags=wallpaper,background">Tweet</a></li>
-            <li><a class="pinterest" href="http://pinterest.com/pin/create/bookmarklet/?media={{entry preview}}&url={{entry url}}&is_video=false&description={{entry title}}">Pin</a></li>
-            <li><a class="tapiture" href="javascript:if(!document.getElementById('jquery_js'))%20%7Bvoid((function()%20%7Bvar%20e%20=%20document.createElement('script');e.setAttribute('id',%20'jquery_js');e.setAttribute('type',%20'text/javascript');e.setAttribute('charset',%20'UTF-8');var%20eSrc%20=%20(location.protocol%20==%20'https:'%20?%20'https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js'%20:%20'http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js');e.setAttribute('src',%20eSrc);document.body.appendChild(e);e%20=%20document.createElement('script');e.setAttribute('id',%20'tapiture_js');e.setAttribute('type',%20'text/javascript');e.setAttribute('charset',%20'UTF-8');eSrc%20=%20(location.protocol%20==%20'https:'%20?%20'https://tapiture.com/assets/js/tap_browser.js?ver='%20+%20Math.random()%20:%20'http://tapiture.com/assets/js/tap_browser.js?ver='%20+%20Math.random());e.setAttribute('src',%20eSrc);document.body.appendChild(e)%7D)())%7D;">Tap</a></li>
-        </ul>
+	<div class="row">
+<!--
+    	<div class="entry-versions col-sm-5 col-xs-12">
+    		<h4>Versions</h4>
+    		<ul>
+    		{{entry kinds}}
+    		</ul>
+    	</div>
+-->
+    	<div class="entry-tags col-sm-7">
+    		<h4>Tags</h4>
+            <ul>
+            {{entry tags}}
+            </ul>
+    	</div>
+    	<div class="social-media col-sm-5">
+    		<h4>Share</h4>
+            <ul>
+                <li><a class="facebook" href="https://www.facebook.com/sharer/sharer.php?u={{entry url}}&title={{entry title}}">Share</a></li>
+                <li><a class="twitter" href="http://twitter.com/intent/tweet?url={{entry url}}&text={{entry title}}+-+{{entry preview}}&hashtags=wallpaper,background">Tweet</a></li>
+                <li><a class="pinterest" href="http://pinterest.com/pin/create/bookmarklet/?media={{entry preview}}&url={{entry url}}&is_video=false&description={{entry title}}">Pin</a></li>
+                <li><a class="tapiture" href="javascript:if(!document.getElementById('jquery_js'))%20%7Bvoid((function()%20%7Bvar%20e%20=%20document.createElement('script');e.setAttribute('id',%20'jquery_js');e.setAttribute('type',%20'text/javascript');e.setAttribute('charset',%20'UTF-8');var%20eSrc%20=%20(location.protocol%20==%20'https:'%20?%20'https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js'%20:%20'http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js');e.setAttribute('src',%20eSrc);document.body.appendChild(e);e%20=%20document.createElement('script');e.setAttribute('id',%20'tapiture_js');e.setAttribute('type',%20'text/javascript');e.setAttribute('charset',%20'UTF-8');eSrc%20=%20(location.protocol%20==%20'https:'%20?%20'https://tapiture.com/assets/js/tap_browser.js?ver='%20+%20Math.random()%20:%20'http://tapiture.com/assets/js/tap_browser.js?ver='%20+%20Math.random());e.setAttribute('src',%20eSrc);document.body.appendChild(e)%7D)())%7D;">Tap</a></li>
+            </ul>
+    	</div>
 	</div>
-	<div class="entry-versions">
-		<h4>Versions</h4>
-		<ul>
-		{{entry kinds}}
-		</ul>
-	</div>
-	<div class="entry-tags">
-		<h4>Tags</h4>
-        <ul>
-        {{entry tags}}
-        </ul>
+    <h4>Wallpaper Types</h4>
+	<div class="entry-images">
+        {{entry image_gallery}}	
 	</div>
     <div id="disqus_thread"></div>
     <script type="text/javascript">

@@ -4,14 +4,14 @@
  * @address		www.drogers.net
  */
 error_reporting(E_ERROR | E_WARNING | E_PARSE);
-$base_dir = '/var/www/spartacuswallpaper.com/';
+$base_dir = dirname(__FILE__).'/';
 require_once($base_dir."db.php");
 date_default_timezone_set("UTC");
-$site_dir   = $base_dir . "/_site/";
-$theme_dir  = $base_dir . "/theme/";
-$assets_dir = $base_dir . "/assets/";
+$site_dir   = $base_dir . "_site/";
+$theme_dir  = $base_dir . "theme/";
+$assets_dir = $base_dir . "assets/";
 $rebuild = false;
-$baseurl = "http://spartacuswallpaper.com/"; //"http://spartacuswallpaper.com/";
+$baseurl = strpos($base_dir, 'development') ?  "http://dev.spartacuswallpaper.com/" : "http://spartacuswallpaper.com/";
 
 function tag($tagName, $content, $html){
     $tagName = str_replace("{{", "", str_replace("}}", "", $tagName));
@@ -82,6 +82,38 @@ function get_layout($long = false){
         }
     }
     return $html;
+}
+
+function tag_entry($entry, $layout, $count, $layoutType = 'tag') {
+    global $baseurl, $db;
+    $entry['slug'] = $baseurl . $entry['url_path'];
+    $preview = $count > 12 ? 'thumb' : 'preview';
+    if($preview == 'thumb')
+        $entry['classes'] = 'col-xs-12 col-sm-4';
+    else 
+        $entry['classes'] = 'col-xs-12 col-sm-6';
+        
+    $imageResult = $db->query("SELECT k.path as dir, i.path as file, k.position FROM image i JOIN image_kind k ON k.id = i.kind WHERE entry_id = {$entry['id']} AND (k.mobile = 1 OR k.path = '".$preview."') ORDER BY k.position ASC LIMIT 3;");
+    $images = $db->fetchAll($imageResult);
+    $mobileImages = '<div class="entry-images visible-xs">';
+    $hasMobile = false;
+    foreach($images as $image) {
+        if($image['dir'] == $preview){
+            $entry['thumb'] = $baseurl."gallery/".$image['dir']."/".$image['file'];
+        } else {
+            $hasMobile = true;
+            $mobileImage = $baseurl."gallery/".$image['dir']."/".$image['file'];
+            $mobileImages .= '<a href="'.$entry['slug'].'" class="image col-xs-6" title="'.$entry['title'].'"><img src="'.$mobileImage.'" alt="'.$entry['title'].'"/></a>';
+        }
+    }
+    if($hasMobile) {
+        $entry['mobile_images'] = $mobileImages . '</div>';
+    } else {
+        $entry['classes'] .= ' hidden-xs';
+    }
+    
+    $entry['date'] = format_date($entry['published_at'], true);
+    return tag_all("tag", $entry, $layout);    
 }
 
 function write_file($slug, $content){    
