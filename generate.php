@@ -5,7 +5,7 @@
  */
 require_once("app.php");
 
-$db->query("UPDATE entry SET published = null WHERE published IS NOT NULL ORDER BY id DESC LIMIT 5;");
+//$db->query("UPDATE entry SET published = null WHERE published IS NOT NULL ORDER BY id DESC LIMIT 5;");
 
 slog('------------------');
 slog('Start Regeneration');
@@ -26,6 +26,7 @@ if(!is_dir($site_dir))
 if(!is_dir($site_dir."gallery"))
     exec("ln -s /var/www/spartacuswallpaper.com/gallery/ {$site_dir}gallery");
 recurse_copy($assets_dir, $site_dir);
+copy($assets_dir.'.htaccess', $site_dir.'.htaccess');
 
 // ! generate banner css
 $banners = glob($assets_dir."images/banners/left/*.png");
@@ -244,7 +245,7 @@ while($tag = $tagResult->fetchArray()){
     $entryResult = $db->query('SELECT e.id FROM entry e JOIN entry_tag t ON t.entry_id = e.id JOIN image i ON e.id = i.entry_id JOIN image_kind k ON k.id = i.kind WHERE t.tag_id = '.$tag['id'].' ORDER BY k.mobile DESC, e.published_at DESC LIMIT 1;');
     $entry = $entryResult->fetchArray();
     $tag['id'] = $entry['id'];
-    $tag['date'] .= ($tag['count'] > 1) ? " entries" : " entry";
+    $tag['date'] = $tag['count'] . ($tag['count'] > 1 ? " entries" : " entry");
     $tag['thumb'] = $baseurl."gallery/thumb/".$tag['thumb'];
     $tag['slug'] = $baseurl . "tag/".$tag['slug'];
     

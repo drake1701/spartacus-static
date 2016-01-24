@@ -112,7 +112,8 @@ function tag_entry($entry, $layout, $count, $layoutType = 'tag') {
         $entry['classes'] .= ' hidden-xs';
     }
     
-    $entry['date'] = format_date($entry['published_at'], true);
+    if(!isset($entry['date']))
+        $entry['date'] = format_date($entry['published_at'], true);
     return tag_all("tag", $entry, $layout);    
 }
 
