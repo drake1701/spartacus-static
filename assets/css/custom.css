@@ -9,16 +9,9 @@ img {
 
 #main {
     margin-top:15px;
-    padding-top: 35px;
-	background: #2f3519;
-	background: -moz-linear-gradient(top,  #2f3519 5%, #121603 100%);
-	background: -webkit-gradient(linear, left top, left bottom, color-stop(5%,#2f3519), color-stop(100%,#121603));
-	background: -webkit-linear-gradient(top,  #2f3519 5%,#121603 100%);
-	background: -o-linear-gradient(top,  #2f3519 5%,#121603 100%);
-	background: -ms-linear-gradient(top,  #2f3519 5%,#121603 100%);
-	background: linear-gradient(top,  #2f3519 5%,#121603 100%);
-	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#2f3519', endColorstr='#121603',GradientType=0 );
-	position: relative;
+    padding: 35px 15px 0;
+    background: #1B2001;
+    position: relative;
 }
 
 .entry-view {
@@ -65,9 +58,6 @@ padding-bottom: 5px;
     clear:both;
     margin: 0 -5px;
 }
-.entry-view .entry-images {
-    margin-top:-15px;
-}
 
 .entry-versions,
 .entry-tags,
@@ -94,7 +84,7 @@ padding-bottom: 5px;
 }
 .header-banner.banner-background {
     border: 1px solid #fff;
-    height: 140px;
+    height: 142px;
     position:relative;
 }
 .header-banner.banner-feature {
@@ -149,20 +139,17 @@ padding-bottom: 5px;
 .social-media li a.tapiture { background-position: 0 -48px; }
 .social-media li a.pinterest { background-position: 0 -72px; }
 
-.sidebar {
-	background: #2f3519;
-	background: -moz-linear-gradient(top,  #2f3519 5%, #121603 60%);
-	background: -webkit-gradient(linear, left top, left bottom, color-stop(5%,#2f3519), color-stop(60%,#121603));
-	background: -webkit-linear-gradient(top,  #2f3519 5%,#121603 60%);
-	background: -o-linear-gradient(top,  #2f3519 5%,#121603 60%);
-	background: -ms-linear-gradient(top,  #2f3519 5%,#121603 60%);
-	background: linear-gradient(top,  #2f3519 5%,#121603 60%);
+#sidebar {
+	background: #1C2100;
 	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#2f3519', endColorstr='#121603',GradientType=0 );
-    position: relative;
-    color:#949A72;
-    font-family:Helvetica;
-    margin:15px 0 0;
-    padding:35px 8px 8px;
+	position: relative;
+	color:#949A72;
+	font-family:Helvetica;
+	margin:15px 0 0;
+	padding:35px 15px 8px;
+}
+.sidebar a img {
+    margin-bottom:8px;
 }
 .sidebar .social-contact {
 	margin:0 auto;
@@ -173,7 +160,10 @@ padding-bottom: 5px;
     float:left;
     height: 32px;
     width: 32px;
-    margin: 0 15px 10px -2px;
+    margin: 0 20px 10px -2px;
+}
+.sidebar .social-contact li:last-of-type {
+    margin-right:0;
 }
 .sidebar .social-contact li a {
     display: block;
@@ -234,6 +224,10 @@ overflow:auto;
 .sidebar ul.years li {
 	float:left;
 	margin-right:10px;
+}
+
+.sidebar .tops .entry-date {
+    display:none;
 }
 
 .entry-grid {
@@ -306,8 +300,7 @@ padding: 5px;
 body > .container-fluid {
 background:none repeat scroll 0 0 #2D2F02;
 margin:0 auto;
-overflow:auto;
-padding:20px;
+padding: 10px 20px 30px;
 max-width:1048px;
 }
 
@@ -318,7 +311,7 @@ max-width:1048px;
 #copy {
 	text-align: center;
 	font-size: 12px;
-	padding: 5px 0 20px;
+	padding: 25px 0 150px;
 }
 
 #admin {
@@ -345,7 +338,7 @@ color:#DAE3A8;
 text-decoration:none;
 }
 
-a:hover {
+a:hover,a:active,a:focus {
 	color: #fff;
 }
 
@@ -372,6 +365,12 @@ td {
 	border: 1px solid #757d56;
 	padding: 1px 5px;
 }
+.col-xs-6:nth-of-type(even) {
+    padding-left:7px;
+}
+.col-xs-6:nth-of-type(odd) {
+    padding-right:7px;
+}
 @media screen and (max-width: 990px) {
     .sidebar ul:not(.social-contact):not(.years),
     .entry-versions ul {
@@ -381,11 +380,10 @@ td {
     }
     .sidebar .years {
     	width:50%;
+    }  
+    .ad-sidebar.long {
+        display: none;
     }
-    #sidebar {
-        padding-left:0;
-        padding-right:0;
-    }    
 }
 @media screen and (min-width: 768px) {
     .entry-grid .entry-item {
@@ -396,6 +394,12 @@ td {
     	clear:left;
     	margin-left:0;
     }
+    body > .container-fluid > .row > :last-child {
+    	padding-left:0;
+    }
+    .entry-view .entry-images {
+        margin-top:-15px;
+    }
 }
 
 @media screen and (max-width: 767px) {
@@ -405,10 +409,6 @@ td {
     }
     .ad-middle {
         display: none;
-    }
-    .ad-bottom,
-    .ad-sidebar.long {
-    	opacity:0;
     }
     .sidebar ul:not(.social-contact):not(.years),
     .entry-versions ul {

@@ -5,7 +5,8 @@
  */
 require_once("app.php");
 
-$db->query("UPDATE entry SET published = null WHERE published IS NOT NULL ORDER BY id DESC LIMIT 5;");
+if(strpos($base_dir, 'development'))
+    $db->query("UPDATE entry SET published = null WHERE published IS NOT NULL ORDER BY id DESC LIMIT 5;");
 
 slog('------------------');
 slog('Start Regeneration');
@@ -102,6 +103,19 @@ while($entry = $result->fetchArray()){
     $html = get_layout();
     $html = tag("title", $entry['title']." | ", $html);
     
+    $prev = $db->query('SELECT e.* FROM entry e JOIN entry o ON o.id = "'.$entry['id'].'" WHERE e.published_at < o.published_at ORDER BY e.published_at DESC LIMIT 1;')->fetchArray();
+    if(isset($prev['id'])) {
+        $entry['prev'] = '<a href="'.$baseurl.$prev['url_path'].'" title="'.$prev['title'].'"><span>Previous</span><img src="'.$baseurl.'gallery/preview/'.$prev['filename'].'" alt="'.$prev['title'].'" /><span>'.$prev['title'].'</span></a>';
+        $entry['prev_link'] = '<a href="'.$baseurl.$prev['url_path'].'" title="'.$prev['title'].'"><span>&laquo; Previous Wallpaper</span></a>';
+    }
+    
+    
+    $next = $db->query('SELECT e.* FROM entry e JOIN entry o ON o.id = "'.$entry['id'].'" WHERE e.published_at > o.published_at ORDER BY e.published_at ASC LIMIT 1;')->fetchArray();
+    if(isset($next['id'])) {
+        $entry['next'] = '<a href="'.$baseurl.$next['url_path'].'" title="'.$next['title'].'"><span>Next</span><img src="'.$baseurl.'gallery/preview/'.$next['filename'].'" alt="'.$next['title'].'" /><span>'.$next['title'].'</span></a>';
+        $entry['next_link'] = '<a href="'.$baseurl.$next['url_path'].'" title="'.$next['title'].'"><span>Next Wallpaper &raquo;</span></a>';
+    }
+    
     $entry['published_at'] = format_date($entry['published_at']);
     
     $imageResult = $db->query("SELECT i.path as filename, k.path as dir, k.label, k.position, k.mobile FROM image i JOIN image_kind k ON i.kind = k.id WHERE entry_id = {$entry['id']} AND exclude = 0 ORDER BY position ASC;");
@@ -135,12 +149,15 @@ while($entry = $result->fetchArray()){
     $entry['kinds'] = $kinds;
     $tagResult = $db->query("SELECT * FROM entry_tag e JOIN tag t ON e.tag_id = t.id WHERE entry_id = {$entry['id']};");
     $tags = "";
+    $tagIds = array();
     while($tag = $tagResult->fetchArray()){
+        $tagIds[] = $tag['id'];
         $tags .= "<li><a href='{$baseurl}tag/{$tag['slug']}' title='{$tag['title']}'>{$tag['title']}</a></li>";
         $changedTags[] = $tag['slug'];
     }
     $entry['tags'] = $tags;
     
+    $html = tag('content_more', getMore(6, $tagIds, 'col-sm-6 col-md-4', array($entry['id'])), $html);
     $html = tag("head", tag_all("entry", $entry, file_get_contents($theme_dir."layout/entry_head.phtml")), $html);
     $html = tag("content", tag_all("entry", $entry, file_get_contents($theme_dir."layout/entry.phtml")), $html);
     
@@ -158,6 +175,7 @@ $entries = "";
 $entryLayout = file_get_contents($theme_dir."layout/entry_home.phtml");
 $deskEntries = 0;
 $mobileEntries = 0;
+$homeEntryIds = array();
 while($entry = $entryResult->fetchArray()){
     $entry['published_at'] = format_date($entry['published_at']);
 
@@ -187,7 +205,7 @@ while($entry = $entryResult->fetchArray()){
     }
     
     if($deskEntries > 10 && $mobileEntries > 10) break;
-
+    $homeEntryIds[] = $entry['id'];
     if($deskEntries == 1) {
         $content = tag("entry_first", tag_all("entry", $entry, $entryLayout), $content);
     } else {
@@ -197,6 +215,7 @@ while($entry = $entryResult->fetchArray()){
 $content = tag("entries", $entries, $content);
 
 $html = tag("content", $content, $html);
+$html = tag('side_more', getMore(7, null, 'col-sm-12', $homeEntryIds), $html);
 $html = tags_parse($html);
 file_put_contents($site_dir."index.html", $html);
 
@@ -236,19 +255,32 @@ slog("updated $i tag pages");
 
 // ! build tags index page
 $html = get_layout(true);
-$tagResult = $db->query("SELECT id, title, slug, count, thumb FROM tag t WHERE list = 1 AND count > 0 ORDER BY title ASC;");
 
-$viewAll = '<div class="row entry-grid">';
-while($tag = $tagResult->fetchArray()){
-    
-    $entryResult = $db->query('SELECT e.id FROM entry e JOIN entry_tag t ON t.entry_id = e.id JOIN image i ON e.id = i.entry_id JOIN image_kind k ON k.id = i.kind WHERE t.tag_id = '.$tag['id'].' ORDER BY k.mobile DESC, e.published_at DESC LIMIT 1;');
-    $entry = $entryResult->fetchArray();
-    $tag['id'] = $entry['id'];
-    $tag['date'] .= ($tag['count'] > 1) ? " entries" : " entry";
-    $tag['thumb'] = $baseurl."gallery/thumb/".$tag['thumb'];
-    $tag['slug'] = $baseurl . "tag/".$tag['slug'];
-    
-    $viewAll .= tag_entry($tag, $tagLayout, 99);
+$tagResult = $db->query("SELECT * FROM tag t WHERE name = 1 AND count > 0 ORDER BY title ASC;");
+$tagResult = $db->fetchAll($tagResult);
+$tagResult = array_chunk($tagResult, ceil(count($tagResult) / 3));
+$viewAll = '<h2>Wallpaper by Subject Name</h2>';
+$viewAll .= '<div class="row">';
+foreach($tagResult as $tagChunk) {
+    $viewAll .= '<ul class="col-sm-4">';
+    foreach($tagChunk as $tag) {
+        $viewAll .= '<li><a href="'.$baseurl.'tag/'.$tag['slug'].'" title="Wallpaper of '.$tag['title'].'">'.$tag['title'].'</a></li>';
+    }
+    $viewAll .= '</ul>';
+}
+$viewAll .= '</div>';
+
+$tagResult = $db->query("SELECT * FROM tag t WHERE name = 0 AND count > 0 ORDER BY title ASC;");
+$tagResult = $db->fetchAll($tagResult);
+$tagResult = array_chunk($tagResult, ceil(count($tagResult) / 3));
+$viewAll .= '<h2>Other Tags</h2>';
+$viewAll .= '<div class="row">';
+foreach($tagResult as $tagChunk) {
+    $viewAll .= '<ul class="col-sm-4">';
+    foreach($tagChunk as $tag) {
+        $viewAll .= '<li><a href="'.$baseurl.'tag/'.$tag['slug'].'" title="Wallpaper of '.$tag['title'].'">'.$tag['title'].'</a></li>';
+    }
+    $viewAll .= '</ul>';
 }
 $viewAll .= '</div>';
 

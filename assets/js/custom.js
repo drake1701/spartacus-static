@@ -4,22 +4,17 @@
  * @date       1/19/16
  */
 
-/*
-jQuery(window).load(function(){
-    var mheight = 0;
-    jQuery('.entry-images .image').each(function(){
-        e = jQuery(this);
-        if(e.height() > mheight) mheight = e.height();
-    });
-    jQuery('.entry-images .image').each(function(){
-        e = jQuery(this);
-        if(e.height() < mheight) {
-            var pad = Math.floor((mheight - e.height()) / 2);
-            e.find('img').css({
-                paddingTop: pad + 'px',
-                paddingBottom: pad + 'px'
-            });
+jQuery(window).load(heightsFix).resize(heightsFix);
+
+
+function heightsFix() {
+    jQuery('#main').height('');
+    jQuery('#sidebar').height('');
+    if(jQuery(document).width() > 976) {
+        if(jQuery('#sidebar').height() < jQuery('#main').height()) {
+            jQuery('#sidebar').height(jQuery('#main').height() - 8);
+        } else {
+            jQuery('#main').height(jQuery('#sidebar').height() + 8);
         }
-    });
-});
-*/
+    }
+}

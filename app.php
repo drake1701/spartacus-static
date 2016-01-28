@@ -54,12 +54,21 @@ function tag_parse($tagName, $arg = null){
                 $html .= "<li><a href='{$baseurl}tag/{$row['year']}'>{$row['year']}</a></li>";
             }
             return $html;
-        case "tag_20":
-            $result = $db->query("SELECT title, slug, count(*) as count FROM tag t  JOIN entry_tag e ON e.tag_id = t.id WHERE list = 1 GROUP BY tag_id ORDER BY count DESC LIMIT 20;");
+        case "tag_10":
+            $result = $db->query("SELECT t.title, t.slug, t.id, count(*) as count, e.id as entry_id FROM tag t JOIN entry_tag et ON et.tag_id = t.id JOIN entry e ON et.entry_id = e.id WHERE e.published IS NOT NULL AND name = 1 GROUP BY tag_id ORDER BY `count` DESC, t.title LIMIT 10;");
             $html = "";
             while($tag = $result->fetchArray()){
-                $html .= "<li><a href='{$baseurl}tag/{$tag['slug']}' title='{$tag['count']} entries'>{$tag['title']}</a></li>";
+                $thumb = $db->prepare("SELECT e.* FROM image i JOIN entry e ON e.id = i.entry_id JOIN entry_tag et ON et.entry_id = e.id JOIN image_kind k ON k.id = i.kind WHERE et.tag_id = :tag_id AND e.published IS NOT NULL AND k.mobile = 1 GROUP BY i.path ORDER BY RANDOM() LIMIT 1;");
+                $thumb->bindParam(':tag_id', $tag['id']);
+                $thumb = $thumb->execute()->fetchArray();
+                $thumb['title'] = $tag['title'];
+                $html .= tag_entry($thumb, null, 99, 'tag', 'col-md-12 col-sm-4 col-xs-12'); //'<div class="col-md-12 col-sm-4 col-xs-6"><a href="'.$baseurl.'tag/'.$tag['slug'].'" title="'.$tag['count'].' entries"><span>'.$tag['title'].'</span><img src="'.$baseurl."gallery/thumb/".$thumb['path'].'" title="'.$tag['title'].'" /></a></div>';
             }
+            return $html;
+        case "calendar":
+            $calEntry = $db->query("SELECT * FROM `entry` WHERE `queue` = 2 AND PUBLISHED = 1 ORDER BY `published_at` DESC LIMIT 1;");
+            $calEntry = $calEntry->fetchArray();
+            $html = '<div class="col-md-12 col-sm-6 col-xs-12"><a href="'.$baseurl.'tag/calendar" title="Calendar Series"><span>'.$calEntry['title'].'</span><img src="'.$baseurl."gallery/thumb/".$calEntry['filename'].'" title="'.$calEntry['title'].'" /></a></div>';
             return $html;
         case "baseurl":
             return $baseurl;
@@ -84,14 +93,20 @@ function get_layout($long = false){
     return $html;
 }
 
-function tag_entry($entry, $layout, $count, $layoutType = 'tag') {
-    global $baseurl, $db;
+function tag_entry($entry, $layout = null, $count, $layoutType = 'tag', $classes = null) {
+    global $baseurl, $db, $theme_dir;
+    if($layout == null)
+        $layout = file_get_contents($theme_dir."layout/tag.phtml");
     $entry['slug'] = $baseurl . $entry['url_path'];
     $preview = $count > 12 ? 'thumb' : 'preview';
-    if($preview == 'thumb')
-        $entry['classes'] = 'col-xs-12 col-sm-4';
-    else 
-        $entry['classes'] = 'col-xs-12 col-sm-6';
+    if($classes) {
+        $entry['classes'] = $classes;
+    } else {
+        if($preview == 'thumb')
+            $entry['classes'] = 'col-xs-12 col-sm-4';
+        else 
+            $entry['classes'] = 'col-xs-12 col-sm-6';
+    }
         
     $imageResult = $db->query("SELECT k.path as dir, i.path as file, k.position FROM image i JOIN image_kind k ON k.id = i.kind WHERE entry_id = {$entry['id']} AND (k.mobile = 1 OR k.path = '".$preview."') ORDER BY k.position ASC LIMIT 3;");
     $images = $db->fetchAll($imageResult);
@@ -111,9 +126,41 @@ function tag_entry($entry, $layout, $count, $layoutType = 'tag') {
     } else {
         $entry['classes'] .= ' hidden-xs';
     }
-    
     $entry['date'] = format_date($entry['published_at'], true);
     return tag_all("tag", $entry, $layout);    
+}
+
+function getMore($count = 1, $tags = null, $class='col-xs-4', $excludeIds = null) {
+    global $db, $baseurl, $theme_dir;
+    $tagLayout = file_get_contents($theme_dir."layout/tag.phtml");
+    $html = '<h3 class="col-xs-12">More Wallpaper</h3>';
+
+    $sql = 'SELECT e.* FROM entry e';
+    if(is_array($tags)) {
+        $sql .= ' JOIN entry_tag t ON t.entry_id = e.id WHERE t.tag_id IN(:tags)';
+        $html = '<h3 class="col-xs-12">Similar Wallpaper</h3>';
+    } else {
+        $sql .= ' WHERE 1';
+    } 
+    if(is_array($excludeIds)) {
+        $sql .= ' AND e.id NOT IN(:exclude)';
+    }
+    $sql .= ' ORDER BY RANDOM() LIMIT ' . $count . ';';
+    
+    $entries = $db->prepare($sql);
+    if(is_array($tags))
+        $entries->bindParam(':tags', implode(',', $tags));
+    if(is_array($excludeIds))
+        $entries->bindParam(':exclude', implode(',', $excludeIds));
+
+    $entries = $entries->execute();
+    $entries = $db->fetchAll($entries);
+    
+    if(count($entries) == 0) return '';
+    foreach($entries as $entry) {
+        $html .= tag_entry($entry, $tagLayout, 99, 'tag', $class);
+    }
+    return $html;
 }
 
 function write_file($slug, $content){    

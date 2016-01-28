@@ -1,5 +1,9 @@
 <!-- Entry ID {{entry id}} -->
 <div class="entry-view">
+    <div class="clearfix">
+        <p class="pull-left">{{entry prev_link}}</p>
+        <p class="pull-right text-right">{{entry next_link}}</p>
+    </div>
 	<h2 class="entry-title">{{entry title}}</h2>
 	<p class="entry-date">{{entry published_at}}</p>
 	<a href="{{entry first_image}}" class="entry-preview-image" title="{{entry title}}">
@@ -47,5 +51,14 @@
     </script>
     <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
     <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
-
+    <div class="row">
+        <div class="prev col-xs-6 col-sm-5 col-md-4">
+            {{entry prev}}
+        </div>
+        <div class="next col-xs-6 col-sm-5 col-md-4 pull-right text-right">
+            {{entry next}}
+        </div>
+    </div>
 </div>
+
+
