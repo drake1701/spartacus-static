@@ -13,3 +13,6 @@ ExpiresByType image/x-icon "access 1 year"
 ExpiresDefault "access 2 days"
 </IfModule>
 ## EXPIRES CACHING ##
+
+RewriteEngine On
+RewriteRule ^jenna-coleman-mmxvi.html jenna-coleman-vi.html
