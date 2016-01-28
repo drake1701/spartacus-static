@@ -18,9 +18,12 @@
     });
     </script>
     <link href="<?php echo $baseurl ?>css/global.css" media="screen" rel="stylesheet" type="text/css" />
+    <link href="<?php echo $baseurl ?>css/bootstrap.min.css" media="screen" rel="stylesheet" type="text/css" />
+    <link href="<?php echo $baseurl ?>css/custom.css" media="screen" rel="stylesheet" type="text/css" />
 </head>
-<body style="width:80%; margin:0 auto;">
+<body>
 <br/>
+<div class="container">
 <?php if(!empty($_GET['action'])): ?>
 <?php switch($_GET['action']): 
           case "edit": ?>
@@ -45,8 +48,8 @@
     }
     ?>
     <h1>Edit</h1>
-    <a href="#" onclick="window.open('<?php echo $baseurl ?>gallery/widescreen/<?php echo $entry['filename'] ?>', '','toolbar=no, scrollbars=yes, resizable=yes, top=10, left=10, width=960, height=600');">
-	    <img style="float:right;" src="<?php echo $baseurl ?>gallery/preview/<?php echo $entry['filename'] ?>">
+    <a href="#" class="col-xs-6 pull-right" onclick="window.open('<?php echo $baseurl ?>gallery/widescreen/<?php echo $entry['filename'] ?>', '','toolbar=no, scrollbars=yes, resizable=yes, top=10, left=10, width=960, height=600');">
+	    <img src="<?php echo $baseurl ?>gallery/preview/<?php echo $entry['filename'] ?>">
     </a>
 <form enctype="application/x-www-form-urlencoded" action="?action=save" method="post">
     <dl class="zend_form">
@@ -95,6 +98,7 @@
     if($data['id'] > 0){
         $query = "UPDATE entry SET ";
         $data['modified_at'] = date('Y-m-d H:i:s');
+        $data['published'] = NULL;
         foreach($data as $key => $value){
             $query .= "$key = :$key, ";
         }
@@ -151,9 +155,6 @@
 		$linkResult->bindParam(":tag_id", $tag['id']);
 		$linkResult = $linkResult->execute();
 		$link = $linkResult->fetchArray();
-        echo "<pre>";
-        print_r($link);
-        echo "</pre>";
 		if($link['id'] == false) {
 		    $ins = $db->prepare("INSERT INTO entry_tag (entry_id, tag_id) VALUES (:entry_id, :tag_id);");
 		    $ins->bindValue(":tag_id", $tag['id']);
@@ -230,12 +231,112 @@
         echo '<h2><em>Deleted</em></h2>';
     }
     break;
+    case 'showall':
+        echo '<h1><a href="/">All Posts</a></h1>';
+        $result = $db->query("SELECT * FROM entry ORDER BY published_at DESC;");
+        ?>
+        <table class="text-nowrap">
+            <thead>
+            	<tr>
+                	<td></td>
+            		<td>Title</td>
+            		<td>Publish Date</td>
+            		<td>Published</td>
+            		<td>Queue</td>
+            		<td>Actions</td>
+            	</tr>
+            </thead>
+            <tbody id="sortable">
+            <?php while($entry = $result->fetchArray()): ?>
+            	<tr>
+                	<td><img src="<?php echo $baseurl ?>gallery/thumb/<?php echo $entry['filename'] ?>" /></td>
+            		<td><a href="?<?php echo http_build_query(array('action'=>'edit','id'=>$entry['id'])) ?>"><?php echo $entry['title'] ?></a></td>
+            		<td><?php echo date("D m-d-Y", strtotime($entry['published_at'])) ?></td>
+            		<td><?php echo $entry['published'] ?></td>
+            		<td><?php echo $entry['queue'] == 1 ? 'N' : 'C' ?></td>
+            		<td>
+                		<?php if($entry['published']): ?><a href="<?php echo $baseurl . $entry['url_path'] ?>">View</a><br/><?php endif; ?>
+            			<a href="?<?php echo http_build_query(array('action'=>'edit','id'=>$entry['id'])) ?>">Edit</a><br/>
+            			<a href="?<?php echo http_build_query(array('action'=>'delete','id'=>$entry['id'])) ?>">Delete</a>
+            		</td>
+            	</tr>
+            <?php endwhile; ?>
+            </tbody>
+        </table>    
+        <?php
+    break;
+    case 'images':
+    $kinds = $db->query('SELECT `path`, `id` FROM `image_kind`');
+    $kinds = $db->fetchAll($kinds);
+    foreach($kinds as $key => $kind) {
+        $kinds[$kind['path']] = $kind['id'];
+        unset($kinds[$key]);
+    }
+    $entries = $db->query('SELECT * FROM `entry`;');
+    echo '<div class="row">';
+    while($entry = $entries->fetchArray()) {
+        // get image files
+        $imageFiles = glob($site_dir.'gallery/*/'.$entry['filename']);
+        foreach($imageFiles as $key => $imageFile){
+            $path = explode('/', $imageFile);
+            $imageFiles[$path[6]] = basename($imageFile);
+            unset($imageFiles[$key]);
+        }
+        // get image db records
+        $imageResult = $db->prepare("SELECT i.path as filename, k.path as dir, k.label, k.position FROM image i JOIN image_kind k ON i.kind = k.id  WHERE entry_id = :entry_id;");
+        $imageResult->bindParam(":entry_id", $entry['id']);
+        $imageResult = $imageResult->execute();
+        $imageRows = $db->fetchAll($imageResult);
+        foreach($imageRows as $key => $row) {
+            $imageRows[$row['dir']] = $row['filename'];
+            unset($imageRows[$key]);
+        }
+        $change = false;
+        $add = array_diff_assoc($imageFiles, $imageRows);
+        if(count($add) > 0) {
+        	foreach($add as $kind => $filename) {
+                if(isset($kinds[$kind]) && file_exists($site_dir."gallery/{$kind}/{$filename}")){                
+                    $ins = $db->prepare("INSERT INTO image (entry_id, path, kind) VALUES (:entry_id, :path, :kind);");
+                    $ins->bindValue(":entry_id", $entry['id']);
+                    $ins->bindValue(":path", $filename);
+                    $ins->bindValue(":kind", $kinds[$kind]);
+                    execute($ins);
+                    echo '<img src="'.$baseurl.'gallery/'.$kind.'/'.$filename.'" class="col-xs-2" alt="'.$entry['title'] .' - '.$kind.'" />';
+                    $change = true;
+                }
+            } 
+            echo "\n";
+        }
+        $del = array_diff_assoc($imageRows, $imageFiles);
+        if(count($del) > 0) {
+            echo 'Deleting from '.$entry['title'];
+        	foreach($del as $kind => $filename) {
+                if(isset($kinds[$kind]) && file_exists($site_dir."gallery/{$kind}/{$filename}") == false){                
+                    $del = $db->prepare("DELETE FROM image WHERE `entry_id` = :entry_id AND `path` = :path AND `kind` = :kind LIMIT 1;");
+                    $del->bindValue(":entry_id", $entry['id']);
+                    $del->bindValue(":path", $filename);
+                    $del->bindValue(":kind", $kinds[$kind]);
+                    execute($del);
+                    echo ' '.$kind;
+                    $change = true;
+                }
+            } 
+            echo "\n";
+        }
+        if($change) {
+            $flag = $db->prepare('UPDATE `entry` SET `published` = NULL WHERE `id` = :id');
+            $flag->bindValue(':id', $entry['id']);
+            execute($flag);
+        }
+    }
+    echo '</div>';
+    break;
     ?>
 <?php endswitch; ?>
 <?php endif; ?>
 <hr />
 <h1><a href="/">Entry Queue</a></h1>
-<p><a href="/phpliteadmin.php" target="_blank">db</a></p>
+<h3><a href="/phpliteadmin.php" target="_blank">Database</a>&nbsp;|&nbsp;<a href="?action=showall">View All</a>&nbsp;|&nbsp;<a href="?action=images">Update Images</a></h3>
 <?php
 $result = $db->query("SELECT * FROM entry WHERE published IS NULL ORDER BY published_at;");
 $columns = array("id", "title", "published_at");
@@ -282,13 +383,15 @@ $columns = array("id", "title", "published_at");
     }
     $images = array_diff($files, $images);
 ?>
-<div class="entry-grid">
+<div class="entry-grid row">
 <?php foreach ($images as $image) : ?>
-	<div class="entry-item">
+	<div class="col-xs-6 col-sm-4 col-md-3">
 		<p class="entry-title"><a href="?<?php echo http_build_query(array('action'=>'newprocess', 'image' => $image)) ?>"><?php echo $image ?></a></p>
 		<div class="entry-image"><a href="?<?php echo http_build_query(array('action'=>'newprocess', 'image' => $image)) ?>"><img src="<?php echo $baseurl ?>gallery/thumb/<?php echo $image ?>" alt="<?php echo codeToName(str_replace(".jpg", '', strtolower($image))) ?>"/></a></div>
 	</div>
 <?php endforeach ?>
+</div>
+<h2><br/><br/></h2>
 </div>
 </body>
 <?php 

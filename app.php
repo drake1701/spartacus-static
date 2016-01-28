@@ -62,7 +62,7 @@ function tag_parse($tagName, $arg = null){
                 $thumb->bindParam(':tag_id', $tag['id']);
                 $thumb = $thumb->execute()->fetchArray();
                 $thumb['title'] = $tag['title'];
-                $html .= tag_entry($thumb, null, 99, 'tag', 'col-md-12 col-sm-4 col-xs-12'); //'<div class="col-md-12 col-sm-4 col-xs-6"><a href="'.$baseurl.'tag/'.$tag['slug'].'" title="'.$tag['count'].' entries"><span>'.$tag['title'].'</span><img src="'.$baseurl."gallery/thumb/".$thumb['path'].'" title="'.$tag['title'].'" /></a></div>';
+                $html .= tag_entry($thumb, null, 99, 'tag', 'col-md-12 col-sm-4 col-xs-12');
             }
             return $html;
         case "calendar":
@@ -126,7 +126,9 @@ function tag_entry($entry, $layout = null, $count, $layoutType = 'tag', $classes
     } else {
         $entry['classes'] .= ' hidden-xs';
     }
-    $entry['date'] = format_date($entry['published_at'], true);
+    if(!isset($entry['date']))
+        $entry['date'] = format_date($entry['published_at'], true);
+
     return tag_all("tag", $entry, $layout);    
 }
 

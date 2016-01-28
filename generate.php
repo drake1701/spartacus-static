@@ -27,6 +27,7 @@ if(!is_dir($site_dir))
 if(!is_dir($site_dir."gallery"))
     exec("ln -s /var/www/spartacuswallpaper.com/gallery/ {$site_dir}gallery");
 recurse_copy($assets_dir, $site_dir);
+copy($assets_dir.'.htaccess', $site_dir.'.htaccess');
 
 // ! generate banner css
 $banners = glob($assets_dir."images/banners/left/*.png");
