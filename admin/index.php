@@ -9,21 +9,30 @@
 ?>
 <html>
 <head>
+    <title>Spartacus Admin</title>
     <script src="http://code.jquery.com/jquery-1.9.1.js"></script>
     <script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
     <script type="text/javascript">
     jQuery(function() {
-      jQuery( "#sortable" ).sortable();
-      jQuery( "#sortable" ).disableSelection();
+        jQuery( "#sortable" ).sortable();
+        jQuery( "#sortable" ).disableSelection();
+        jQuery('.entry img').click(function(){
+            jQuery(this).parent().toggleClass('ui-selected');
+            var check = jQuery(this).parent().find('input[type=checkbox]');
+            check.prop('checked', check.prop('checked') ? '' : 'checked');
+        });
     });
     </script>
     <link href="<?php echo $baseurl ?>css/global.css" media="screen" rel="stylesheet" type="text/css" />
     <link href="<?php echo $baseurl ?>css/bootstrap.min.css" media="screen" rel="stylesheet" type="text/css" />
     <link href="<?php echo $baseurl ?>css/custom.css" media="screen" rel="stylesheet" type="text/css" />
+    <style type="text/css">
+        .ui-selected { background-color: #4A5404; }
+    </style>
 </head>
 <body>
 <br/>
-<div class="container">
+<div class="container" id="main">
 <?php if(!empty($_GET['action'])): ?>
 <?php switch($_GET['action']): 
           case "edit": ?>
@@ -133,7 +142,7 @@
     // !handle tags
 	// Current & New
 	foreach($slugs as $slugKey => $slug){
-		$slug = trim(str_replace(' ', '-', $slug));
+		$slug = trim(str_replace(' ', '-', strtolower($slug)));
 		$slugs[$slugKey] = $slug;
 		if($slug == '') continue;
 		$tag = $db->prepare("SELECT * FROM tag WHERE slug = :slug;");
@@ -219,8 +228,48 @@
             }
         }
     echo '<h2><em>Reordering Successful.</em></h2>';
-    break; ?>
-    <?php 
+    break; 
+    case 'addtag':
+    /* !mass add tags */
+        if(empty($_POST['tag'])) {
+            echo "<h3>No tag sent</h3>";
+            break;
+        }
+        if(!is_array($_POST['entry'])){
+            echo "<h3>No entries selected</h3>";
+            break;
+        }
+		$slug = trim(str_replace(' ', '-', strtolower($_POST['tag'])));
+		$tag = $db->prepare("SELECT * FROM tag WHERE slug = :slug;");
+		$tag->bindParam(":slug", $slug);
+		$tag = $tag->execute();
+		$tag = $tag->fetchArray();
+		if($tag['id'] == false){
+		    $ins = $db->prepare("INSERT INTO tag (title, slug) VALUES (:title, :slug);");
+		    $ins->bindValue(":title", codeToName($slug));
+		    $ins->bindValue(":slug", $slug);
+		    execute($ins);
+            echo "<h3><em>Created new tag '".codeToName($slug)."'.</em></h3>";
+		    $tag['id'] = $db->lastInsertRowID();
+		}
+		foreach($_POST['entry'] as $entryId => $flag) {
+    		$linkResult = $db->prepare("SELECT * FROM entry_tag e WHERE entry_id = :entry_id AND tag_id = :tag_id;");
+    		$linkResult->bindParam(":entry_id", $entryId);
+    		$linkResult->bindParam(":tag_id", $tag['id']);
+    		$linkResult = $linkResult->execute();
+    		$link = $linkResult->fetchArray();
+    		if($link['id'] == false) {
+    		    $ins = $db->prepare("INSERT INTO entry_tag (entry_id, tag_id) VALUES (:entry_id, :tag_id);");
+    		    $ins->bindValue(":tag_id", $tag['id']);
+    		    $ins->bindValue(":entry_id", $entryId);
+    		    execute($ins);
+    		    $flag = $db->prepare("UPDATE entry SET published = NULL WHERE id = :id;");
+    		    $flag->bindParam(':id', $entryId);
+    		    execute($flag);
+    		    echo "<p>Added $entryId to $slug</p>";
+    		}    		
+		}
+    break;
     case 'delete':
     /* !deleting */
     if($_GET['id']){
@@ -232,40 +281,54 @@
     }
     break;
     case 'showall':
+        /* !show all */
         echo '<h1><a href="/">All Posts</a></h1>';
-        $result = $db->query("SELECT * FROM entry ORDER BY published_at DESC;");
+        $sql = 'SELECT e.*, group_concat(t.slug) AS tags FROM entry e JOIN entry_tag et ON et.entry_id = e.id JOIN tag t ON t.id = et.tag_id';
+        if(!empty($_GET['tag'])) {
+            $sql .= ' JOIN entry_tag fet ON fet.entry_id = e.id JOIN tag ft ON ft.id = fet.tag_id WHERE ft.slug = "'.$_GET['tag'].'"';
+        }
+        $sql .= ' GROUP BY et.entry_id ORDER BY published_at DESC;';
+        $result = $db->query($sql);
         ?>
-        <table class="text-nowrap">
-            <thead>
-            	<tr>
-                	<td></td>
-            		<td>Title</td>
-            		<td>Publish Date</td>
-            		<td>Published</td>
-            		<td>Queue</td>
-            		<td>Actions</td>
-            	</tr>
-            </thead>
-            <tbody id="sortable">
+        <form action="?action=addtag" method="post">
+            <div class="row">
+            <?php $i = 0; ?>
             <?php while($entry = $result->fetchArray()): ?>
-            	<tr>
-                	<td><img src="<?php echo $baseurl ?>gallery/thumb/<?php echo $entry['filename'] ?>" /></td>
-            		<td><a href="?<?php echo http_build_query(array('action'=>'edit','id'=>$entry['id'])) ?>"><?php echo $entry['title'] ?></a></td>
-            		<td><?php echo date("D m-d-Y", strtotime($entry['published_at'])) ?></td>
-            		<td><?php echo $entry['published'] ?></td>
-            		<td><?php echo $entry['queue'] == 1 ? 'N' : 'C' ?></td>
-            		<td>
-                		<?php if($entry['published']): ?><a href="<?php echo $baseurl . $entry['url_path'] ?>">View</a><br/><?php endif; ?>
-            			<a href="?<?php echo http_build_query(array('action'=>'edit','id'=>$entry['id'])) ?>">Edit</a><br/>
-            			<a href="?<?php echo http_build_query(array('action'=>'delete','id'=>$entry['id'])) ?>">Delete</a>
-            		</td>
-            	</tr>
+            	<div class="col-xs-3 entry">
+                	<input class="no-display" type="checkbox" name="entry[<?php echo $entry['id'] ?>]" />
+            		<a href="?<?php echo http_build_query(array('action'=>'edit','id'=>$entry['id'])) ?>">
+                		<span class="entry-title"><?php echo $entry['title'] ?></span>
+                    </a>
+                    <img src="<?php echo $baseurl ?>gallery/thumb/<?php echo $entry['filename'] ?>" />
+            		<div class="pull-left">
+                		<?php echo date("D m-d-y", strtotime($entry['published_at'])) ?><br/>
+                        <?php echo $entry['published'] ? 'Published' : 'Queued' ?><br/>
+                        <?php echo $entry['queue'] == 1 ? 'Normal' : 'Calendar' ?>
+            		</div>
+            		<div class="pull-right">
+                		<?php foreach(explode(',', $entry['tags']) as $tag): ?>
+                		<a href="?action=showall&tag=<?php echo $tag ?>"><?php echo $tag ?></a><br/>
+                		<?php endforeach; ?>
+            		</div>
+            		<div class="clearfix"></div>
+            		<?php if($entry['published']): ?><a href="<?php echo $baseurl . $entry['url_path'] ?>">View</a>&nbsp;|&nbsp;<?php endif; ?>
+        			<a href="?<?php echo http_build_query(array('action'=>'edit','id'=>$entry['id'])) ?>">Edit</a>&nbsp;|&nbsp;
+        			<a href="?<?php echo http_build_query(array('action'=>'delete','id'=>$entry['id'])) ?>">Delete</a>
+            		<hr />
+            	</div>
+            	<?php if(++$i % 4 == 0): ?>
+            </div>
+            <div class="row selectable">
+                <?php endif; ?>
             <?php endwhile; ?>
-            </tbody>
-        </table>    
+            </div> 
+            <input name="tag" />
+            <button type="submit"><span>Add Tag</span></button>
+        </form>
         <?php
     break;
     case 'images':
+    /* !rebuild images */
     $kinds = $db->query('SELECT `path`, `id` FROM `image_kind`');
     $kinds = $db->fetchAll($kinds);
     foreach($kinds as $key => $kind) {
@@ -331,12 +394,42 @@
     }
     echo '</div>';
     break;
+    case 'tags':
+    /* !show tags */
+    $tags = $db->query('SELECT t.*, count(*) as count FROM tag t JOIN entry_tag et ON et.tag_id = t.id GROUP BY et.tag_id ORDER by name, title;');
+    ?>
+    <table>
+        <thead>
+            <th></th>
+            <th>Title</th>
+            <th>Count</th>
+            <th>Name</th>
+        </thead>
+        <tbody>
+            <?php while($tag = $tags->fetchArray()): ?>
+            <tr>
+                <td><?php echo $tag['id'] ?></td>
+                <td><a href="?action=showall&tag=<?php echo $tag['slug'] ?>"><?php echo $tag['title'] ?></a></td>
+                <td><?php echo $tag['count'] ?></td>
+                <td><?php echo $tag['name'] ? 'Name' : 'Not Name' ?></td>
+            </tr>
+            <?php endwhile; ?>
+        </tbody>
+    </table>
+    <?php
+    break;
     ?>
 <?php endswitch; ?>
 <?php endif; ?>
 <hr />
+<?php /*  ! admin home begins */ ?>
 <h1><a href="/">Entry Queue</a></h1>
-<h3><a href="/phpliteadmin.php" target="_blank">Database</a>&nbsp;|&nbsp;<a href="?action=showall">View All</a>&nbsp;|&nbsp;<a href="?action=images">Update Images</a></h3>
+<h3>
+    <a href="/phpliteadmin.php" target="_blank">Database</a>&nbsp;|&nbsp;
+    <a href="?action=showall">View All</a>&nbsp;|&nbsp;
+    <a href="?action=images">Update Images</a>&nbsp;|&nbsp;
+    <a href="?action=tags">Tags</a>
+</h3>
 <?php
 $result = $db->query("SELECT * FROM entry WHERE published IS NULL ORDER BY published_at;");
 $columns = array("id", "title", "published_at");

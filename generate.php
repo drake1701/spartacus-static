@@ -148,7 +148,7 @@ while($entry = $result->fetchArray()){
             $kinds .= "<li><a href='{$baseurl}gallery/{$image['dir']}/{$image['filename']}' title='{$image['label']}'>{$image['label']}</a></li>";
     }
     $entry['kinds'] = $kinds;
-    $tagResult = $db->query("SELECT * FROM entry_tag e JOIN tag t ON e.tag_id = t.id WHERE entry_id = {$entry['id']};");
+    $tagResult = $db->query("SELECT * FROM entry_tag e JOIN tag t ON e.tag_id = t.id WHERE entry_id = {$entry['id']} ORDER BY t.name DESC, t.title ASC;");
     $tags = "";
     $tagIds = array();
     while($tag = $tagResult->fetchArray()){
