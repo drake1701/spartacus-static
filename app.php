@@ -66,7 +66,7 @@ function tag_parse($tagName, $arg = null){
             }
             return $html;
         case "calendar":
-            $calEntry = $db->query("SELECT * FROM `entry` WHERE `queue` = 2 AND PUBLISHED = 1 ORDER BY `published_at` DESC LIMIT 1;");
+            $calEntry = $db->query("SELECT * FROM `entry` WHERE `queue` = 2 AND `published_at` < date('now') ORDER BY `published_at` DESC LIMIT 1;");
             $calEntry = $calEntry->fetchArray();
             $html = '<div class="col-md-12 col-sm-6 col-xs-12"><a href="'.$baseurl.'tag/calendar" title="Calendar Series"><span>'.$calEntry['title'].'</span><img src="'.$baseurl."gallery/thumb/".$calEntry['filename'].'" title="'.$calEntry['title'].'" /></a></div>';
             return $html;
@@ -132,36 +132,54 @@ function tag_entry($entry, $layout = null, $count, $layoutType = 'tag', $classes
     return tag_all("tag", $entry, $layout);    
 }
 
-function getMore($count = 1, $tags = null, $class='col-xs-4', $excludeIds = null) {
+function getMore($count = 1, $tagIds = null, $class='col-xs-4', $excludeIds = null) {
     global $db, $baseurl, $theme_dir;
     $tagLayout = file_get_contents($theme_dir."layout/tag.phtml");
-    $html = '<h3 class="col-xs-12">More Wallpaper</h3>';
-
-    $sql = 'SELECT e.* FROM entry e';
-    if(is_array($tags)) {
-        $sql .= ' JOIN entry_tag t ON t.entry_id = e.id WHERE t.tag_id IN(:tags)';
-        $html = '<h3 class="col-xs-12">Similar Wallpaper</h3>';
-    } else {
-        $sql .= ' WHERE 1';
-    } 
-    if(is_array($excludeIds)) {
-        $sql .= ' AND e.id NOT IN(:exclude)';
-    }
-    $sql .= ' ORDER BY RANDOM() LIMIT ' . $count . ';';
     
-    $entries = $db->prepare($sql);
-    if(is_array($tags))
-        $entries->bindParam(':tags', implode(',', $tags));
+    $html = '';
+    $head = 'SELECT e.* FROM entry e';
     if(is_array($excludeIds))
-        $entries->bindParam(':exclude', implode(',', $excludeIds));
-
-    $entries = $entries->execute();
-    $entries = $db->fetchAll($entries);
+        $tail = ' AND e.id NOT IN('.implode(',', $excludeIds).') ORDER BY RANDOM() LIMIT ' . $count . ';';
+    else
+        $tail = ' ORDER BY RANDOM() LIMIT ' . $count . ';';
     
-    if(count($entries) == 0) return '';
-    foreach($entries as $entry) {
-        $html .= tag_entry($entry, $tagLayout, 99, 'tag', $class);
+    $moreCount = 0;
+    if(is_array($tagIds)) {
+        if(count($tagIds) > 1) {
+            $tail = str_replace('LIMIT '.$count, 'LIMIT 3', $tail);
+            $count = 3;
+        }
+        $tags = $db->prepare('SELECT * FROM tag WHERE id IN('.implode(',', $tagIds).') ORDER BY name DESC, title ASC;');
+        $tags = $tags->execute();
+        
+        while($tag = $tags->fetchArray()) {
+            $sql = $head . ' JOIN entry_tag t ON t.entry_id = e.id WHERE t.tag_id = :tag' . $tail;
+            $entries = $db->prepare($sql);
+            $entries->bindValue(':tag', $tag['id']);
+
+            $entries = $entries->execute();
+            $entries = $db->fetchAll($entries);
+            
+            if(count($entries) == 0) continue;
+            $html .= '<h3 class="col-xs-12">More "'.$tag['title'].'" Wallpaper</h3>';
+            foreach($entries as $entry) {
+                $excludeIds[] = $entry['id'];
+                $tail = ' AND e.id NOT IN('.implode(',', $excludeIds).') ORDER BY RANDOM() LIMIT ' . $count . ';';
+                $html .= tag_entry($entry, $tagLayout, 99, 'tag', $class);
+                $moreCount++;
+            }
+        }
     }
+    if($moreCount == 0) {
+        $sql = $db->query($head . ' WHERE 1' . $tail);
+        $entries = $db->fetchAll($sql);
+        $html .= '<h3 class="col-xs-12">More Wallpaper</h3>';
+        foreach($entries as $entry) {
+            $html .= tag_entry($entry, $tagLayout, 99, 'tag', $class);
+            $moreCount++;
+        }        
+    }
+
     return $html;
 }
 

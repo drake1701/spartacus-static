@@ -148,14 +148,20 @@ while($entry = $result->fetchArray()){
             $kinds .= "<li><a href='{$baseurl}gallery/{$image['dir']}/{$image['filename']}' title='{$image['label']}'>{$image['label']}</a></li>";
     }
     $entry['kinds'] = $kinds;
-    $tagResult = $db->query("SELECT * FROM entry_tag e JOIN tag t ON e.tag_id = t.id WHERE entry_id = {$entry['id']} ORDER BY t.name DESC, t.title ASC;");
-    $tags = "";
+    $tagResult = $db->query("SELECT t.* FROM entry_tag e JOIN tag t ON e.tag_id = t.id WHERE entry_id = {$entry['id']} ORDER BY t.name DESC, t.title ASC;");
+    $tags = '<h4>Subjects</h4><ul>';
     $tagIds = array();
+    $switch = false;
     while($tag = $tagResult->fetchArray()){
         $tagIds[] = $tag['id'];
+        if($switch == false && $tag['name'] == 0) {
+            $switch = true;
+            $tags .= '</ul><h4>Tags</h4><ul>';
+        }
         $tags .= "<li><a href='{$baseurl}tag/{$tag['slug']}' title='{$tag['title']}'>{$tag['title']}</a></li>";
         $changedTags[] = $tag['slug'];
     }
+    $tags .= '</ul>';
     $entry['tags'] = $tags;
     
     $html = tag('content_more', getMore(6, $tagIds, 'col-sm-6 col-md-4', array($entry['id'])), $html);

@@ -11,7 +11,7 @@
         <span class="visible-xs">Desktop</span>
     </a>
 	<p class="entry-content">{{entry content}}</p>
-	<div class="row">
+	<div class="row-fluid">
 <!--
     	<div class="entry-versions col-sm-5 col-xs-12">
     		<h4>Versions</h4>
@@ -20,13 +20,10 @@
     		</ul>
     	</div>
 -->
-    	<div class="entry-tags col-sm-7">
-    		<h4>Tags</h4>
-            <ul>
+    	<div class="entry-tags pull-left">
             {{entry tags}}
-            </ul>
     	</div>
-    	<div class="social-media col-sm-5">
+    	<div class="social-media pull-right">
     		<h4>Share</h4>
             <ul>
                 <li><a class="facebook" href="https://www.facebook.com/sharer/sharer.php?u={{entry url}}&title={{entry title}}">Share</a></li>
@@ -36,6 +33,7 @@
             </ul>
     	</div>
 	</div>
+	<div class="clearfix"></div>
     <h4>Wallpaper Types</h4>
 	<div class="entry-images">
         {{entry image_gallery}}	
