@@ -21,13 +21,63 @@
             var check = jQuery(this).parent().find('input[type=checkbox]');
             check.prop('checked', check.prop('checked') ? '' : 'checked');
         });
+		var availableTags = [
+			<?php 
+    			$tags = $db->query('SELECT slug FROM tag t;'); 
+    			while($tag = $tags->fetchArray()) {
+        			echo '"'.$tag['slug'].'", ';
+    			}
+			?>
+		];
+		function split( val ) {
+			return val.split( /,\s*/ );
+		}
+		function extractLast( term ) {
+			return split( term ).pop();
+		}
+
+		$( ".tags" )
+			// don't navigate away from the field on tab when selecting an item
+			.bind( "keydown", function( event ) {
+				if ( event.keyCode === $.ui.keyCode.TAB &&
+						$( this ).autocomplete( "instance" ).menu.active ) {
+					event.preventDefault();
+				}
+			})
+			.autocomplete({
+				minLength: 0,
+				source: function( request, response ) {
+					// delegate back to autocomplete, but extract the last term
+					response( $.ui.autocomplete.filter(
+						availableTags, extractLast( request.term ) ) );
+				},
+				focus: function() {
+					// prevent value inserted on focus
+					return false;
+				},
+				select: function( event, ui ) {
+					var terms = split( this.value );
+					// remove the current input
+					terms.pop();
+					// add the selected item
+					terms.push( ui.item.value );
+					// add placeholder to get the comma-and-space at the end
+					terms.push( "" );
+					this.value = terms.join( ", " );
+					return false;
+				},
+				appendTo: '#tags-element'
+			});        
     });
     </script>
     <link href="<?php echo $baseurl ?>css/global.css" media="screen" rel="stylesheet" type="text/css" />
     <link href="<?php echo $baseurl ?>css/bootstrap.min.css" media="screen" rel="stylesheet" type="text/css" />
     <link href="<?php echo $baseurl ?>css/custom.css" media="screen" rel="stylesheet" type="text/css" />
     <style type="text/css">
-        .ui-selected { background-color: #4A5404; }
+        .ui-selected, .not-name { background-color: #4A5404; }
+        .ui-helper-hidden-accessible {display:none;}
+        .ui-autocomplete { background-color: #282F02; }
+        #tags-element {width:333px;}
     </style>
 </head>
 <body>
@@ -78,7 +128,7 @@
         </select></dd>
         <dt id="tags-label"><label for="tags" class="required">tags:</label></dt>
         <dd id="tags-element">
-            <textarea name="tags" id="tags" cols="40" rows="5"><?php echo $entry['tags'] ?></textarea>
+            <textarea class="tags" name="tags" id="tags" cols="40" rows="5"><?php echo $entry['tags'] ?></textarea>
         </dd>
         <dt id="url_path-label"><label for="url_path" class="required">url path:</label></dt>
         <dd id="url_path-element">
@@ -228,47 +278,6 @@
             }
         }
     echo '<h2><em>Reordering Successful.</em></h2>';
-    break; 
-    case 'addtag':
-    /* !mass add tags */
-        if(empty($_POST['tag'])) {
-            echo "<h3>No tag sent</h3>";
-            break;
-        }
-        if(!is_array($_POST['entry'])){
-            echo "<h3>No entries selected</h3>";
-            break;
-        }
-		$slug = trim(str_replace(' ', '-', strtolower($_POST['tag'])));
-		$tag = $db->prepare("SELECT * FROM tag WHERE slug = :slug;");
-		$tag->bindParam(":slug", $slug);
-		$tag = $tag->execute();
-		$tag = $tag->fetchArray();
-		if($tag['id'] == false){
-		    $ins = $db->prepare("INSERT INTO tag (title, slug) VALUES (:title, :slug);");
-		    $ins->bindValue(":title", codeToName($slug));
-		    $ins->bindValue(":slug", $slug);
-		    execute($ins);
-            echo "<h3><em>Created new tag '".codeToName($slug)."'.</em></h3>";
-		    $tag['id'] = $db->lastInsertRowID();
-		}
-		foreach($_POST['entry'] as $entryId => $flag) {
-    		$linkResult = $db->prepare("SELECT * FROM entry_tag e WHERE entry_id = :entry_id AND tag_id = :tag_id;");
-    		$linkResult->bindParam(":entry_id", $entryId);
-    		$linkResult->bindParam(":tag_id", $tag['id']);
-    		$linkResult = $linkResult->execute();
-    		$link = $linkResult->fetchArray();
-    		if($link['id'] == false) {
-    		    $ins = $db->prepare("INSERT INTO entry_tag (entry_id, tag_id) VALUES (:entry_id, :tag_id);");
-    		    $ins->bindValue(":tag_id", $tag['id']);
-    		    $ins->bindValue(":entry_id", $entryId);
-    		    execute($ins);
-    		    $flag = $db->prepare("UPDATE entry SET published = NULL WHERE id = :id;");
-    		    $flag->bindParam(':id', $entryId);
-    		    execute($flag);
-    		    echo "<p>Added $entryId to $slug</p>";
-    		}    		
-		}
     break;
     case 'delete':
     /* !deleting */
@@ -281,6 +290,45 @@
     }
     break;
     case 'showall':
+ 
+    case 'addtag':
+        /* !mass add tags */
+        if(!empty($_POST['tags']) && is_array($_POST['entry'])) {
+            $slugs = explode(',', $_POST['tags']);
+            foreach($slugs as $slug) {
+        		$slug = str_replace(' ', '-', trim(strtolower($slug)));
+        		if($slug == '') continue;
+        		$tag = $db->prepare("SELECT * FROM tag WHERE slug = :slug;");
+        		$tag->bindParam(":slug", $slug);
+        		$tag = $tag->execute();
+        		$tag = $tag->fetchArray();
+        		if($tag['id'] == false){
+        		    $ins = $db->prepare("INSERT INTO tag (title, slug) VALUES (:title, :slug);");
+        		    $ins->bindValue(":title", codeToName($slug));
+        		    $ins->bindValue(":slug", $slug);
+        		    execute($ins);
+                    echo "<h3><em>Created new tag '".codeToName($slug)."'.</em></h3>";
+        		    $tag['id'] = $db->lastInsertRowID();
+        		}
+        		foreach($_POST['entry'] as $entryId => $flag) {
+            		$linkResult = $db->prepare("SELECT * FROM entry_tag e WHERE entry_id = :entry_id AND tag_id = :tag_id;");
+            		$linkResult->bindParam(":entry_id", $entryId);
+            		$linkResult->bindParam(":tag_id", $tag['id']);
+            		$linkResult = $linkResult->execute();
+            		$link = $linkResult->fetchArray();
+            		if($link['id'] == false) {
+            		    $ins = $db->prepare("INSERT INTO entry_tag (entry_id, tag_id) VALUES (:entry_id, :tag_id);");
+            		    $ins->bindValue(":tag_id", $tag['id']);
+            		    $ins->bindValue(":entry_id", $entryId);
+            		    execute($ins);
+            		    $flag = $db->prepare("UPDATE entry SET published = NULL WHERE id = :id;");
+            		    $flag->bindParam(':id', $entryId);
+            		    execute($flag);
+            		    echo "<p>Added $entryId to $slug</p>";
+            		}    		
+        		}
+    		}
+        }
         /* !show all */
         echo '<h1><a href="/">All Posts</a></h1>';
         $sql = 'SELECT e.*, group_concat(t.slug) AS tags FROM entry e JOIN entry_tag et ON et.entry_id = e.id JOIN tag t ON t.id = et.tag_id';
@@ -290,8 +338,8 @@
         $sql .= ' GROUP BY et.entry_id ORDER BY published_at DESC;';
         $result = $db->query($sql);
         ?>
-        <form action="?action=addtag" method="post">
-            <div class="row">
+        <form action="?<?php echo http_build_query($_GET) ?>" method="post">
+            <div class="row entry-grid">
             <?php $i = 0; ?>
             <?php while($entry = $result->fetchArray()): ?>
             	<div class="col-xs-3 entry">
@@ -318,11 +366,14 @@
             	</div>
             	<?php if(++$i % 4 == 0): ?>
             </div>
-            <div class="row selectable">
+            <div class="row">
                 <?php endif; ?>
             <?php endwhile; ?>
             </div> 
-            <input name="tag" />
+            <dt id="tags-label"><label for="tags" class="required">tags:</label></dt>
+            <dd id="tags-element">
+                <textarea class="tags" name="tags" id="tags" cols="40" rows="2"></textarea>
+            </dd>
             <button type="submit"><span>Add Tag</span></button>
         </form>
         <?php
@@ -396,7 +447,14 @@
     break;
     case 'tags':
     /* !show tags */
-    $tags = $db->query('SELECT t.*, count(*) as count FROM tag t JOIN entry_tag et ON et.tag_id = t.id GROUP BY et.tag_id ORDER by name, title;');
+    if(!empty($_POST['tag_id']) && isset($_POST['name'])) {
+        $sql = $db->prepare('UPDATE tag SET name = :name WHERE id = :id;');
+        $sql->bindParam(':id', $_POST['tag_id']);
+        $sql->bindParam(':name', $_POST['name']);
+        execute($sql);
+        echo '<h3>Set tag ID '.$_POST['tag_id'].' to '.($_POST['name'] ? 'name' : 'not name') .'.</h3>';
+    }
+    $tags = $db->query('SELECT t.*, count(*) as count FROM tag t JOIN entry_tag et ON et.tag_id = t.id GROUP BY et.tag_id ORDER by et.tag_id DESC;');
     ?>
     <table>
         <thead>
@@ -407,11 +465,17 @@
         </thead>
         <tbody>
             <?php while($tag = $tags->fetchArray()): ?>
-            <tr>
+            <tr class="<?php echo $tag['name'] ? 'name' : 'not-name' ?>">
+                <form action="?<?php echo http_build_query($_GET) ?>" method="post">
                 <td><?php echo $tag['id'] ?></td>
                 <td><a href="?action=showall&tag=<?php echo $tag['slug'] ?>"><?php echo $tag['title'] ?></a></td>
                 <td><?php echo $tag['count'] ?></td>
-                <td><?php echo $tag['name'] ? 'Name' : 'Not Name' ?></td>
+                <td><?php echo $tag['name'] ? 'Name' : 'Not Name' ?>
+                    <input type="hidden" value="<?php echo $tag['id'] ?>" name="tag_id" />
+                    <input type="hidden" value="<?php echo $tag['name'] ? '0' : '1' ?>" name="name" />
+                    <input class="pull-right" type="submit" value="switch" />
+                </td>
+                </form>
             </tr>
             <?php endwhile; ?>
         </tbody>

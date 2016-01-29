@@ -334,8 +334,9 @@ font-weight:400;
 	color:#A4B070;
 }
 a {
-color:#DAE3A8;
-text-decoration:none;
+    color:#DAE3A8;
+    text-decoration:none;
+    cursor: pointer;
 }
 
 a:hover,a:active,a:focus {
