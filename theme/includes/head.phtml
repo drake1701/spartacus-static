@@ -18,6 +18,16 @@
         	if(window.getComputedStyle == undefined || window.getComputedStyle(document.body).backgroundBlendMode == undefined)
         		jQuery('.header-banner.banner-border').css('background-image', 'none');
         });
+        function share() {
+            var width = 626;
+            var height = 436;
+            var yourPageToShare = location.href;
+            var sharerUrl = 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(yourPageToShare);
+            var l = window.screenX + (window.outerWidth - width) / 2;
+            var t = window.screenY + (window.outerHeight - height) / 2;
+            var winProps = ['width='+width,'height='+height,'left='+l,'top='+t,'status=no','resizable=yes','toolbar=no','menubar=no','scrollbars=yes'].join(',');
+            var win = window.open(sharerUrl, 'fbShareWin', winProps);
+        }
     //]]>
     </script>
 </head>
