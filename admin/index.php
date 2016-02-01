@@ -468,7 +468,7 @@
             <tr class="<?php echo $tag['name'] ? 'name' : 'not-name' ?>">
                 <form action="?<?php echo http_build_query($_GET) ?>" method="post">
                 <td><?php echo $tag['id'] ?></td>
-                <td><a href="?action=showall&tag=<?php echo $tag['slug'] ?>"><?php echo $tag['title'] ?></a></td>
+                <td><a href="?action=showall&tag=<?php echo $tag['slug'] ?>" target="_blank"><?php echo $tag['title'] ?></a></td>
                 <td><?php echo $tag['count'] ?></td>
                 <td><?php echo $tag['name'] ? 'Name' : 'Not Name' ?>
                     <input type="hidden" value="<?php echo $tag['id'] ?>" name="tag_id" />
