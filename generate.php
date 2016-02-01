@@ -110,7 +110,6 @@ while($entry = $result->fetchArray()){
         $entry['prev_link'] = '<a href="'.$baseurl.$prev['url_path'].'" title="'.$prev['title'].'"><span>&laquo; Previous Wallpaper</span></a>';
     }
     
-    
     $next = $db->query('SELECT e.* FROM entry e JOIN entry o ON o.id = "'.$entry['id'].'" WHERE e.published_at > o.published_at ORDER BY e.published_at ASC LIMIT 1;')->fetchArray();
     if(isset($next['id'])) {
         $entry['next'] = '<a href="'.$baseurl.$next['url_path'].'" title="'.$next['title'].'"><span>Next</span><img src="'.$baseurl.'gallery/preview/'.$next['filename'].'" alt="'.$next['title'].'" /><span>'.$next['title'].'</span></a>';
@@ -118,6 +117,7 @@ while($entry = $result->fetchArray()){
     }
     
     $entry['published_at'] = format_date($entry['published_at']);
+    $entry['preview'] = $baseurl."gallery/preview/".$entry['filename'];
     
     $imageResult = $db->query("SELECT i.path as filename, k.path as dir, k.label, k.position, k.mobile FROM image i JOIN image_kind k ON i.kind = k.id WHERE entry_id = {$entry['id']} AND exclude = 0 ORDER BY position ASC;");
     $images = array();
@@ -128,9 +128,9 @@ while($entry = $result->fetchArray()){
     $hasMobile = false;
     foreach($images as $image){
         $imageUrl = $baseurl."gallery/".$image['dir']."/".$image['filename'];
-        if($image['position'] == 1){
+        if($image['position'] == 1)
             $entry['first_image'] = $imageUrl;
-        }
+
         if($image['mobile']) {
             $hasMobile = true;
             $class = 'col-xs-6 col-sm-2';
