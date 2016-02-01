@@ -370,11 +370,11 @@
                 <?php endif; ?>
             <?php endwhile; ?>
             </div> 
+            <button type="submit"><span>Add Tag</span></button>
             <dt id="tags-label"><label for="tags" class="required">tags:</label></dt>
             <dd id="tags-element">
                 <textarea class="tags" name="tags" id="tags" cols="40" rows="2"></textarea>
             </dd>
-            <button type="submit"><span>Add Tag</span></button>
         </form>
         <?php
     break;
