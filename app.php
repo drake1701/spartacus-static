@@ -29,7 +29,7 @@ function tag_all($tagName, $object, $html){
 }
 
 function tags_parse($html){
-    preg_match_all("#{{(\S*)\s*(\S*)}}#", $html, $tags);
+    preg_match_all("#{{(\S*)[ ]*(\S*)}}#", $html, $tags);
     foreach($tags[0] as $i => $tag){
         $tagContent = tag_parse($tags[1][$i], $tags[2][$i]);
         $html = tag($tag, $tagContent, $html);
@@ -62,11 +62,12 @@ function tag_parse($tagName, $arg = null){
                 $thumb->bindParam(':tag_id', $tag['id']);
                 $thumb = $thumb->execute()->fetchArray();
                 $thumb['title'] = $tag['title'];
+                $thumb['url_path'] = $tag['slug'];
                 $html .= tag_entry($thumb, null, 99, 'tag', 'col-md-12 col-sm-4 col-xs-12');
             }
             return $html;
         case "calendar":
-            $calEntry = $db->query("SELECT * FROM `entry` WHERE `queue` = 2 AND `published_at` < date('now') ORDER BY `published_at` DESC LIMIT 1;");
+            $calEntry = $db->query("SELECT * FROM `entry` WHERE `queue` = 2 AND `published_at` <= date('now') ORDER BY `published_at` DESC LIMIT 1;");
             $calEntry = $calEntry->fetchArray();
             $html = '<div class="col-md-12 col-sm-6 col-xs-12"><a href="'.$baseurl.'tag/calendar" title="Calendar Series"><span>'.$calEntry['title'].'</span><img src="'.$baseurl."gallery/thumb/".$calEntry['filename'].'" title="'.$calEntry['title'].'" /></a></div>';
             return $html;
