@@ -62,7 +62,7 @@ function tag_parse($tagName, $arg = null){
                 $thumb->bindParam(':tag_id', $tag['id']);
                 $thumb = $thumb->execute()->fetchArray();
                 $thumb['title'] = $tag['title'];
-                $thumb['url_path'] = $tag['slug'];
+                $thumb['url_path'] = 'tag/' . $tag['slug'];
                 $html .= tag_entry($thumb, null, 99, 'tag', 'col-md-12 col-sm-4 col-xs-12');
             }
             return $html;
