@@ -103,19 +103,7 @@ while($entry = $result->fetchArray()){
     
     $html = get_layout();
     $html = tag("title", $entry['title']." | ", $html);
-    
-    $prev = $db->query('SELECT e.* FROM entry e JOIN entry o ON o.id = "'.$entry['id'].'" WHERE e.published_at < o.published_at ORDER BY e.published_at DESC LIMIT 1;')->fetchArray();
-    if(isset($prev['id'])) {
-        $entry['prev'] = '<a href="'.$baseurl.$prev['url_path'].'" title="'.$prev['title'].'"><span>Previous</span><img src="'.$baseurl.'gallery/preview/'.$prev['filename'].'" alt="'.$prev['title'].'" /><span>'.$prev['title'].'</span></a>';
-        $entry['prev_link'] = '<a href="'.$baseurl.$prev['url_path'].'" title="'.$prev['title'].'"><span>&laquo; Previous Wallpaper</span></a>';
-    }
-    
-    $next = $db->query('SELECT e.* FROM entry e JOIN entry o ON o.id = "'.$entry['id'].'" WHERE e.published_at > o.published_at ORDER BY e.published_at ASC LIMIT 1;')->fetchArray();
-    if(isset($next['id'])) {
-        $entry['next'] = '<a href="'.$baseurl.$next['url_path'].'" title="'.$next['title'].'"><span>Next</span><img src="'.$baseurl.'gallery/preview/'.$next['filename'].'" alt="'.$next['title'].'" /><span>'.$next['title'].'</span></a>';
-        $entry['next_link'] = '<a href="'.$baseurl.$next['url_path'].'" title="'.$next['title'].'"><span>Next Wallpaper &raquo;</span></a>';
-    }
-    
+        
     $entry['published_at'] = format_date($entry['published_at']);
     $entry['preview'] = $baseurl."gallery/preview/".$entry['filename'];
     
@@ -164,7 +152,22 @@ while($entry = $result->fetchArray()){
     $tags .= '</ul>';
     $entry['tags'] = $tags;
     
-    $html = tag('content_more', getMore(6, $tagIds, 'col-sm-6 col-md-4', array($entry['id'])), $html);
+    $excludeIds = array($entry['id']);
+    $prev = $db->query('SELECT e.* FROM entry e JOIN entry o ON o.id = "'.$entry['id'].'" WHERE e.published_at < o.published_at ORDER BY e.published_at DESC LIMIT 1;')->fetchArray();
+    if(isset($prev['id'])) {
+        $entry['prev'] = '<a href="'.$baseurl.$prev['url_path'].'" title="'.$prev['title'].'"><span>Previous</span><img src="'.$baseurl.'gallery/preview/'.$prev['filename'].'" alt="'.$prev['title'].'" /><span>'.$prev['title'].'</span></a>';
+        $entry['prev_link'] = '<a href="'.$baseurl.$prev['url_path'].'" title="'.$prev['title'].'"><span>&laquo; Previous Wallpaper</span></a>';
+        $excludeIds[] = $prev['id'];
+    }
+    
+    $next = $db->query('SELECT e.* FROM entry e JOIN entry o ON o.id = "'.$entry['id'].'" WHERE e.published_at > o.published_at ORDER BY e.published_at ASC LIMIT 1;')->fetchArray();
+    if(isset($next['id'])) {
+        $entry['next'] = '<a href="'.$baseurl.$next['url_path'].'" title="'.$next['title'].'"><span>Next</span><img src="'.$baseurl.'gallery/preview/'.$next['filename'].'" alt="'.$next['title'].'" /><span>'.$next['title'].'</span></a>';
+        $entry['next_link'] = '<a href="'.$baseurl.$next['url_path'].'" title="'.$next['title'].'"><span>Next Wallpaper &raquo;</span></a>';
+        $excludeIds[] = $next['id'];
+    }
+    
+    $html = tag('content_more', getMore(6, $tagIds, 'col-sm-6 col-md-4', $excludeIds), $html);
     $html = tag("head", tag_all("entry", $entry, file_get_contents($theme_dir."layout/entry_head.phtml")), $html);
     $html = tag("content", tag_all("entry", $entry, file_get_contents($theme_dir."layout/entry.phtml")), $html);
     
