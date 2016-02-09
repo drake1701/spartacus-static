@@ -6,7 +6,7 @@
 require_once("app.php");
 
 if(strpos($base_dir, 'development'))
-    $db->query("UPDATE entry SET published = null WHERE published IS NOT NULL ORDER BY id DESC LIMIT 5;");
+    $db->query("UPDATE entry SET published = null WHERE published IS NOT NULL ORDER BY published_at DESC LIMIT 10;");
 
 slog('------------------');
 slog('Start Regeneration');
@@ -113,20 +113,25 @@ while($entry = $result->fetchArray()){
         $images[$image['dir']] = $image;
     }
     $imageGallery = '';
-    $hasMobile = false;
+    $mobile = 0;
     foreach($images as $image){
         $imageUrl = $baseurl."gallery/".$image['dir']."/".$image['filename'];
         if($image['position'] == 1)
             $entry['first_image'] = $imageUrl;
 
         if($image['mobile']) {
-            $hasMobile = true;
-            $class = 'col-xs-6 col-sm-2';
+            if($mobile%2 == 0)
+                $imageGallery .= '<div class="image-box col-xs-12 col-sm-4">';
+            $class = 'col-xs-6';
         } else {
             $class = 'col-xs-12 col-sm-4 hidden-xs';
         }
         $imageGallery .= '<a href="'.$imageUrl.'" class="image '.$class.'" title="'.$entry['title'].'"><img src="'.$imageUrl.'" alt="'.$entry['title'].'"/><span>'.$image['label'].'</span></a>';
+        if($image['mobile'] && $mobile++%2 == 1)
+            $imageGallery .= '</div>';
     }
+    if($mobile%2 == 1)
+        $imageGallery .= '</div>';
     $entry['image_gallery'] = $imageGallery;
         
     $entry['url'] = $baseurl.$entry['url_path'];
@@ -167,7 +172,7 @@ while($entry = $result->fetchArray()){
         $excludeIds[] = $next['id'];
     }
     
-    $html = tag('content_more', getMore(6, $tagIds, 'col-sm-6 col-md-4', $excludeIds), $html);
+    $html = tag('content_more', getMore(6, $tagIds, 'col-sm-4', $excludeIds), $html);
     $html = tag("head", tag_all("entry", $entry, file_get_contents($theme_dir."layout/entry_head.phtml")), $html);
     $html = tag("content", tag_all("entry", $entry, file_get_contents($theme_dir."layout/entry.phtml")), $html);
     
@@ -201,20 +206,17 @@ while($entry = $entryResult->fetchArray()){
             $mobileImages .= '<a href="'.$entry['url_path'].'" class="image col-xs-6" title="'.$entry['title'].'"><img src="'.$mobileImage.'" alt="'.$entry['title'].'"/></a>';
         }
     }
-    $deskEntries++;
+    
+    if($deskEntries++ > 10) break;
+    
     if($hasMobile) {
         $entry['mobile_images'] = $mobileImages . '</div>';
-        if($deskEntries > 10)
-            $entry['mobile'] = 'visible-xs';
-        else
-            $entry['mobile'] = ''; 
+        $entry['mobile'] = 'hidden-xs';
         $mobileEntries++;
     } else {
-        if($deskEntries > 10) continue;
-        $entry['mobile'] = 'hidden-xs';
+        $entry['mobile'] = '';
     }
     
-    if($deskEntries > 10 && $mobileEntries > 10) break;
     $homeEntryIds[] = $entry['id'];
     if($deskEntries == 1) {
         $content = tag("entry_first", tag_all("entry", $entry, $entryLayout), $content);

@@ -113,19 +113,23 @@ function tag_entry($entry, $layout = null, $count, $layoutType = 'tag', $classes
     $images = $db->fetchAll($imageResult);
     $mobileImages = '<div class="entry-images visible-xs">';
     $hasMobile = false;
+    $i = 0;
     foreach($images as $image) {
         if($image['dir'] == $preview){
             $entry['thumb'] = $baseurl."gallery/".$image['dir']."/".$image['file'];
         } else {
             $hasMobile = true;
             $mobileImage = $baseurl."gallery/".$image['dir']."/".$image['file'];
+            if($i%2 == 0)
+                $mobileImages .= '<div class="image-box col-xs-12 col-sm-4">';
             $mobileImages .= '<a href="'.$entry['slug'].'" class="image col-xs-6" title="'.$entry['title'].'"><img src="'.$mobileImage.'" alt="'.$entry['title'].'"/></a>';
+            if($i++%2 == 1)
+                $mobileImages .= '</div>';
         }
     }
     if($hasMobile) {
         $entry['mobile_images'] = $mobileImages . '</div>';
-    } else {
-        $entry['classes'] .= ' hidden-xs';
+        $entry['mobile'] = 'hidden-xs';
     }
     if(!isset($entry['date']))
         $entry['date'] = format_date($entry['published_at'], true);
@@ -174,11 +178,13 @@ function getMore($count = 1, $tagIds = null, $class='col-xs-4', $excludeIds = nu
     if($moreCount == 0) {
         $sql = $db->query($head . ' WHERE 1' . $tail);
         $entries = $db->fetchAll($sql);
+        $html .= '<div class="row">';
         $html .= '<h3 class="col-xs-12">More Wallpaper</h3>';
         foreach($entries as $entry) {
             $html .= tag_entry($entry, $tagLayout, 99, 'tag', $class);
             $moreCount++;
-        }        
+        }
+        $html .= '</div>';
     }
 
     return $html;

@@ -49,7 +49,9 @@ padding-bottom: 5px;
     font-weight: normal;
     margin:20px 0 5px;
 }
-
+.entry-images .image-box {
+    padding:0 0 10px;
+}
 .entry-images .image {
     padding: 10px 5px;
 }
@@ -91,22 +93,23 @@ padding-bottom: 5px;
     height: 160px;
     margin: -10px;
 }
-.ad-top,.ad-middle,.ad-bottom,.ad-sidebar {
+.ad {
     overflow:hidden;
+    background:url(../images/no-ad.png) 50% 50%;
+    min-height: 90px;
 }
-
-.ad-top {
+.ad .top {
 	margin: -14px -15px 10px;
 }
-.ad-middle{
+.ad .middle{
 	margin: -20px -15px 20px;
 }
-.ad-bottom {
+.ad .bottom {
 	margin:  50px -15px 0px;
 }
-.ad-sidebar {
-    background: #121603;
+#sidebar .ad {
     padding: 0 0 15px;
+    min-height:450px;
 }
 
 .logo {
@@ -260,6 +263,9 @@ overflow:auto;
 .entry-grid .entry-image img {
     width: 100%;
 }
+#main .random-entries h3 {
+    margin: 30px 0 -10px;
+}
 
 .top-nav {
 bottom:2px;
@@ -366,11 +372,11 @@ td {
 	border: 1px solid #757d56;
 	padding: 1px 5px;
 }
-.col-xs-6:nth-of-type(even) {
-    padding-left:7px;
+.entry-images .col-xs-6:nth-of-type(even) {
+    padding-left:5px;
 }
-.col-xs-6:nth-of-type(odd) {
-    padding-right:7px;
+.entry-images .col-xs-6:nth-of-type(odd) {
+    padding-right:5px;
 }
 @media screen and (max-width: 990px) {
     .sidebar ul:not(.social-contact):not(.years),
@@ -382,7 +388,7 @@ td {
     .sidebar .years {
     	width:50%;
     }  
-    .ad-sidebar.long {
+    #sidebar .ad.long {
         display: none;
     }
 }
@@ -418,7 +424,7 @@ td {
     	column-count: 2;
     }
     .sidebar .years {
-    	width:70%;
+    	width:100%;
     }
 }
 @media screen and (max-width: 475px) {
