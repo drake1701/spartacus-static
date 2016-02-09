@@ -162,7 +162,7 @@ function getMore($count = 1, $tagIds = null, $class='col-xs-4', $excludeIds = nu
             $entries = $db->fetchAll($entries);
             
             if(count($entries) == 0) continue;
-            $html .= '<h3 class="col-xs-12">More "'.$tag['title'].'" Wallpaper</h3>';
+            $html .= '<h3 class="col-xs-12">More <a href="'.$baseurl.'tag/'.$tag['slug'].'" title="'.$tag['title'].'">'.$tag['title'].'</a> Wallpaper</h3>';
             foreach($entries as $entry) {
                 $excludeIds[] = $entry['id'];
                 $tail = ' AND e.id NOT IN('.implode(',', $excludeIds).') ORDER BY RANDOM() LIMIT ' . $count . ';';
