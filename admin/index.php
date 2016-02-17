@@ -14,8 +14,12 @@
     <script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
     <script type="text/javascript">
     jQuery(function() {
-        jQuery( "#sortable" ).sortable();
-        jQuery( "#sortable" ).disableSelection();
+        jQuery( ".calendar" ).sortable({
+            stop: function() {
+                jQuery('#calendar').submit();
+            }
+        });
+        jQuery( ".calendar" ).disableSelection();
         jQuery('.entry img').click(function(){
             jQuery(this).parent().toggleClass('ui-selected');
             var check = jQuery(this).parent().find('input[type=checkbox]');
@@ -67,7 +71,17 @@
 					return false;
 				},
 				appendTo: '#tags-element'
-			});        
+			});
+    });
+    jQuery(window).load(function(){
+        var height = 0;
+        jQuery('.calendar > div').each(function(){
+            if(jQuery(this).height() > height) {
+                height = jQuery(this).height();
+            }
+        });
+        jQuery('.calendar > div').height('25px');
+        jQuery('.calendar > div:gt(6)').height(height);        
     });
     </script>
     <link href="<?php echo $baseurl ?>css/global.css" media="screen" rel="stylesheet" type="text/css" />
@@ -78,6 +92,28 @@
         .ui-helper-hidden-accessible {display:none;}
         .ui-autocomplete { background-color: #282F02; }
         #tags-element {width:333px;}
+        .calendar {
+            clear:both;
+            overflow:auto;
+            width:100%;
+            border-bottom: 1px solid #A4B070;
+        }
+        .calendar > div {
+            width: 14.285714286%;
+            vertical-align: top;
+            float:left;
+            border: 1px solid #A4B070;
+            border-width: 1px 1px 0 0;
+            background: #1B2000;
+            padding: 0 5px;
+        }
+        .calendar > div:nth-child(7n+1) {
+            clear:left;
+            border-left: 1px solid #A4B070;
+        }
+        .calendar .entry-title {
+            font-size:.9em;
+        }
     </style>
 </head>
 <body>
@@ -496,32 +532,65 @@
 </h3>
 <?php
 $result = $db->query("SELECT * FROM entry WHERE published IS NULL ORDER BY published_at;");
-$columns = array("id", "title", "published_at");
+
+$sql = 'SELECT published_at FROM entry ORDER BY published_at DESC LIMIT 1;';
+$result = $db->query($sql);
+$last = $result->fetchArray();
+$last = new DateTime($last['published_at']);
+
+$now = new DateTime();
+$marker = new DateTime();
+$marker = $marker->sub(new DateInterval('P' . $now->format('w') . 'D'));
+$increment = new DateInterval('P1D');
+$month = $marker->format('m');
+
 ?>
-<form action="?<?php echo http_build_query(array('action' => "reorder")); ?>" method="post">
-<table style="width:auto;">
-	<thead>
-		<tr>
-			<td>ID</td>
-			<td>Title</td>
-			<td>Publish Date</td>
-			<td>Actions</td>
-		</tr>
-	</thead>
-	<tbody id="sortable">
-    <?php while($entry = $result->fetchArray()): ?>
-    	<tr>
-    		<td><input type="hidden" name="entry_id[<?php echo $entry['queue'] ?>][]" value="<?php echo $entry['id'] ?>" /><?php echo $entry['id'] ?></td>
-    		<td><?php echo $entry['title'] ?></td>
-    		<td><?php echo date("l, M jS, Y", strtotime($entry['published_at'])) ?></td>
-    		<td>
+<form id="calendar" action="?<?php echo http_build_query(array('action' => "reorder")); ?>" method="post">
+<div class="calendar">
+	<div>Su</div>
+	<div>M</div>
+	<div>Tu</div>
+	<div>W</div>
+	<div>Th</div>
+	<div>F</div>
+	<div>Sa</div>
+	<?php while($marker < $last): ?>
+	<?php for($day = 0; $day < 7; $day++): ?>
+	    <div>
+    	    <?php if($day == 0): ?>
+    	    <?php echo $marker->format('F d'); ?><br/>
+            <?php endif; ?>
+    	    <?php 
+        	    $entry = $db->prepare('SELECT e.*, group_concat(t.slug) AS tags FROM entry e JOIN entry_tag et ON et.entry_id = e.id JOIN tag t ON t.id = et.tag_id WHERE date(e.published_at) = date(:published_at) GROUP BY et.entry_id LIMIT 1');
+        	    $entry->bindValue(':published_at', $marker->format('Y-m-d'));
+                $entry = $entry->execute();
+                $entry = $entry->fetchArray();
+            ?>
+            <?php if($entry['id']): ?>
+                <?php if(new DateTime($entry['published_at']) > $now): ?>
+            	<input type="hidden" name="entry_id[<?php echo $entry['queue'] ?>][]" value="<?php echo $entry['id'] ?>" />
+            	<?php endif; ?>
+                <img src="<?php echo $baseurl ?>gallery/thumb/<?php echo $entry['filename'] ?>" />
+        		<a href="?<?php echo http_build_query(array('action'=>'edit','id'=>$entry['id'])) ?>">
+            		<span class="entry-title"><?php echo $entry['title'] ?></span>
+                </a>
+        		<div class="clearfix"></div>
+                <?php echo $entry['queue'] == 1 ? 'Normal' : 'Calendar' ?><br/>
+        		<?php foreach(explode(',', $entry['tags']) as $tag): ?>
+        		<a href="?action=showall&tag=<?php echo $tag ?>"><?php echo $tag ?></a><br/>
+        		<?php endforeach; ?>
+        		<div class="clearfix"></div>
+        		<?php if($entry['published']): ?><a href="<?php echo $baseurl . $entry['url_path'] ?>">View</a>&nbsp;|&nbsp;<?php endif; ?>
     			<a href="?<?php echo http_build_query(array('action'=>'edit','id'=>$entry['id'])) ?>">Edit</a>&nbsp;|&nbsp;
     			<a href="?<?php echo http_build_query(array('action'=>'delete','id'=>$entry['id'])) ?>">Delete</a>
-    		</td>
-    	</tr>
-    <?php endwhile; ?>
-	</tbody>
-</table>
+            <?php else: ?>
+                &nbsp;
+    	    <?php endif; ?>
+	    </div>
+	    <?php $marker->add($increment); ?>
+	<?php endfor; ?>
+	<?php endwhile; ?>
+</div>
 <button type="submit"><span>Save</span></button>
 </form>
 
