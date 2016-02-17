@@ -17,7 +17,8 @@
         jQuery( ".calendar" ).sortable({
             stop: function() {
                 jQuery('#calendar').submit();
-            }
+            },
+            items:'.item'
         });
         jQuery( ".calendar" ).disableSelection();
         jQuery('.entry img').click(function(){
@@ -81,7 +82,11 @@
             }
         });
         jQuery('.calendar > div').height('25px');
-        jQuery('.calendar > div:gt(6)').height(height);        
+        jQuery('.calendar > div:gt(6)').height(height);  
+        jQuery('.calendar > div:nth-child(7n+1)').css({
+            clear:'left',
+            borderLeft: '1px solid #A4B070'
+        });
     });
     </script>
     <link href="<?php echo $baseurl ?>css/global.css" media="screen" rel="stylesheet" type="text/css" />
@@ -106,10 +111,6 @@
             border-width: 1px 1px 0 0;
             background: #1B2000;
             padding: 0 5px;
-        }
-        .calendar > div:nth-child(7n+1) {
-            clear:left;
-            border-left: 1px solid #A4B070;
         }
         .calendar .entry-title {
             font-size:.9em;
@@ -228,7 +229,7 @@
     // !handle tags
 	// Current & New
 	foreach($slugs as $slugKey => $slug){
-		$slug = str_replace(' ', '-', trim(strtolower($slug)));
+		$slug = trim(str_replace(' ', '-', strtolower($slug)));
 		$slugs[$slugKey] = $slug;
 		if($slug == '') continue;
 		$tag = $db->prepare("SELECT * FROM tag WHERE slug = :slug;");
@@ -556,16 +557,16 @@ $month = $marker->format('m');
 	<div>Sa</div>
 	<?php while($marker < $last): ?>
 	<?php for($day = 0; $day < 7; $day++): ?>
-	    <div>
+	    <?php 
+    	    $entry = $db->prepare('SELECT e.*, group_concat(t.slug) AS tags FROM entry e JOIN entry_tag et ON et.entry_id = e.id JOIN tag t ON t.id = et.tag_id WHERE date(e.published_at) = date(:published_at) GROUP BY et.entry_id LIMIT 1');
+    	    $entry->bindValue(':published_at', $marker->format('Y-m-d'));
+            $entry = $entry->execute();
+            $entry = $entry->fetchArray();
+        ?>
+	    <div<?php echo ($entry['id'] ? ' class="item"' : '') ?>>
     	    <?php if($day == 0): ?>
     	    <?php echo $marker->format('F d'); ?><br/>
             <?php endif; ?>
-    	    <?php 
-        	    $entry = $db->prepare('SELECT e.*, group_concat(t.slug) AS tags FROM entry e JOIN entry_tag et ON et.entry_id = e.id JOIN tag t ON t.id = et.tag_id WHERE date(e.published_at) = date(:published_at) GROUP BY et.entry_id LIMIT 1');
-        	    $entry->bindValue(':published_at', $marker->format('Y-m-d'));
-                $entry = $entry->execute();
-                $entry = $entry->fetchArray();
-            ?>
             <?php if($entry['id']): ?>
                 <?php if(new DateTime($entry['published_at']) > $now): ?>
             	<input type="hidden" name="entry_id[<?php echo $entry['queue'] ?>][]" value="<?php echo $entry['id'] ?>" />
