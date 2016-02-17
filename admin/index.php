@@ -228,7 +228,7 @@
     // !handle tags
 	// Current & New
 	foreach($slugs as $slugKey => $slug){
-		$slug = trim(str_replace(' ', '-', strtolower($slug)));
+		$slug = str_replace(' ', '-', trim(strtolower($slug)));
 		$slugs[$slugKey] = $slug;
 		if($slug == '') continue;
 		$tag = $db->prepare("SELECT * FROM tag WHERE slug = :slug;");
