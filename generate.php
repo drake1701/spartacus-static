@@ -349,6 +349,63 @@ while($kind = $kindResult->fetchArray()){
     slog("update {$kind['path']} index"); 
 }
 
+// ! Changelog pages
+$year = date("Y");
+while($year >= 2000) {
+    
+    $changes = array();
+    
+    $entries = $db->query("SELECT e.id, title, url_path, published_at FROM entry e WHERE published_at LIKE('{$year}%') AND published IS NOT NULL ORDER BY published_at DESC;");
+    while($entry = $entries->fetchArray()) {
+        $changes[date('Y-m-d', strtotime($entry['published_at']))][] = array(
+            'date' => $entry['published_at'],
+            'message' => '<a href="'.$baseurl.$entry['url_path'].'">'.$entry['title'].'</a> published.'
+        );
+    }
+    
+    $logs = $db->query("SELECT l.created_at, l.message, e.title, e.url_path FROM entry_log l JOIN entry e ON l.entry_id = e.id WHERE l.created_at LIKE('{$year}%') ORDER BY l.created_at DESC;");
+    while($log = $logs->fetchArray()) {
+        $changes[date('Y-m-d', strtotime($log['created_at']))][] = array(
+            'date' => $log['created_at'],
+            'message' => '<a href="'.$baseurl.$log['url_path'].'">'.$log['title'].'</a> '.$log['message']
+        );
+    }
+    
+    krsort($changes);
+    
+    $page = '<dl>';
+    foreach($changes as $date => $change) {
+        $page .= '<dt>'.format_date($date, 1).'</dt>';
+        $page .= '<dd><ul>';
+        foreach($change as $message) {
+            $page .= '<li>'.$message['message'].'</li>';
+        }
+        $page .= '</ul></dd>';
+    }
+    $page .= '</dl>';
+    
+    for($y = date('Y'); $y >= 2000; $y--) {
+        $page .= '<a href="'.$baseurl.'changelog/'.$y.'">'.$y.'</a>&nbsp;&nbsp;';
+    }
+    
+    
+    $html = get_layout(true);
+    $html = tag("content", $page, $html);
+    $html = tag("title", "Changelog, $year | ", $html);
+    $html = tag("content_title", "Changelog $year", $html);
+    $html = tags_parse($html);
+    write_file('changelog/'.$year, $html); 
+    if($year == date('Y'))
+        write_file('changelog', $html); 
+    
+    slog("update changelog $year");
+
+    if(!$rebuild)
+        break;
+    $year--;
+}
+
+
 // ! reports
 $result = $db->query("SELECT count(*) as count FROM entry WHERE published IS NULL AND queue = 1;")->fetchArray();
 if($result['count']){

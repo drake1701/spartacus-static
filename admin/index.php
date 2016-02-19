@@ -115,6 +115,9 @@
         .calendar .entry-title {
             font-size:.9em;
         }
+        .calendar > div.live {
+            opacity:.3;
+        }
     </style>
 </head>
 <body>
@@ -205,6 +208,7 @@
             $update->bindValue(":$key", $value);
         }
         execute($update);
+        elog('Updated.', $data['id']);
         echo "<h2><em>Entry {$data['id']} saved successfully.</em></h2>";
     } else {
         /* ! entry creation */
@@ -358,9 +362,10 @@
             		    $ins->bindValue(":tag_id", $tag['id']);
             		    $ins->bindValue(":entry_id", $entryId);
             		    execute($ins);
-            		    $flag = $db->prepare("UPDATE entry SET published = NULL WHERE id = :id;");
+            		    $flag = $db->prepare("UPDATE entry SET published = NULL, modified_at = datetime('now') WHERE id = :id;");
             		    $flag->bindParam(':id', $entryId);
             		    execute($flag);
+            		    elog('Added tags.', $entryId);
             		    echo "<p>Added $entryId to $slug</p>";
             		}    		
         		}
@@ -429,8 +434,9 @@
         // get image files
         $imageFiles = glob($site_dir.'gallery/*/'.$entry['filename']);
         foreach($imageFiles as $key => $imageFile){
-            $path = explode('/', $imageFile);
-            $imageFiles[$path[6]] = basename($imageFile);
+            $path = explode('/', dirname($imageFile));
+            $kind = array_pop($path);
+            $imageFiles[$kind] = basename($imageFile);
             unset($imageFiles[$key]);
         }
         // get image db records
@@ -456,7 +462,8 @@
                     $change = true;
                 }
             } 
-            echo "\n";
+            elog('Added '.count($add).' image formats.', $entry['id']);
+            echo "<br/>";
         }
         $del = array_diff_assoc($imageRows, $imageFiles);
         if(count($del) > 0) {
@@ -472,10 +479,10 @@
                     $change = true;
                 }
             } 
-            echo "\n";
+            echo "<br/>";
         }
         if($change) {
-            $flag = $db->prepare('UPDATE `entry` SET `published` = NULL WHERE `id` = :id');
+            $flag = $db->prepare('UPDATE `entry` SET `published` = NULL, modified_at = datetime("now") WHERE `id` = :id');
             $flag->bindValue(':id', $entry['id']);
             execute($flag);
         }
@@ -562,8 +569,10 @@ $month = $marker->format('m');
     	    $entry->bindValue(':published_at', $marker->format('Y-m-d'));
             $entry = $entry->execute();
             $entry = $entry->fetchArray();
+            $class = $entry['id'] ? 'item' : '';
+            $class .= $entry['published'] ? ' live' : '';
         ?>
-	    <div<?php echo ($entry['id'] ? ' class="item"' : '') ?>>
+	    <div<?php echo ($class ? (' class="'.$class.'"') : '') ?>>
     	    <?php if($day == 0): ?>
     	    <?php echo $marker->format('F d'); ?><br/>
             <?php endif; ?>
@@ -633,4 +642,17 @@ $month = $marker->format('m');
         }
     }
     
-?>
+    function elog($message, $entryId, $date = null) {
+        global $db;
+                
+        $sql = $db->prepare("INSERT INTO entry_log (entry_id, message, created_at) VALUES (:entry_id, :message, :created_at);");
+        if($date == '') $date = date('Y-m-d H:i:s');
+        $sql->bindParam(':entry_id', $entryId);
+        $sql->bindParam(':message', $message);
+        $sql->bindParam(':created_at', $date);
+        execute($sql);
+    }
+  
+  
+  
+  
