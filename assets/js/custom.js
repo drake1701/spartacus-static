@@ -6,7 +6,6 @@
 
 jQuery(window).load(heightsFix).resize(heightsFix);
 
-
 function heightsFix() {
     jQuery('#main').height('');
     jQuery('#sidebar').height('');
