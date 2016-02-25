@@ -539,8 +539,6 @@
     <a href="?action=tags">Tags</a>
 </h3>
 <?php
-$result = $db->query("SELECT * FROM entry WHERE published IS NULL ORDER BY published_at;");
-
 $sql = 'SELECT published_at FROM entry ORDER BY published_at DESC LIMIT 1;';
 $result = $db->query($sql);
 $last = $result->fetchArray();
@@ -548,10 +546,14 @@ $last = new DateTime($last['published_at']);
 
 $now = new DateTime();
 $marker = new DateTime();
+
 $marker = $marker->sub(new DateInterval('P' . $now->format('w') . 'D'));
 $increment = new DateInterval('P1D');
 $month = $marker->format('m');
 
+$repost = $db->prepare('SELECT e.*, group_concat(t.slug) AS tags FROM entry e JOIN entry_tag et ON et.entry_id = e.id JOIN tag t ON t.id = et.tag_id WHERE published IS NULL AND date(published_at) < date(:published_at) GROUP BY et.entry_id ORDER BY published_at ASC;');
+$repost->bindValue(':published_at', $marker->format('Y-m-d'));
+$reposts = $repost->execute();
 ?>
 <form id="calendar" action="?<?php echo http_build_query(array('action' => "reorder")); ?>" method="post">
 <div class="calendar">
@@ -603,6 +605,37 @@ $month = $marker->format('m');
 </div>
 <button type="submit"><span>Save</span></button>
 </form>
+<h4>Reposts</h4>
+<div class="calendar">
+<?php
+while($entry = $reposts->fetchArray()){
+    ?>
+    <div>
+        <?php if($entry['id']): ?>
+            <?php if(new DateTime($entry['published_at']) > $now): ?>
+        	<input type="hidden" name="entry_id[<?php echo $entry['queue'] ?>][]" value="<?php echo $entry['id'] ?>" />
+        	<?php endif; ?>
+            <img src="<?php echo $baseurl ?>gallery/thumb/<?php echo $entry['filename'] ?>" />
+    		<a href="?<?php echo http_build_query(array('action'=>'edit','id'=>$entry['id'])) ?>">
+        		<span class="entry-title"><?php echo $entry['title'] ?></span>
+            </a>
+    		<div class="clearfix"></div>
+    		<?php echo format_date($entry['published_at'], 1) ?><br/>
+            <?php echo $entry['queue'] == 1 ? 'Normal' : 'Calendar' ?><br/>
+    		<?php foreach(explode(',', $entry['tags']) as $tag): ?>
+    		<a href="?action=showall&tag=<?php echo $tag ?>"><?php echo $tag ?></a><br/>
+    		<?php endforeach; ?>
+    		<div class="clearfix"></div>
+			<a href="?<?php echo http_build_query(array('action'=>'edit','id'=>$entry['id'])) ?>">Edit</a>&nbsp;|&nbsp;
+			<a href="?<?php echo http_build_query(array('action'=>'delete','id'=>$entry['id'])) ?>">Delete</a>
+        <?php else: ?>
+            &nbsp;
+	    <?php endif; ?>
+    </div>
+    <?php
+}
+?>
+</div>
 
 
 <h1>New Images</h1>
@@ -642,16 +675,7 @@ $month = $marker->format('m');
         }
     }
     
-    function elog($message, $entryId, $date = null) {
-        global $db;
-                
-        $sql = $db->prepare("INSERT INTO entry_log (entry_id, message, created_at) VALUES (:entry_id, :message, :created_at);");
-        if($date == '') $date = date('Y-m-d H:i:s');
-        $sql->bindParam(':entry_id', $entryId);
-        $sql->bindParam(':message', $message);
-        $sql->bindParam(':created_at', $date);
-        execute($sql);
-    }
+
   
   
   

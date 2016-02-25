@@ -266,3 +266,14 @@ function slog($message, $error = false) {
     fclose($fp);
 }
 
+function elog($message, $entryId, $date = null) {
+    global $db;
+            
+    $sql = $db->prepare("INSERT INTO entry_log (entry_id, message, created_at) VALUES (:entry_id, :message, :created_at);");
+    if($date == '') $date = date('Y-m-d H:i:s');
+    $sql->bindParam(':entry_id', $entryId);
+    $sql->bindParam(':message', $message);
+    $sql->bindParam(':created_at', $date);
+    $sql->execute();
+}
+
