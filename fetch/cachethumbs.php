@@ -1,4 +1,11 @@
-<?php 
+<?php
+/**
+ * @author     Dennis Rogers <dennis@drogers.net>
+ * @address    www.drogers.net
+ *
+ * Fetch, download and resize thumb images.
+ */
+
     
 
 $debug = isset($argv[2]) && !empty($argv[2]);

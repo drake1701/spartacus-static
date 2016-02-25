@@ -1,11 +1,18 @@
-<?php 
+<?php
+/**
+ * @author     Dennis Rogers <dennis@drogers.net>
+ * @address    www.drogers.net
+ * 
+ * Verify link and get thumbnail url for posts without a thumb url.
+ */
+    
     
 $debug = isset($argv[1]) && !empty($argv[1]);
 $db = new PDO('sqlite:'.dirname(__FILE__).'/index.sqlite');
 
 $postsCount = array_pop($db->query('SELECT count(*) FROM posts WHERE `thumb` IS NULL;')->fetch());
 
-$sql = $db->prepare("SELECT * FROM `posts` WHERE `thumb` IS NULL ORDER BY `id` DESC LIMIT 5;");
+$sql = $db->prepare("SELECT * FROM `posts` WHERE `thumb` IS NULL ORDER BY `id` DESC LIMIT 1000;");
 
 $sql->execute();
 $posts = $sql->fetchAll();
@@ -26,9 +33,17 @@ foreach($posts as $post){
     if ($debug)
         echo $post['url']."\n";
     $fetchResults = doCurl('http://fetch.spartacuswallpaper.com/fetch.php?json=1&url='.$post['url']);
-    $fetchResults = json_decode($fetchResults);
-    $thumb = array_pop($fetchResults);
-    $thumb = $thumb->url;
+    $fetchData = json_decode($fetchResults);
+    if(count($fetchData)) {
+        $thumb = array_pop($fetchData);
+        if(isset($thumb->error)) {
+            $thumb = $thumb->msg;
+        } else {
+            $thumb = $thumb->url;
+        }
+    } else {
+        $thumb = $fetchResults;
+    }
     if ($debug)
         echo $thumb."\n";
     if(substr($thumb, 0, 4) != 'http') {

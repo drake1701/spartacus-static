@@ -183,9 +183,9 @@ switch($host){
         $title = $title[1];
         $dir = parseTitle($title, "SuperiorPics");
         $links = array();
-        preg_match('#<div id="body0".+?<div class="signature">#', $postPage, $post);
+        preg_match('#<div id="body0".+?</td>#', $postPage, $post);
         $post = array_pop($post);
-        preg_match_all('#a href="([^"]+?)".+?target="_blank"#', $post, $links);
+        preg_match_all('#a href="([^"]+?)"[^>]+?target="_blank"#', $post, $links);
         $links = array_pop($links);
         break;
     // ! listal
@@ -322,7 +322,7 @@ foreach($links as $linkId => $link){
                 preg_match("#http://storeimgs.net/upload/big/.+?.jpg#", $imagePage, $largeImg);
                 break;
             case "imagebam.com":
-                preg_match("#http://.+?/download.+?.jpg#", $imagePage, $largeImg);
+                preg_match("#(http://.+?/download[^\"]+?)\"#", $imagePage, $largeImg);
                 break;
             case "oncelebrity.com":
                 preg_match('#<img.+?src="(.+?)".+?id="full_pic"#', $imagePage, $largeImg);
@@ -340,8 +340,14 @@ foreach($links as $linkId => $link){
                 fail("video or other");
                 continue;
             default:
-                fail("no image processing found for $linkMatch");
-                break;
+                fail("no image processing found for $link ($linkMatch)");
+                if($json) {
+                    $largeImages[] = array(
+                        'msg' => "no image processing found for $link ($linkMatch)",
+                        'error' => 1
+                    );                    
+                }
+                continue;
         }
     } else {
         $largeImg = $link;
@@ -363,6 +369,7 @@ foreach($links as $linkId => $link){
         );
     }
 }
+
 // ! End Main Block
 
 // ! output
@@ -390,7 +397,7 @@ echo "Title: <?php echo $title ?>"
 <?php foreach($largeImages as $largeImage): ?>
 curl --create-dirs "<?php echo $largeImage['url'] ?>" -o "<?php echo str_replace(':', '', $largeImage['file']) ?>"
 <?php endforeach; ?>
-rm /Volumes/Macintosh\ HD/Users/dennis/Downloads/<?php echo str_replace(' ', '-', $name.'_'.$title.'.sh') ?>
+trash /Volumes/Macintosh\ HD/Users/dennis/Downloads/<?php echo str_replace(' ', '-', $name.'_'.$title.'.sh') ?>
 <?php
 }
 
@@ -424,13 +431,17 @@ function get_http_response_code($url) {
     $headers = get_headers($url);
     return substr($headers[0], 9, 3);
 }
-function fail($msg){
-    global $output;
-    $output = "ERROR: ".$msg;
-    die();
+function fail($msg){    
+    $er = fopen('error.log', 'a');
+    fputs($er, date('c') . ': '.$msg."\n");
+    fclose($er);
 }
 function linkError($link){
-    echo "Link error $link\n";
+    global $json;
+    if(!$json) {
+        echo "Link error $link\n";
+    }
+    fail("Link error $link");
 }
 function file_url($url){
     $parts = parse_url($url);
