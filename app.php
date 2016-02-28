@@ -158,7 +158,7 @@ function getMore($count = 1, $tagIds = null, $class='col-xs-4', $excludeIds = nu
         $tags = $tags->execute();
         
         while($tag = $tags->fetchArray()) {
-            $sql = $head . ' JOIN entry_tag t ON t.entry_id = e.id WHERE t.tag_id = :tag' . $tail;
+            $sql = $head . ' JOIN entry_tag t ON t.entry_id = e.id WHERE published IS NOT NULL AND t.tag_id = :tag' . $tail;
             $entries = $db->prepare($sql);
             $entries->bindValue(':tag', $tag['id']);
 
@@ -176,7 +176,7 @@ function getMore($count = 1, $tagIds = null, $class='col-xs-4', $excludeIds = nu
         }
     }
     if($moreCount == 0) {
-        $sql = $db->query($head . ' WHERE 1' . $tail);
+        $sql = $db->query($head . ' WHERE published IS NOT NULL' . $tail);
         $entries = $db->fetchAll($sql);
         $html .= '<div class="row">';
         $html .= '<h3 class="col-xs-12">More Wallpaper</h3>';
