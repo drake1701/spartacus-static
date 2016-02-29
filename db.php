@@ -5,7 +5,11 @@
 class MySqlite extends SQLite3 {
 
 	public function query($sql) {
-    	return parent::query($sql);
+    	if($result = parent::query($sql)) {
+        	return $result;
+    	} else {
+        	die($this::lastErrorMsg());
+    	}
 	}
 
     public function fetchAll($result) {

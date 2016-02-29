@@ -233,7 +233,7 @@
     // !handle tags
 	// Current & New
 	foreach($slugs as $slugKey => $slug){
-		$slug = trim(str_replace(' ', '-', strtolower($slug)));
+		$slug = str_replace(' ', '-', trim(strtolower($slug)));
 		$slugs[$slugKey] = $slug;
 		if($slug == '') continue;
 		$tag = $db->prepare("SELECT * FROM tag WHERE slug = :slug;");
@@ -498,14 +498,22 @@
         execute($sql);
         echo '<h3>Set tag ID '.$_POST['tag_id'].' to '.($_POST['name'] ? 'name' : 'not name') .'.</h3>';
     }
-    $tags = $db->query('SELECT t.*, count(*) as count FROM tag t JOIN entry_tag et ON et.tag_id = t.id GROUP BY et.tag_id ORDER by et.tag_id DESC;');
+    if(!empty($_GET['tag_id']) && !empty($_GET['delete'])) {
+        echo '<h3>Deleting Tag ID '.$_GET['tag_id'].'.</h3>';
+        $sql = $db->prepare('DELETE FROM tag WHERE id = :id;');
+        $sql->bindParam(':id', $_GET['tag_id']);
+        execute($sql);
+    }
+    $tags = $db->query('SELECT t.*, count(et.tag_id) as count FROM tag t LEFT OUTER JOIN entry_tag et ON et.tag_id = t.id GROUP BY t.id ORDER by t.id DESC;');
     ?>
     <table>
         <thead>
             <th></th>
             <th>Title</th>
+            <th>Slug</th>
             <th>Count</th>
             <th>Name</th>
+            <th></th>
         </thead>
         <tbody>
             <?php while($tag = $tags->fetchArray()): ?>
@@ -513,11 +521,15 @@
                 <form action="?<?php echo http_build_query($_GET) ?>" method="post">
                 <td><?php echo $tag['id'] ?></td>
                 <td><a href="?action=showall&tag=<?php echo $tag['slug'] ?>" target="_blank"><?php echo $tag['title'] ?></a></td>
+                <td><a href="?action=showall&tag=<?php echo $tag['slug'] ?>" target="_blank"><?php echo $tag['slug'] ?></a></td>
                 <td><?php echo $tag['count'] ?></td>
                 <td><?php echo $tag['name'] ? 'Name' : 'Not Name' ?>
                     <input type="hidden" value="<?php echo $tag['id'] ?>" name="tag_id" />
                     <input type="hidden" value="<?php echo $tag['name'] ? '0' : '1' ?>" name="name" />
-                    <input class="pull-right" type="submit" value="switch" />
+                </td>
+                <td class="text-right">
+                    <a href="?action=tags&delete=1&tag_id=<?php echo $tag['id'] ?>">Delete</a>
+                    <input type="submit" value="switch" />&nbsp;
                 </td>
                 </form>
             </tr>
