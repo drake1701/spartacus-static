@@ -181,56 +181,6 @@ while($entry = $result->fetchArray()){
     $db->query("UPDATE entry SET published = 1 WHERE id = {$entry['id']};");
 }
 
-// ! build index
-$html = get_layout(true);
-$content = file_get_contents($theme_dir."index.phtml");
-slog("rebuilding home page");
-$entryResult = $db->query("SELECT * FROM entry WHERE published IS NOT NULL ORDER BY published_at DESC LIMIT 200;");
-$entries = "";
-$entryLayout = file_get_contents($theme_dir."layout/entry_home.phtml");
-$deskEntries = 0;
-$mobileEntries = 0;
-$homeEntryIds = array();
-while($entry = $entryResult->fetchArray()){
-    $entry['published_at'] = format_date($entry['published_at']);
-
-    $imageResult = $db->query("SELECT k.path as dir, i.path as file, k.position FROM image i JOIN image_kind k ON k.id = i.kind WHERE entry_id = {$entry['id']} AND (k.mobile = 1 OR k.id = 6) ORDER BY k.position ASC LIMIT 3;");
-    $mobileImages = '<div class="entry-images visible-xs">';
-    $hasMobile = false;
-    while($image = $imageResult->fetchArray()){
-        if($image['dir'] == 'preview'){
-            $entry['preview'] = $baseurl."gallery/".$image['dir']."/".$image['file'];
-        } else {
-            $hasMobile = true;
-            $mobileImage = $baseurl."gallery/".$image['dir']."/".$image['file'];
-            $mobileImages .= '<a href="'.$entry['url_path'].'" class="image col-xs-6" title="'.$entry['title'].'"><img src="'.$mobileImage.'" alt="'.$entry['title'].'"/></a>';
-        }
-    }
-    
-    if($deskEntries++ > 10) break;
-    
-    if($hasMobile) {
-        $entry['mobile_images'] = $mobileImages . '</div>';
-        $entry['mobile'] = 'hidden-xs';
-        $mobileEntries++;
-    } else {
-        $entry['mobile'] = '';
-    }
-    
-    $homeEntryIds[] = $entry['id'];
-    if($deskEntries == 1) {
-        $content = tag("entry_first", tag_all("entry", $entry, $entryLayout), $content);
-    } else {
-        $entries .= tag_all("entry", $entry, $entryLayout);
-    }
-}
-$content = tag("entries", $entries, $content);
-
-$html = tag("content", $content, $html);
-$html = tag('side_more', getMore(7, null, 'col-sm-12', $homeEntryIds), $html);
-$html = tags_parse($html);
-file_put_contents($site_dir."index.html", $html);
-
 // ! udpate tags
 slog('updating tags');
 if($rebuild){
@@ -404,6 +354,56 @@ while($year >= 2000) {
         break;
     $year--;
 }
+
+// ! build index
+$html = get_layout(true);
+$content = file_get_contents($theme_dir."index.phtml");
+slog("rebuilding home page");
+$entryResult = $db->query("SELECT * FROM entry WHERE published IS NOT NULL ORDER BY published_at DESC LIMIT 200;");
+$entries = "";
+$entryLayout = file_get_contents($theme_dir."layout/entry_home.phtml");
+$deskEntries = 0;
+$mobileEntries = 0;
+$homeEntryIds = array();
+while($entry = $entryResult->fetchArray()){
+    $entry['published_at'] = format_date($entry['published_at']);
+
+    $imageResult = $db->query("SELECT k.path as dir, i.path as file, k.position FROM image i JOIN image_kind k ON k.id = i.kind WHERE entry_id = {$entry['id']} AND (k.mobile = 1 OR k.id = 6) ORDER BY k.position ASC LIMIT 3;");
+    $mobileImages = '<div class="entry-images visible-xs">';
+    $hasMobile = false;
+    while($image = $imageResult->fetchArray()){
+        if($image['dir'] == 'preview'){
+            $entry['preview'] = $baseurl."gallery/".$image['dir']."/".$image['file'];
+        } else {
+            $hasMobile = true;
+            $mobileImage = $baseurl."gallery/".$image['dir']."/".$image['file'];
+            $mobileImages .= '<a href="'.$entry['url_path'].'" class="image col-xs-6" title="'.$entry['title'].'"><img src="'.$mobileImage.'" alt="'.$entry['title'].'"/></a>';
+        }
+    }
+    
+    if($deskEntries++ > 10) break;
+    
+    if($hasMobile) {
+        $entry['mobile_images'] = $mobileImages . '</div>';
+        $entry['mobile'] = 'hidden-xs';
+        $mobileEntries++;
+    } else {
+        $entry['mobile'] = '';
+    }
+    
+    $homeEntryIds[] = $entry['id'];
+    if($deskEntries == 1) {
+        $content = tag("entry_first", tag_all("entry", $entry, $entryLayout), $content);
+    } else {
+        $entries .= tag_all("entry", $entry, $entryLayout);
+    }
+}
+$content = tag("entries", $entries, $content);
+
+$html = tag("content", $content, $html);
+$html = tag('side_more', getMore(7, null, 'col-sm-12', $homeEntryIds), $html);
+$html = tags_parse($html);
+file_put_contents($site_dir."index.html", $html);
 
 
 // ! reports
