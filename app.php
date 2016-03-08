@@ -10,6 +10,7 @@ date_default_timezone_set("UTC");
 $site_dir   = $base_dir . "_site/";
 $theme_dir  = $base_dir . "theme/";
 $assets_dir = $base_dir . "assets/";
+$page_size  = 18;
 $rebuild = false;
 $baseurl = strpos($base_dir, 'development') ?  "http://dev.spartacuswallpaper.com/" : "http://spartacuswallpaper.com/";
 
@@ -62,14 +63,14 @@ function tag_parse($tagName, $arg = null){
                 $thumb->bindParam(':tag_id', $tag['id']);
                 $thumb = $thumb->execute()->fetchArray();
                 $thumb['title'] = $tag['title'];
-                $thumb['url_path'] = 'tag/' . $tag['slug'];
-                $html .= tag_entry($thumb, null, 99, 'tag', 'col-md-12 col-sm-4 col-xs-12');
+                //$thumb['url_path'] = 'tag/' . $tag['slug'];
+                $html .= tag_entry($thumb, null, 99, 'tag', 'col-md-12 col-sm-4 col-xs-6');
             }
             return $html;
         case "calendar":
             $calEntry = $db->query("SELECT * FROM `entry` WHERE `queue` = 2 AND `published_at` <= date('now') ORDER BY `published_at` DESC LIMIT 1;");
             $calEntry = $calEntry->fetchArray();
-            $html = '<div class="col-md-12 col-sm-6 col-xs-12"><a href="'.$baseurl.'tag/calendar" title="Calendar Series"><span>'.$calEntry['title'].'</span><img src="'.$baseurl."gallery/thumb/".$calEntry['filename'].'" title="'.$calEntry['title'].'" /></a></div>';
+            $html = '<div class="col-md-12 col-sm-6 col-xs-6"><a href="'.$baseurl.'tag/calendar" title="Calendar Series"><span>'.$calEntry['title'].'</span><img src="'.$baseurl."gallery/thumb/".$calEntry['filename'].'" title="'.$calEntry['title'].'" /></a></div>';
             return $html;
         case "baseurl":
             return $baseurl;
@@ -95,11 +96,12 @@ function get_layout($long = false){
 }
 
 function tag_entry($entry, $layout = null, $count, $layoutType = 'tag', $classes = null) {
-    global $baseurl, $db, $theme_dir;
+    global $baseurl, $db, $theme_dir, $page_size;
     if($layout == null)
         $layout = file_get_contents($theme_dir."layout/tag.phtml");
     $entry['slug'] = $baseurl . $entry['url_path'];
-    $preview = $count > 12 ? 'thumb' : 'preview';
+
+    $preview = $count > $page_size ? 'thumb' : 'preview';
     if($classes) {
         $entry['classes'] = $classes;
     } else {
@@ -187,6 +189,50 @@ function getMore($count = 1, $tagIds = null, $class='col-xs-4', $excludeIds = nu
         $html .= '</div>';
     }
 
+    return $html;
+}
+
+function pager($url, $current, $count) {
+    global $baseurl;
+    $html = '<script type="text/javascript">
+    var curPage = '.$current.';
+    </script>';
+    if($count > 1) {
+        if($current < $count) 
+            $html .= '<button class="btn btn-more btn-lg"><a id="show_more">Show More</a></button>';
+    
+        $html .= '<ul class="pager /* hidden */">';
+        
+        $start = max(array($current-3, 1));
+        $end = min(array($count, $current+3));
+                        
+        if($current != $count) {
+            $html .= '<li><a href="'.$baseurl.$url.'/page/'.($current+1).'" title="older">&lsaquo; older</a></li>';
+        } else {
+            $html .= '<li><span>&laquo;</span></li>';
+        }
+        
+        if($end < $count)
+            $html .= '<li><a href="'.$baseurl.$url.'/page/'.($count).'" title="page '. $count .'">'. $count .'</a></li>...';
+         
+        for($i = $end; $i >= $start; $i--){
+            if($i == $current)
+                $html .= '<li class="current"><span>'.$i.'</span></li>';
+            else
+                $html .= '<li><a href="'.$baseurl.$url.'/page/'.$i.'" title="page '. $i .'">'.$i.'</a></li>';
+        }
+        
+        if($start > 1)
+            $html .= '...<li><a href="'.$baseurl.$url.'/page/1" title="page 1">1</a></li>';
+        
+        if($current != 1) {
+            $html .= '<li><a href="'.$baseurl.$url.'/page/'.($current-1).'" title="newer">&rsaquo; newer</a></li>';
+        } else {
+            $html .= '<li><span>&rsaquo; newer</span></li>';
+        }
+        
+        $html .= '</ul>';
+    }
     return $html;
 }
 

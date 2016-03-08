@@ -234,6 +234,7 @@ overflow:auto;
 }
 
 .entry-grid {
+    clear:both;
 	list-style: none;
 	padding: 0;
 	overflow: auto;
@@ -378,6 +379,32 @@ td {
 .entry-images .col-xs-6:nth-of-type(odd) {
     padding-right:5px;
 }
+.pager {
+    margin: 15px -5px;
+}
+.pager li>a, .pager li>span {
+	border-radius:0;
+	padding: 2px 6px;
+}
+.pager li>a, .pager li>span, .btn-lg {
+    background: #4e5827; /* Old browsers */
+    background: -moz-linear-gradient(top,  #4e5827 25%, #4e5827 25%, #3e4717 99%); /* FF3.6-15 */
+    background: -webkit-linear-gradient(top,  #4e5827 25%,#4e5827 25%,#3e4717 99%); /* Chrome10-25,Safari5.1-6 */
+    background: linear-gradient(to bottom,  #4e5827 25%,#4e5827 25%,#3e4717 99%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+    filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#4e5827', endColorstr='#3e4717',GradientType=0 ); /* IE6-9 */
+	border-color:#1B2000;
+}
+.btn-lg a {
+    text-decoration: none;
+}
+
+
+@media screen and (min-width: 990px) {
+    body > .container-fluid > .row > :last-child {
+    	padding-left:0;
+    }
+}
+
 @media screen and (max-width: 990px) {
     .sidebar ul:not(.social-contact):not(.years),
     .entry-versions ul {
@@ -400,9 +427,6 @@ td {
     .entry-grid .entry-item:nth-of-type(3n+1) {
     	clear:left;
     	margin-left:0;
-    }
-    body > .container-fluid > .row > :last-child {
-    	padding-left:0;
     }
     .entry-view .entry-images {
         margin-top:-15px;

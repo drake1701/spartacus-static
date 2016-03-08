@@ -26,8 +26,9 @@ if(!is_dir($site_dir))
     
 if(!is_dir($site_dir."gallery"))
     exec("ln -s /var/www/spartacuswallpaper.com/gallery/ {$site_dir}gallery");
+
 recurse_copy($assets_dir, $site_dir);
-copy($assets_dir.'.htaccess', $site_dir.'.htaccess');
+copy($assets_dir.'.htaccess.maint', $site_dir.'.htaccess');
 
 // ! generate banner css
 $banners = glob($assets_dir."images/banners/left/*.png");
@@ -194,26 +195,37 @@ slog('building tag pages');
 $html = get_layout();
 $tagLayout = file_get_contents($theme_dir."layout/tag.phtml");
 $columnCount = 3;
-$i = 0;
+$tagCount = 0;
 while($tag = $tagResult->fetchArray()){
     slog('tag page '.$tag['slug']);
     $db->query("UPDATE tag SET count = ".$tag['count'].", thumb='".$tag['thumb']."' WHERE id = ".$tag['id'].";");
     
     $tagEntryResult = $db->query("SELECT e.id, title, url_path, published_at FROM entry e JOIN entry_tag t ON t.entry_id = e.id WHERE t.tag_id = {$tag['id']} AND published IS NOT NULL ORDER BY published_at DESC;");
     $entries = $db->fetchAll($tagEntryResult);
-    $tagPage = '<div class="row entry-grid">';
-    foreach($entries as $entry) {
-        $tagPage .= tag_entry($entry, $tagLayout, count($entries));
+    $entryPages = array_chunk($entries, $page_size);
+    
+    foreach($entryPages as $page => $pageEntries) {
+        $page+=1;
+    
+        $tagPage = '<div class="row entry-grid">';
+        foreach($pageEntries as $entry) {
+            $tagPage .= tag_entry($entry, $tagLayout, $page_size);
+        }
+        $tagPage .= '</div>';
+        
+        $tagHtml = get_layout();
+        $tagHtml = tag("content", $tagPage, $tagHtml);
+        $tagHtml = tag('pager', pager('tag/'.$tag['slug'], $page, count($entryPages)), $tagHtml);
+        $tagHtml = tag("title", $tag['title'].' | ', $tagHtml);
+        $tagHtml = tag("content_title", $tag['title'].' Wallpaper', $tagHtml);
+        $tagHtml = tags_parse($tagHtml);
+        write_file('tag/'.$tag['slug'].'/page/'.$page, $tagHtml);
+        if($page == 1)
+            write_file("tag/".$tag['slug'], $tagHtml);
     }
-    $tagPage .= '</div>';
-    $tagHtml = get_layout();
-    $tagHtml = tag("content", $tagPage, $tagHtml);
-    $tagHtml = tag("title", $tag['title']." | ", $tagHtml);
-    $tagHtml = tags_parse($tagHtml);
-    write_file("tag/".$tag['slug'], $tagHtml);
-    $i++;  
+    $tagCount++;
 }
-slog("updated $i tag pages");
+slog('updated '.$tagCount.' tag pages');
 
 // ! build tags index page
 $html = get_layout(true);
@@ -260,17 +272,27 @@ while($year >= 2000) {
     slog("update $year index");
     $tagEntryResult = $db->query("SELECT e.id, title, url_path, published_at FROM entry e WHERE published_at LIKE('{$year}%') AND published IS NOT NULL ORDER BY published_at DESC;");
     $entries = $db->fetchAll($tagEntryResult);
-    $tagPage = '<div class="row entry-grid">';
-    foreach($entries as $entry) {
-        $tagPage .= tag_entry($entry, $tagLayout, count($entries));
-    }
-    $tagPage .= '</div>';
-    $tagHtml = get_layout(true);
-    $tagHtml = tag("content", $tagPage, $tagHtml);
-    $tagHtml = tag("title", $year." | ", $tagHtml);
-    $tagHtml = tag("content_title", "Wallpaper from {$year}", $tagHtml);
-    $tagHtml = tags_parse($tagHtml);
-    write_file("tag/".$year, $tagHtml);
+    $entryPages = array_chunk($entries, $page_size);
+    
+    foreach($entryPages as $page => $pageEntries) {
+        $page+=1;
+    
+        $tagPage = '<div class="row entry-grid">';
+        foreach($pageEntries as $entry) {
+            $tagPage .= tag_entry($entry, $tagLayout, $page_size);
+        }
+        $tagPage .= '</div>';
+        
+        $tagHtml = get_layout();
+        $tagHtml = tag("content", $tagPage, $tagHtml);
+        $tagHtml = tag('pager', pager('tag/'.$year, $page, count($entryPages)), $tagHtml);
+        $tagHtml = tag("title", $year." | ", $tagHtml);
+        $tagHtml = tag("content_title", "Wallpaper from {$year}", $tagHtml);
+        $tagHtml = tags_parse($tagHtml);
+        write_file('tag/'.$year.'/page/'.$page, $tagHtml);
+        if($page == 1)
+            write_file("tag/".$year, $tagHtml);
+    } 
     if(!$rebuild)
         break;
     $year--;
@@ -285,17 +307,27 @@ while($kind = $kindResult->fetchArray()){
         $tagEntryResult = $db->query("SELECT e.id, title, url_path, published_at, i.path as thumb FROM entry e JOIN image i ON i.entry_id = e.id WHERE i.kind = {$kind['id']} AND published IS NOT NULL ORDER BY published_at DESC;");
     }
     $entries = $db->fetchAll($tagEntryResult);
-    $tagPage = '<div class="row entry-grid">';
-    foreach($entries as $entry) {
-        $tagPage .= tag_entry($entry, $tagLayout, count($entries));
-    }
-    $tagPage .= '</div>';
-    $tagHtml = get_layout(true);
-    $tagHtml = tag("content", $tagPage, $tagHtml);
-    $tagHtml = tag("title", $kind['label']." | ", $tagHtml);
-    $tagHtml = tag("content_title", "Wallpaper with {$kind['label']} Version", $tagHtml);
-    $tagHtml = tags_parse($tagHtml);
-    write_file("tag/".$kind['path'], $tagHtml);   
+    $entryPages = array_chunk($entries, $page_size);
+    
+    foreach($entryPages as $page => $pageEntries) {
+        $page+=1;
+    
+        $tagPage = '<div class="row entry-grid">';
+        foreach($pageEntries as $entry) {
+            $tagPage .= tag_entry($entry, $tagLayout, $page_size);
+        }
+        $tagPage .= '</div>';
+        
+        $tagHtml = get_layout();
+        $tagHtml = tag("content", $tagPage, $tagHtml);
+        $tagHtml = tag('pager', pager('tag/'.$kind['path'], $page, count($entryPages)), $tagHtml);
+        $tagHtml = tag("title", $kind['path']." | ", $tagHtml);
+        $tagHtml = tag("content_title", "Wallpaper with {$kind['label']} Version", $tagHtml);
+        $tagHtml = tags_parse($tagHtml);
+        write_file('tag/'.$kind['path'].'/page/'.$page, $tagHtml);
+        if($page == 1)
+            write_file("tag/".$kind['path'], $tagHtml);
+    }  
     slog("update {$kind['path']} index"); 
 }
 
@@ -356,55 +388,68 @@ while($year >= 2000) {
 }
 
 // ! build index
-$html = get_layout(true);
-$content = file_get_contents($theme_dir."index.phtml");
 slog("rebuilding home page");
-$entryResult = $db->query("SELECT * FROM entry WHERE published IS NOT NULL ORDER BY published_at DESC LIMIT 200;");
-$entries = "";
+
+$layout = get_layout(true);
 $entryLayout = file_get_contents($theme_dir."layout/entry_home.phtml");
-$deskEntries = 0;
-$mobileEntries = 0;
-$homeEntryIds = array();
-while($entry = $entryResult->fetchArray()){
-    $entry['published_at'] = format_date($entry['published_at']);
 
-    $imageResult = $db->query("SELECT k.path as dir, i.path as file, k.position FROM image i JOIN image_kind k ON k.id = i.kind WHERE entry_id = {$entry['id']} AND (k.mobile = 1 OR k.id = 6) ORDER BY k.position ASC LIMIT 3;");
-    $mobileImages = '<div class="entry-images visible-xs">';
-    $hasMobile = false;
-    while($image = $imageResult->fetchArray()){
-        if($image['dir'] == 'preview'){
-            $entry['preview'] = $baseurl."gallery/".$image['dir']."/".$image['file'];
-        } else {
-            $hasMobile = true;
-            $mobileImage = $baseurl."gallery/".$image['dir']."/".$image['file'];
-            $mobileImages .= '<a href="'.$entry['url_path'].'" class="image col-xs-6" title="'.$entry['title'].'"><img src="'.$mobileImage.'" alt="'.$entry['title'].'"/></a>';
+$entryResult = $db->query("SELECT * FROM entry WHERE published IS NOT NULL ORDER BY published_at DESC;");
+$entries = $db->fetchAll($entryResult);
+$entryPages = array_chunk($entries, 10);
+
+$first = 0;
+
+foreach($entryPages as $page => $pageEntries) {
+    $page+=1;
+    
+    if($page > 1)
+        $entriesHtml = '<button class="btn btn-home btn-lg pull-right"><a href="'. $baseurl .'">Newest Entries</a></button><div class="clearfix"></div>';
+    else
+        $entriesHtml = '';
+        
+    foreach($pageEntries as $index => $entry) {
+
+        $imageResult = $db->query("SELECT k.path as dir, i.path as file, k.position FROM image i JOIN image_kind k ON k.id = i.kind WHERE entry_id = {$entry['id']} AND (k.mobile = 1 OR k.id = 6) ORDER BY k.position ASC LIMIT 3;");
+        $mobileImages = '<div class="entry-images visible-xs">';
+        $hasMobile = false;
+        while($image = $imageResult->fetchArray()){
+            if($image['dir'] == 'preview'){
+                $entry['preview'] = $baseurl."gallery/".$image['dir']."/".$image['file'];
+            } else {
+                $hasMobile = true;
+                $mobileImage = $baseurl."gallery/".$image['dir']."/".$image['file'];
+                $mobileImages .= '<a href="'.$entry['url_path'].'" class="image col-xs-6" title="'.$entry['title'].'"><img src="'.$mobileImage.'" alt="'.$entry['title'].'"/></a>';
+            }
         }
+    
+        $entry['published_at'] = format_date($entry['published_at']);
+        
+        if($hasMobile) {
+            $entry['mobile_images'] = $mobileImages . '</div>';
+            $entry['mobile'] = 'hidden-xs';
+        } else {
+            $entry['mobile'] = '';
+        }
+        
+        $entriesHtml .= tag_all("entry", $entry, $entryLayout);
+        if($index == 0) {
+            $entriesHtml .= "{{include ad-middle.phtml}}";
+        }
+        
     }
     
-    if($deskEntries++ > 10) break;
+    $html = tag("content", $entriesHtml, $layout);
+    $html = tag('side_more', getMore(7, null, 'col-sm-12', $homeEntryIds), $html);
+    $html = tag('pager', pager('', $page, count($entryPages)), $html);
+    $html = tags_parse($html);
     
-    if($hasMobile) {
-        $entry['mobile_images'] = $mobileImages . '</div>';
-        $entry['mobile'] = 'hidden-xs';
-        $mobileEntries++;
-    } else {
-        $entry['mobile'] = '';
-    }
+    write_file('page/'.$page, $html);
+    if($page == 1)
+        write_file("index.html", $html);
     
-    $homeEntryIds[] = $entry['id'];
-    if($deskEntries == 1) {
-        $content = tag("entry_first", tag_all("entry", $entry, $entryLayout), $content);
-    } else {
-        $entries .= tag_all("entry", $entry, $entryLayout);
-    }
 }
-$content = tag("entries", $entries, $content);
 
-$html = tag("content", $content, $html);
-$html = tag('side_more', getMore(7, null, 'col-sm-12', $homeEntryIds), $html);
-$html = tags_parse($html);
-file_put_contents($site_dir."index.html", $html);
-
+copy($assets_dir.'.htaccess', $site_dir.'.htaccess');
 
 // ! reports
 $result = $db->query("SELECT count(*) as count FROM entry WHERE published IS NULL AND queue = 1;")->fetchArray();

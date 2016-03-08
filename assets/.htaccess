@@ -15,4 +15,6 @@ ExpiresDefault "access 2 days"
 ## EXPIRES CACHING ##
 
 RewriteEngine On
-RewriteRule ^jenna-coleman-mmxvi.html jenna-coleman-vi.html
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^([^?]*)$ /index.html [NC,L,QSA]

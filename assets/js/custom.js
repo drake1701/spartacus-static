@@ -17,3 +17,50 @@ function heightsFix() {
         }
     }
 }
+
+var ajaxing = false;
+var ajaxContent;
+
+jQuery(document).ready(function(){
+    
+    jQuery('#main').on('click', '#show_more', function(){
+        if(ajaxing) return;
+        if(typeof curPage != 'number') return;
+        console.log('show more');
+
+        curPage += 1;
+        var newUrl = jQuery('.pager .current').prev().find('a').prop('href');
+        
+        jQuery('nav').append('<img src="../images/ajax-loader.gif" />');
+        ajaxing = true;
+        jQuery('.btn-more').prop('disabled', 1);
+        
+        jQuery.ajax({
+            url: newUrl,
+            success: function(response) {
+                processAjaxData(response, newUrl);
+            },
+            error: function() {
+                ajaxing = false;
+            }
+        });
+        
+    })
+		
+});
+
+function processAjaxData(response, urlPath){
+    
+    ajaxContent = jQuery(response);
+    
+    ajaxContent.find('.ad:not(.bottom), .content-head, .content-title, .btn-home').remove();
+    
+    jQuery('nav, .ad.bottom').remove();
+    jQuery('#main').append(ajaxContent.find('#main').html());
+    
+    jQuery('img').load(heightsFix);
+     
+    window.history.pushState({"html":response.html,"pageTitle":document.title},"", urlPath);
+    ajaxing = false;
+}
+
