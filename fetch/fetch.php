@@ -228,6 +228,17 @@ switch($host){
             $links[$linkid] = "http://rosemciversource.net/gallery/displayimage.php?pid={$pid}&fullsize=1";
         }
         break;
+    case "imgur.com":
+        preg_match("#<title>(.+?) - Album on Imgur</title>#s", $postPage, $title);
+        if(count($title) < 2 || count($title[1]) == 0) die("no title found for $url using $host\n");
+        $title = $title[1];
+        $dir = parseTitle("Imgur Gallery ".$title, "Imgur");
+        preg_match_all('#class="post-image-placeholder" src="([^"]+?)"#', $postPage, $links);
+        $links = array_pop($links);
+        foreach($links as $linkid => $link) {
+            $links[$linkid] = "http:$link";
+        }
+        break;
     default:
         die("no processing found for $host\n");
 }

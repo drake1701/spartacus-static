@@ -1,4 +1,5 @@
 RewriteEngine On
 RewriteBase /
+RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_URI} !^/maintenance\.html$
 RewriteRule ^(.*)$ /maintenance.html [L]
