@@ -426,8 +426,8 @@ $first = 0;
 foreach($entryPages as $page => $pageEntries) {
     $page+=1;
     
-    if($page > 1) {break;
-        $entriesHtml = '<button class="btn btn-home btn-lg pull-right"><a href="'. $baseurl .'">Newest Entries</a></button><div class="clearfix"></div>';}
+    if($page > 1)
+        $entriesHtml = '<button class="btn btn-home btn-lg pull-right"><a href="'. $baseurl .'">Newest Entries</a></button><div class="clearfix"></div>';
     else
         $entriesHtml = '';
         
