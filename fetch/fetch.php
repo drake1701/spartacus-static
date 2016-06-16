@@ -126,6 +126,21 @@ switch($host){
             }
         }
         break;
+    // !NCF
+    case "www.nudecelebforum.com":
+        preg_match("#<title>(.+?)</title>#", $postPage, $title);
+        if(count($title) < 2 || count($title[1]) == 0) die("no title found for $url using $host\n");
+        $title = $title[1];
+        $dir = parseTitle($title, "Nude Celeb Forum");
+        preg_match_all('#<!-- message -->(.+?)<!-- / message -->#s', $postPage, $posts);
+        $posts = array_pop($posts);
+        
+        $links = array();
+        foreach($posts as $post) {
+            preg_match_all('#a href="([^"]+?)" target="_blank"><img src#s', $post, $postlinks);
+            $links = array_merge($links, $postlinks[1]);
+        }
+        break;        
     // ! gotceleb post
     case "www.gotceleb.com":
         preg_match("#<title>(.+?)</title>#", $postPage, $title);
@@ -197,23 +212,18 @@ switch($host){
         $name = strtolower(str_replace(' ', '-', $dirParts[2]));
         preg_match_all("#href='.+?\/viewimage\/(.+?)'#", $postPage, $pageLinks);
         $links = $pageLinks[1];
+        
+        $page = 2;
         do {
-            preg_match("#xajax_displaycustomlist\((\d*),(\d*)#", $postPage, $nextPage);
-            if(count($nextPage) < 3) break;
-                        
-            $ch = curl_init('http://www.listal.com/ajax/');
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_AUTOREFERER, true);
-            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-            curl_setopt($ch, CURLOPT_POST, 3);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, "xjxfun=displaycustomlist&xjxargs[]=N{$nextPage[1]}&xjxargs[]=N{$nextPage[2]}");
-            $postPage = curl_exec($ch);
-            
-            preg_match_all("#href='\/viewimage\/(.+?)'#", $postPage, $pageLinks);
+            unset($pageLinks);
+            $postPage = doCurl($url . '//' . $page++);
+            preg_match_all("#href='.+?\/viewimage\/(.+?)'#", $postPage, $pageLinks);
+            if(count($pageLinks[1]) == 0) break;
             $links = array_merge($links, $pageLinks[1]);
         } while (1);
+        
         foreach($links as $id => $value){
-            $links[$id] = 'http://ilarge.listal.com/image/' . $value . '/10000full-' . $name . '.jpg';
+            $links[$id] = 'http://iv1.lisimg.com/image/' . $value . '/10000full-' . $name . '.jpg';
         }
         break;
     // ! rosemciversource.net :)
@@ -249,7 +259,7 @@ $largeImages = array();
 foreach($links as $linkId => $link){
     $linkHost = parse_url($link);
     $linkHost = $linkHost['host'];
-    if($linkHost == 'ilarge.listal.com') {
+    if($linkHost == 'iv1.lisimg.com') {
         $linkParts = array_reverse(explode('/', $link));
         $id = $linkParts[1];
         $destfile = $dir . $id . '.jpg';

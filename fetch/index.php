@@ -10,7 +10,7 @@
             #search { margin: 20px auto; text-align: center; }
             #search input { font-size:20px; }
             #results .item { 
-                width:19%; 
+                width:11.5%; 
                 margin:0.5%; 
                 float:left; 
                 background-color: #ccc;                
@@ -117,7 +117,7 @@
             function getCaches() {
                 var count = 0;
         		jQuery('.item:not(:visible)').each(function(){
-            		if(count++ > 14) return;
+            		if(count++ >= 24) return;
             		var item = jQuery(this);
             		var background = jQuery(this).data('image')
             		jQuery.ajax({
@@ -148,8 +148,10 @@
         <form id="search">
             <input id="q" name="q" type="text" value="new" /><button type="submit"><span>Go</span></button>
             <input type="checkbox" name="b" /> Bad
-            <input type="checkbox" name="r" /> Reject
-            
+            <input type="checkbox" name="r" /> Reject            
+        </form>
+        <form id="url" action="fetch.php" method="get">
+            <input type="text" name="url" placeholder="URL Get" />
         </form>
         <div id="results">
             
