@@ -10,7 +10,7 @@ date_default_timezone_set("UTC");
 $site_dir   = $base_dir . "_site/";
 $theme_dir  = $base_dir . "theme/";
 $assets_dir = $base_dir . "assets/";
-$page_size  = 18;
+$page_size  = 15;
 $rebuild = false;
 $baseurl = strpos($base_dir, 'development') ?  "http://dev.spartacuswallpaper.com/" : "http://spartacuswallpaper.com/";
 
@@ -68,9 +68,9 @@ function tag_parse($tagName, $arg = null){
             }
             return $html;
         case "calendar":
-            $calEntry = $db->query("SELECT * FROM `entry` WHERE `queue` = 2 AND `published_at` <= date('now') ORDER BY `published_at` DESC LIMIT 1;");
+            $calEntry = $db->query("SELECT e.*, k.path as kind, i.path as image FROM entry e JOIN image i ON i.entry_id = e.id JOIN image_kind k ON i.kind = k.id AND k.exclude != 1 WHERE `queue` = 2 AND `published_at` <= date('now') ORDER BY k.position ASC, `published_at` DESC LIMIT 1;");
             $calEntry = $calEntry->fetchArray();
-            $html = '<div class="col-md-12 col-sm-6 col-xs-6"><a href="'.$baseurl.'tag/calendar" title="Calendar Series"><span>'.$calEntry['title'].'</span><img src="'.$baseurl."gallery/thumb/".$calEntry['filename'].'" title="'.$calEntry['title'].'" /></a></div>';
+            $html = '<div class="col-md-12 col-sm-6 col-xs-6"><a href="'.$baseurl.'tag/calendar" title="Calendar Series"><span>'.$calEntry['title'].'</span><img src="'.get_cache_url($calEntry['kind'].'/'.$calEntry['filename'], 360).'" title="'.$calEntry['title'].'" /></a></div>';
             return $html;
         case "baseurl":
             return $baseurl;
@@ -95,40 +95,51 @@ function get_layout($long = false){
     return $html;
 }
 
-function tag_entry($entry, $layout = null, $count, $layoutType = 'tag', $classes = null) {
+function tag_entry($entry, $layout = null, $count, $layoutType = 'tag', $classes = null, $mobile = true) {
     global $baseurl, $db, $theme_dir, $page_size;
     if($layout == null)
         $layout = file_get_contents($theme_dir."layout/tag.phtml");
     $entry['slug'] = $baseurl . $entry['url_path'];
 
-    $preview = $count > $page_size ? 'thumb' : 'preview';
+    $preview = $count >= $page_size ? 'thumb' : 'preview';
     if($classes) {
         $entry['classes'] = $classes;
     } else {
         if($preview == 'thumb')
-            $entry['classes'] = 'col-xs-12 col-sm-4';
+            $entry['classes'] = 'col-sm-4';
         else 
-            $entry['classes'] = 'col-xs-12 col-sm-6';
+            $entry['classes'] = 'col-sm-6';
+            
+        if($mobile)
+            $entry['classes'] .= ' col-xs-12';
+        else
+            $entry['classes'] .= ' col-xs-6';
     }
-        
-    $imageResult = $db->query("SELECT k.path as dir, i.path as file, k.position FROM image i JOIN image_kind k ON k.id = i.kind WHERE entry_id = {$entry['id']} AND (k.mobile = 1 OR k.path = '".$preview."') ORDER BY k.position ASC LIMIT 3;");
-    $images = $db->fetchAll($imageResult);
-    $mobileImages = '<div class="entry-images visible-xs">';
-    $hasMobile = false;
-    $i = 0;
-    foreach($images as $image) {
-        if($image['dir'] == $preview){
-            $entry['thumb'] = $baseurl."gallery/".$image['dir']."/".$image['file'];
-        } else {
+    
+    $hasMobile = false;    
+    if($mobile) {
+        $imageResult = $db->query("SELECT k.path as dir, i.path as file, k.position FROM image i JOIN image_kind k ON k.id = i.kind WHERE entry_id = {$entry['id']} AND k.mobile = 1 ORDER BY k.position ASC LIMIT 2;");
+        $images = $db->fetchAll($imageResult);
+        $mobileImages = '<div class="entry-images visible-xs">';
+        $i = 0;
+        foreach($images as $image) {
             $hasMobile = true;
             $mobileImage = $baseurl."gallery/".$image['dir']."/".$image['file'];
             if($i%2 == 0)
                 $mobileImages .= '<div class="image-box col-xs-12 col-sm-4">';
-            $mobileImages .= '<a href="'.$entry['slug'].'" class="image col-xs-6" title="'.$entry['title'].'"><img src="'.$mobileImage.'" alt="'.$entry['title'].'"/></a>';
+            $mobileImages .= '<a href="'.$entry['slug'].'" class="image col-xs-6" title="'.$entry['title'].'"><img src="'.get_cache_url($mobileImage, 340).'" alt="'.$entry['title'].'"/></a>';
             if($i++%2 == 1)
                 $mobileImages .= '</div>';
         }
     }
+    
+    if(!isset($entry['thumb']) || empty($entry['thumb'])) {
+        $imageResult = $db->query("SELECT k.path || '/' || i.path as thumb FROM image i JOIN image_kind k ON k.id = i.kind WHERE entry_id = {$entry['id']} AND k.exclude != 1 ORDER BY k.position ASC LIMIT 1;");
+        $image = $imageResult->fetchArray();        
+        $entry['thumb'] = $image['thumb'];
+    }    
+    $entry['thumb'] = get_cache_url($entry['thumb'], 340);
+    
     if($hasMobile) {
         $entry['mobile_images'] = $mobileImages . '</div>';
         $entry['mobile'] = 'hidden-xs';
@@ -285,6 +296,30 @@ function codeToName($code) {
 function format_date($date, $short = false) {
 	$format = $short ? "M j, Y" : "l, F jS, Y";
 	return date($format, strtotime($date));
+}
+
+function get_cache_url($image, $size) {
+    global $baseurl;
+    
+    $filename = str_replace('.jpg', '', basename($image));
+    $kind = basename(dirname($image));
+       
+    $encoded = transcode($kind . '/' . $filename);
+
+    $url = $baseurl . 'gallery/cache/' . $size . '/' . $encoded . '.jpg';
+
+    return $url;
+}
+
+function transcode($string){
+    $key = array('0' => 'a', '-' => 'y', '_' => '4', 'a' => '0', 'b' => 'c', 'c' => 'b', 'd' => '3', 'e' => '6', 'f' => 'n', 'g' => 'o', 'h' => 'm', 'i' => 'j', 'j' => 'i', 'k' => 'q', 'l' => '9', 'm' => 'h', 'n' => 'f', 'o' => 'g', 'p' => 't', 'q' => 'k', 'r' => 'w', 's' => '8', 't' => 'p', 'u' => '1', 'v' => '2', 'w' => 'r', 'x' => 'z', 'y' => '-', 'z' => 'x', '1' => 'u', '2' => 'v', '3' => 'd', '4' => '_', '5' => '7', '6' => 'e', '7' => '5', '8' => 's', '9' => 'l', '/' => '/');
+    
+    $in = str_split($string);
+    $out = array();
+    foreach($in as $v) {
+        $out[] = $key[$v];
+    }
+    return implode('', $out);
 }
 
 function slog($message, $error = false) {

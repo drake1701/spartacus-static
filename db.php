@@ -21,4 +21,4 @@ class MySqlite extends SQLite3 {
         return $resultArray;
     }
 }
-$db = new MySqlite($base_dir . "/spartacus");
+$db = new MySqlite(dirname(__FILE__) . "/spartacus");

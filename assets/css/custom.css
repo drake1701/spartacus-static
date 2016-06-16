@@ -58,7 +58,6 @@ padding-bottom: 5px;
 .entry-images {
     overflow: auto;
     clear:both;
-    margin: 0 -5px;
 }
 
 .entry-versions,
@@ -236,9 +235,14 @@ overflow:auto;
 .entry-grid {
     clear:both;
 	list-style: none;
-	padding: 0;
+	padding: 0 7px;
 	overflow: auto;
 }
+.entry-grid > div {
+    padding-left:7px;
+    padding-right:7px;
+}
+
 .entry-grid .entry-images .image {
     padding:0 5px;
 }
@@ -406,6 +410,10 @@ td {
 }
 
 @media screen and (max-width: 990px) {
+    body > .container-fluid {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
     .sidebar ul:not(.social-contact):not(.years),
     .entry-versions ul {
     	-webkit-column-count: 3;
@@ -434,12 +442,43 @@ td {
 }
 
 @media screen and (max-width: 767px) {
-    .entry-grid .entry-item {
-        width:100%;
-        margin-left:0;
+    .container-fluid .row {
+        margin: 0;
+    }
+    #sidebar .row {
+    	margin-left:-7px;
+    	margin-right:-7px;
+    }
+    .container-fluid > .row > .col-md-3,
+    .container-fluid > .row > .col-md-9,
+    .col-xs-12 {
+        padding-left:0;
+        padding-right:0;
+    }
+    .col-xs-6:nth-child(2n) {
+        padding-left: 5px;
+        padding-right: 7px;
+    }
+    .col-xs-6:nth-child(2n+1) {
+        padding-right: 5px;
+        padding-left: 7px;
+    }
+    .tops > div:nth-child(2n+1) {
+    	clear:left;
     }
     .ad-middle {
         display: none;
+    }
+    .ad {
+        margin-left:0 !important;
+        margin-right:0 !important;
+    }
+    .entry-images {
+        margin-left: -7px;
+        margin-right: -7px;
+    }
+    .entry-grid {
+        padding:0;
     }
     .sidebar ul:not(.social-contact):not(.years),
     .entry-versions ul {
@@ -500,6 +539,10 @@ td {
     .entry-date {
     	float:none;
     	font-size:14px;
+    }
+    #main, #sidebar {
+        padding-left:7px;
+        padding-right:7px;
     }
 }
 
