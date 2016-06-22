@@ -666,7 +666,7 @@ while($entry = $reposts->fetchArray()){
     }
     $images = array_diff($files, $images);
 ?>
-<div class="entry-grid row">
+<div class="row">
 <?php foreach ($images as $image) : ?>
 	<div class="col-xs-6 col-sm-4 col-md-3">
 		<p class="entry-title"><a href="?<?php echo http_build_query(array('action'=>'newprocess', 'image' => $image)) ?>"><?php echo $image ?></a></p>

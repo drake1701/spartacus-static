@@ -6,7 +6,6 @@
  * @address     www.drogers.net
  */
 
-
 require_once dirname(dirname(dirname(__FILE__))).'/app.php';
 
 // If script is called directly, give debug info
@@ -15,7 +14,6 @@ if($debug) {
     error_reporting(E_ALL);
     ini_set('show_errors', 1);
 }
-die('foo');
 
 try {
     // parse requested string
@@ -23,7 +21,7 @@ try {
     $pathParts = explode('/', trim($requestedFile, '/'));
     
     // must be five parts
-    if(count($pathParts) != 3)
+    if(count($pathParts) != 5)
         throw new Exception(print_r($pathParts, 1));
     
     // get filename and type
@@ -61,10 +59,9 @@ try {
     echo $im->getImageBlob();
 
 } Catch (Exception $e) {
-    var_dump($e);
     if($debug)
-        var_dump($e);
-    else 
+        echo $e->getMessage()."\n";
+    else
         header('Location: /gallery/cache/placeholder.png');
         
 }
