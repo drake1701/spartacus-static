@@ -116,6 +116,8 @@ while($entry = $result->fetchArray()){
         
     $entry['published_at'] = format_date($entry['published_at']);
     $entry['short_content'] = substr(strip_tags($entry['content']), 0, 45);
+    if(strlen($entry['content']))
+        $entry['content'] = '<p class="std">' . $entry['content'] . '</p>';
     
     $imageResult = $db->query("SELECT i.path as filename, k.path as dir, k.label, k.position, k.mobile FROM image i JOIN image_kind k ON i.kind = k.id WHERE entry_id = {$entry['id']} AND exclude = 0 ORDER BY position ASC;");
     $images = array();
@@ -435,6 +437,9 @@ foreach($entryPages as $page => $pageEntries) {
     foreach($pageEntries as $index => $entry) {
         
         $entry['preview'] = get_cache_url($entry['thumb'], 924);
+        if(strlen($entry['content']))
+            $entry['content'] = '<p class="std">' . $entry['content'] . '</p>';
+        
 
         $imageResult = $db->query("SELECT k.path as dir, i.path as file, k.position FROM image i JOIN image_kind k ON k.id = i.kind WHERE entry_id = {$entry['id']} AND k.mobile = 1 ORDER BY k.position ASC LIMIT 2;");
         $mobileImages = '<div class="entry-images visible-xs">';
