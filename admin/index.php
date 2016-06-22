@@ -140,6 +140,7 @@
             "id" => null,
             "title" => codeToName(str_replace(".jpg", '', strtolower($image))),
             "filename" => $image,
+            "thumb" => 'widescreen/'.$image,
             "content" => null,
             "tags" => preg_replace("#-[ivxlm]*\$#", "", str_replace(".jpg", '', strtolower($image))),
             "url_path" => str_replace(".jpg", ".html", $image),
@@ -148,7 +149,7 @@
     ?>
     <h1>Edit</h1>
     <a href="#" class="col-xs-6 pull-right" onclick="window.open('<?php echo $baseurl ?>gallery/<?php echo $entry['thumb'] ?>', '','toolbar=no, scrollbars=yes, resizable=yes, top=10, left=10, width=960, height=600');">
-	    <img src="<?php echo get_cache_url($entry['thumb'], 340) ?>">
+	    <img src="<?php echo get_cache_url($entry['thumb'], 924) ?>">
     </a>
 <form enctype="application/x-www-form-urlencoded" action="?action=save" method="post">
     <dl class="zend_form">
@@ -177,6 +178,7 @@
         <dt id="filename-label">&nbsp;</dt>
         <dd id="filename-element">
             <input type="hidden" name="filename" value="<?php echo $entry['filename'] ?>" id="filename">
+            <input type="hidden" name="thumb" value="<?php echo $entry['thumb'] ?>" id="thumb">
             <input type="hidden" name="id" value="<?php echo $entry['id'] ?>" id="id">
         </dd>
         <dt id="save-label">&nbsp;</dt>
