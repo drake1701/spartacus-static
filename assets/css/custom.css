@@ -25,7 +25,13 @@ margin-bottom: 40px;
 }
 
 .entry-content {
-font-size:14px;
+    font-size:14px;
+    margin-top:10px;
+    padding:10px 20px 20px;
+    color:#eee;
+    font-weight: 300;
+    border-top: 2px solid rgba(255,255,255,.08);
+    border-bottom: 2px solid rgba(255,255,255,.08);
 }
 
 .entry-date {
