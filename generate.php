@@ -62,7 +62,7 @@ $testHtml = '
 <script type="text/javascript">
 //<![CDATA[
 	jQuery(document).ready(function(){
-    	var counter = 1;
+    	var counter = 0;
         jQuery(".header-banner.banner-border").each(function(){
             jQuery(this).attr("class", "").addClass("banner_" + counter++).addClass("header-banner").addClass("banner-border");
         });
@@ -75,8 +75,8 @@ $testHtml = '
 .header-banner.banner-border {margin-bottom:10px; }
 </style>
 ';
-$testHtml .= str_repeat($header, (count($banners)-2));
-$testPage = get_layout();
+$testHtml .= str_repeat($header, (count($banners)-1));
+$testPage = get_layout(0, 'empty');
 $testPage = tag('content', $testHtml, $testPage);
 $testPage = tags_parse($testPage);
 $testPage = str_replace('col-md-9', 'col-md-12', $testPage);
@@ -115,6 +115,7 @@ while($entry = $result->fetchArray()){
     $html = tag("title", $entry['title']." | ", $html);
         
     $entry['published_at'] = format_date($entry['published_at']);
+    $entry['short_content'] = substr(strip_tags($entry['content']), 0, 45);
     
     $imageResult = $db->query("SELECT i.path as filename, k.path as dir, k.label, k.position, k.mobile FROM image i JOIN image_kind k ON i.kind = k.id WHERE entry_id = {$entry['id']} AND exclude = 0 ORDER BY position ASC;");
     $images = array();
@@ -125,7 +126,7 @@ while($entry = $result->fetchArray()){
     $mobile = 0;
     foreach($images as $image){
         $imageUrl = $baseurl."gallery/".$image['dir']."/".$image['filename'];
-        if($image['position'] == 1) {
+        if(!isset($entry['first_image'])) {
             $entry['first_image'] = $imageUrl;
             $entry['preview'] = get_cache_url($imageUrl, 924);
         }
@@ -169,17 +170,17 @@ while($entry = $result->fetchArray()){
     $entry['tags'] = $tags;
     
     $excludeIds = array($entry['id']);
-    $prev = $db->query('SELECT e.*, k.path as kind, i.path as image FROM entry e JOIN entry o ON o.id = "'.$entry['id'].'" JOIN image i ON i.entry_id = e.id JOIN image_kind k ON i.kind = k.id AND k.exclude != 1 WHERE e.published_at < o.published_at ORDER BY k.position ASC, e.published_at DESC LIMIT 1;')->fetchArray();
+    $prev = $db->query('SELECT e.* FROM entry e JOIN entry o ON o.id = "'.$entry['id'].'" WHERE e.published_at < o.published_at ORDER BY e.published_at DESC LIMIT 1;')->fetchArray();
     if(isset($prev['id'])) {
-        $entry['prev'] = '<a href="'.$baseurl.$prev['url_path'].'" title="'.$prev['title'].'"><span>Previous</span><img src="'.get_cache_url($prev['kind'].'/'.$prev['image'], 360).'" alt="'.$prev['title'].'" /><span>'.$prev['title'].'</span></a>';
+        $entry['prev'] = '<a href="'.$baseurl.$prev['url_path'].'" title="'.$prev['title'].'"><span>Previous</span><img src="'.get_cache_url($prev['thumb'], 360).'" alt="'.$prev['title'].'" /><span>'.$prev['title'].'</span></a>';
         $entry['prev_link'] = '<a href="'.$baseurl.$prev['url_path'].'" title="'.$prev['title'].'"><span>&laquo; Previous Wallpaper</span></a>';
         $excludeIds[] = $prev['id'];
     }
     
-    $next = $db->query('SELECT e.*, k.path as kind, i.path as image FROM entry e JOIN entry o ON o.id = "'.$entry['id'].'" JOIN image i ON i.entry_id = e.id JOIN image_kind k ON i.kind = k.id AND k.exclude != 1 WHERE e.published_at > o.published_at ORDER BY k.position ASC, e.published_at ASC LIMIT 1;')->fetchArray();
+    $next = $db->query('SELECT e.* FROM entry e JOIN entry o ON o.id = "'.$entry['id'].'" WHERE e.published_at > o.published_at ORDER BY e.published_at ASC LIMIT 1;')->fetchArray();
     if(isset($next['id'])) {
         $nexturl = $baseurl.$next['url_path'];
-        $nextImg = '<span>Next</span><img src="'.get_cache_url($next['kind'].'/'.$next['image'], 360).'" alt="'.$next['title'].'" /><span>'.$next['title'].'</span>';
+        $nextImg = '<span>Next</span><img src="'.get_cache_url($next['thumb'], 360).'" alt="'.$next['title'].'" /><span>'.$next['title'].'</span>';
         
         $entry['next'] = $next['published'] ? 
             '<a href="'.$nexturl.'" title="'.$next['title'].'">'.$nextImg.'</a>' :
@@ -201,9 +202,9 @@ while($entry = $result->fetchArray()){
 // ! update tags
 slog('updating tags');
 if($rebuild){
-    $tagResult = $db->query("SELECT t.title, t.slug, t.id, count(*) as count, i.path AS thumb FROM tag t JOIN entry_tag e ON e.tag_id = t.id JOIN image i ON i.entry_id = e.entry_id WHERE list = 1 AND i.kind = 7 GROUP BY tag_id;");
+    $tagResult = $db->query("SELECT t.title, t.slug, t.id, count(*) as count FROM tag t JOIN entry_tag e ON e.tag_id = t.id WHERE list = 1 GROUP BY tag_id;");
 } else {
-    $tagResult = $db->query("SELECT t.title, t.slug, t.id, count(*) as count, i.path AS thumb FROM tag t JOIN entry_tag e ON e.tag_id = t.id JOIN image i ON i.entry_id = e.entry_id WHERE slug IN('".implode("','", $changedTags)."') AND list = 1 AND i.kind = 7 GROUP BY tag_id;");
+    $tagResult = $db->query("SELECT t.title, t.slug, t.id, count(*) as count FROM tag t JOIN entry_tag e ON e.tag_id = t.id WHERE slug IN('".implode("','", $changedTags)."') AND list = 1 GROUP BY tag_id;");
 }
 
 // ! build tag pages
@@ -322,7 +323,7 @@ while($year >= 2000) {
 $kindResult = $db->query("SELECT * FROM image_kind WHERE exclude != 1;");
 while($kind = $kindResult->fetchArray()){
     if($kind['path'] == 'calendar') {
-        $tagEntryResult = $db->query("SELECT e.id, title, url_path, published_at, 'widescreen/' || i.path as thumb FROM entry e JOIN image i ON i.entry_id = e.id WHERE queue = 2 AND published IS NOT NULL GROUP BY e.id ORDER BY published_at DESC;");
+        $tagEntryResult = $db->query("SELECT e.id, title, url_path, published_at FROM entry e WHERE queue = 2 AND published IS NOT NULL GROUP BY e.id ORDER BY published_at DESC;");
     } else {
         $tagEntryResult = $db->query("SELECT e.id, title, url_path, published_at, k.path || '/' || i.path as thumb FROM entry e JOIN image i ON i.entry_id = e.id JOIN image_kind k ON i.kind = k.id WHERE i.kind = {$kind['id']} AND published IS NOT NULL ORDER BY published_at DESC;");
     }
@@ -432,18 +433,16 @@ foreach($entryPages as $page => $pageEntries) {
         $entriesHtml = '';
         
     foreach($pageEntries as $index => $entry) {
+        
+        $entry['preview'] = get_cache_url($entry['thumb'], 924);
 
-        $imageResult = $db->query("SELECT k.path as dir, i.path as file, k.position FROM image i JOIN image_kind k ON k.id = i.kind WHERE entry_id = {$entry['id']} AND (k.mobile = 1 OR k.id = 8) ORDER BY k.position ASC LIMIT 3;");
+        $imageResult = $db->query("SELECT k.path as dir, i.path as file, k.position FROM image i JOIN image_kind k ON k.id = i.kind WHERE entry_id = {$entry['id']} AND k.mobile = 1 ORDER BY k.position ASC LIMIT 2;");
         $mobileImages = '<div class="entry-images visible-xs">';
         $hasMobile = false;
         while($image = $imageResult->fetchArray()){
-            if(!isset($entry['preview'])){
-                $entry['preview'] = get_cache_url($image['dir']."/".$image['file'], 924);
-            } else {
-                $hasMobile = true;
-                $mobileImage = $baseurl."gallery/".$image['dir']."/".$image['file'];
-                $mobileImages .= '<a href="'.$baseurl.$entry['url_path'].'" class="image col-xs-6" title="'.$entry['title'].'"><img src="'.get_cache_url($mobileImage, 340).'" alt="'.$entry['title'].'"/></a>';
-            }
+            $hasMobile = true;
+            $mobileImage = $baseurl."gallery/".$image['dir']."/".$image['file'];
+            $mobileImages .= '<a href="'.$baseurl.$entry['url_path'].'" class="image col-xs-6" title="'.$entry['title'].'"><img src="'.get_cache_url($mobileImage, 340).'" alt="'.$entry['title'].'"/></a>';
         }
     
         $entry['published_at'] = format_date($entry['published_at']);

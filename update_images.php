@@ -26,11 +26,20 @@ while($entry = $entries->fetchArray()) {
         unset($imageFiles[$key]);
     }
     // get image db records
-    $imageResult = $db->prepare("SELECT i.path as filename, k.path as dir, k.label, k.position FROM image i JOIN image_kind k ON i.kind = k.id  WHERE entry_id = :entry_id;");
+    $imageResult = $db->prepare("SELECT i.path as filename, k.path as dir, k.label, k.position FROM image i JOIN image_kind k ON i.kind = k.id  WHERE entry_id = :entry_id ORDER BY k.position ASC;");
     $imageResult->bindParam(":entry_id", $entry['id']);
     $imageResult = $imageResult->execute();
     $imageRows = $db->fetchAll($imageResult);
+    $first = false;
     foreach($imageRows as $key => $row) {
+        if($first == false) {                
+            $thumb = $db->prepare("UPDATE entry SET thumb = :thumb WHERE id = :id;");
+            $thumb->bindValue(":id", $entry['id']);
+            $thumb->bindValue(":thumb", $row['dir'] . '/' . $row['filename']);
+            $thumb->execute();            
+            $first = true;
+            echo 'Set thumb for '.$entry['id'].' to '.$row['dir'] . '/' . $row['filename']."\n";
+        }
         $imageRows[$row['dir']] = $row['filename'];
         unset($imageRows[$key]);
     }
