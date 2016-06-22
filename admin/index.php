@@ -147,8 +147,8 @@
     }
     ?>
     <h1>Edit</h1>
-    <a href="#" class="col-xs-6 pull-right" onclick="window.open('<?php echo $baseurl ?>gallery/widescreen/<?php echo $entry['filename'] ?>', '','toolbar=no, scrollbars=yes, resizable=yes, top=10, left=10, width=960, height=600');">
-	    <img src="<?php echo $baseurl ?>gallery/preview/<?php echo $entry['filename'] ?>">
+    <a href="#" class="col-xs-6 pull-right" onclick="window.open('<?php echo $baseurl ?>gallery/<?php echo $entry['thumb'] ?>', '','toolbar=no, scrollbars=yes, resizable=yes, top=10, left=10, width=960, height=600');">
+	    <img src="<?php echo get_cache_url($entry['thumb'], 340) ?>">
     </a>
 <form enctype="application/x-www-form-urlencoded" action="?action=save" method="post">
     <dl class="zend_form">
@@ -389,7 +389,7 @@
             		<a href="?<?php echo http_build_query(array('action'=>'edit','id'=>$entry['id'])) ?>">
                 		<span class="entry-title"><?php echo $entry['title'] ?></span>
                     </a>
-                    <img src="<?php echo $baseurl ?>gallery/thumb/<?php echo $entry['filename'] ?>" />
+                    <img src="<?php echo get_cache_url($entry['thumb'], 340) ?>" />
             		<div class="pull-left">
                 		<?php echo date("D m-d-y", strtotime($entry['published_at'])) ?><br/>
                         <?php echo $entry['published'] ? 'Published' : 'Queued' ?><br/>
@@ -458,7 +458,7 @@
                     $ins->bindValue(":path", $filename);
                     $ins->bindValue(":kind", $kinds[$kind]);
                     execute($ins);
-                    echo '<img src="'.$baseurl.'gallery/'.$kind.'/'.$filename.'" class="col-xs-2" alt="'.$entry['title'] .' - '.$kind.'" />';
+                    echo '<img src="'.get_cache_url($kind.'/'.$filename, 340).'" class="col-xs-2" alt="'.$entry['title'] .' - '.$kind.'" />';
                     $change = true;
                 }
             } 
@@ -594,7 +594,7 @@ $reposts = $repost->execute();
                 <?php if(new DateTime($entry['published_at']) > $now): ?>
             	<input type="hidden" name="entry_id[<?php echo $entry['queue'] ?>][]" value="<?php echo $entry['id'] ?>" />
             	<?php endif; ?>
-                <img src="<?php echo $baseurl ?>gallery/thumb/<?php echo $entry['filename'] ?>" />
+                <img src="<?php echo get_cache_url($entry['thumb'], 340) ?>" />
         		<a href="?<?php echo http_build_query(array('action'=>'edit','id'=>$entry['id'])) ?>">
             		<span class="entry-title"><?php echo $entry['title'] ?></span>
                 </a>
@@ -627,7 +627,7 @@ while($entry = $reposts->fetchArray()){
             <?php if(new DateTime($entry['published_at']) > $now): ?>
         	<input type="hidden" name="entry_id[<?php echo $entry['queue'] ?>][]" value="<?php echo $entry['id'] ?>" />
         	<?php endif; ?>
-            <img src="<?php echo $baseurl ?>gallery/thumb/<?php echo $entry['filename'] ?>" />
+            <img src="<?php echo get_cache_url($entry['thumb'], 340) ?>" />
     		<a href="?<?php echo http_build_query(array('action'=>'edit','id'=>$entry['id'])) ?>">
         		<span class="entry-title"><?php echo $entry['title'] ?></span>
             </a>
@@ -654,10 +654,10 @@ while($entry = $reposts->fetchArray()){
 <p>Normal Queue:   <?php echo format_date($queue->getLastQueuedDate(1)) ?></p>
 <p>Calendar Queue: <?php echo format_date($queue->getLastQueuedDate(2), "short") ?></p>
 <?php 
-    chdir($site_dir.'gallery/thumb/');
+    chdir($site_dir.'gallery/widescreen/');
     $files = glob('*.jpg');
     
-    $imageResult = $db->query("SELECT path FROM image WHERE kind = 7;");
+    $imageResult = $db->query("SELECT path FROM image WHERE kind = 8;");
     $images = array();
     while($image = $imageResult->fetchArray()){
         $images[] = $image['path'];
@@ -668,7 +668,7 @@ while($entry = $reposts->fetchArray()){
 <?php foreach ($images as $image) : ?>
 	<div class="col-xs-6 col-sm-4 col-md-3">
 		<p class="entry-title"><a href="?<?php echo http_build_query(array('action'=>'newprocess', 'image' => $image)) ?>"><?php echo $image ?></a></p>
-		<div class="entry-image"><a href="?<?php echo http_build_query(array('action'=>'newprocess', 'image' => $image)) ?>"><img src="<?php echo $baseurl ?>gallery/thumb/<?php echo $image ?>" alt="<?php echo codeToName(str_replace(".jpg", '', strtolower($image))) ?>"/></a></div>
+		<div class="entry-image"><a href="?<?php echo http_build_query(array('action'=>'newprocess', 'image' => $image)) ?>"><img src="<?php echo get_cache_url('widescreen/' . $image, 340) ?>" alt="<?php echo codeToName(str_replace(".jpg", '', strtolower($image))) ?>"/></a></div>
 	</div>
 <?php endforeach ?>
 </div>

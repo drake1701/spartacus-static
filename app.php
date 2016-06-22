@@ -81,9 +81,9 @@ function tag_parse($tagName, $arg = null){
     }
 }
 
-function get_layout($long = false){
+function get_layout($long = false, $file = ''){
     global $theme_dir;
-    $html = file_get_contents($theme_dir."layout/default.phtml");
+    $html = $file ? file_get_contents($theme_dir."layout/" . $file . ".phtml") : file_get_contents($theme_dir."layout/default.phtml");
     preg_match_all("#{{include (\S*)}}#", $html, $tags);
     foreach($tags[0] as $i => $tag){
         if($long && $tags[1][$i] == "ad-sidebar.phtml") {
