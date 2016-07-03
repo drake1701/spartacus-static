@@ -1,1 +1,0 @@
-gallery/cache/cache.php
