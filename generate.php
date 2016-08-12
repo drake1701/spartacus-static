@@ -227,8 +227,9 @@ while($tag = $tagResult->fetchArray()){
         $page+=1;
     
         $tagPage = '<div class="row entry-grid">';
+        $count = count($entryPages) > 1 ? $page_size : count($pageEntries);
         foreach($pageEntries as $entry) {
-            $tagPage .= tag_entry($entry, $tagLayout, count($pageEntries));
+            $tagPage .= tag_entry($entry, $tagLayout, $count);
         }
         $tagPage .= '</div>';
         

@@ -238,15 +238,20 @@ switch($host){
             $links[$linkid] = "http://rosemciversource.net/gallery/displayimage.php?pid={$pid}&fullsize=1";
         }
         break;
+    // ! imgur.com
     case "imgur.com":
         preg_match("#<title>(.+?) - Album on Imgur</title>#s", $postPage, $title);
-        if(count($title) < 2 || count($title[1]) == 0) die("no title found for $url using $host\n");
-        $title = $title[1];
-        $dir = parseTitle("Imgur Gallery ".$title, "Imgur");
-        preg_match_all('#class="post-image-placeholder" src="([^"]+?)"#', $postPage, $links);
+
+        if(count($title) > 0 && count($title[1]) == 0)
+            $dir = parseTitle("Imgur Gallery ".$title[1], "Imgur");
+        else
+            $dir = $baseDir . "Imgur Gallery/" . sanitize($urlParts['path']) . "/";
+            
+        preg_match_all('#"(//i.imgur.com/[^"]+?)"#', $postPage, $links);
         $links = array_pop($links);
         foreach($links as $linkid => $link) {
-            $links[$linkid] = "http:$link";
+            $link = str_replace('.jpg', '', $link);
+            $links[basename($link)] = "http:$link";
         }
         break;
     default:
@@ -406,7 +411,7 @@ if($json) {
     $name = array_pop($nameInfo);
     header('Content-Description: File Transfer');
     header("Content-Type: text/plain");
-    header('Content-Disposition: attachment; filename=' . str_replace(' ', '-', $name.'_'.$title.'.sh')); 
+    header('Content-Disposition: attachment; filename=' . str_replace(' ', '-', $name.'_'.$title.'.fetch')); 
     header('Content-Transfer-Encoding: binary');
     header('Connection: Keep-Alive');
     header('Expires: 0');
@@ -418,7 +423,7 @@ echo "Title: <?php echo $title ?>"
 <?php foreach($largeImages as $largeImage): ?>
 curl --create-dirs "<?php echo $largeImage['url'] ?>" -o "<?php echo str_replace(':', '', $largeImage['file']) ?>"
 <?php endforeach; ?>
-trash /Volumes/Macintosh\ HD/Users/dennis/Downloads/<?php echo str_replace(' ', '-', $name.'_'.$title.'.sh') ?>
+trash /Volumes/Macintosh\ HD/Users/dennis/Downloads/<?php echo str_replace(' ', '-', $name.'_'.$title.'.fetch') ?>
 <?php
 }
 
@@ -458,10 +463,6 @@ function fail($msg){
     fclose($er);
 }
 function linkError($link){
-    global $json;
-    if(!$json) {
-        echo "Link error $link\n";
-    }
     fail("Link error $link");
 }
 function file_url($url){
