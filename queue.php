@@ -17,12 +17,14 @@ class Queue {
         }
         switch($this->types[$type]){
             case "m-th-sa":
-                $last_dow = $date->format("w");
-                if($last_dow == 1){
-                    $date->add(new DateInterval("P3D"));
-                } else {
-                    $date->add(new DateInterval("P2D"));
-                }
+                do {
+                    $last_dow = $date->format("w");
+                    if ($last_dow == 1) {
+                        $date->add(new DateInterval("P3D"));
+                    } else {
+                        $date->add(new DateInterval("P2D"));
+                    }
+                } while($date->format("d") == 1);
                 break;
             case "monthly-1":
                 $date->add(new DateInterval("P1M"));
