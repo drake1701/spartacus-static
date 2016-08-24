@@ -3,9 +3,11 @@
  * @author		Dennis Rogers
  * @address		www.drogers.net
  */
- require_once("../app.php");
- require_once("../queue.php");
- $queue = new Queue();
+
+session_start();
+require_once("../app.php");
+require_once("../queue.php");
+$queue = new Queue();
 ?>
 <html>
 <head>
@@ -118,6 +120,9 @@
         .calendar > div:nth-child(7n-6) {
             width: 10%;
         }
+        .calendar.reposts > div {
+            width:14%;
+        }
         .calendar .entry-title {
             font-size:.9em;
         }
@@ -129,6 +134,7 @@
 <body>
 <br/>
 <div class="container" id="main">
+    <?php require_once __DIR__ . '/../access.php' ?>
 <?php if(!empty($_GET['action'])): ?>
 <?php switch($_GET['action']): 
           case "edit": ?>
@@ -635,7 +641,7 @@ $reposts = $repost->execute();
 <button type="submit"><span>Save</span></button>
 </form>
 <h4>Reposts</h4>
-<div class="calendar">
+<div class="calendar reposts">
 <?php
 while($entry = $reposts->fetchArray()){
     ?>

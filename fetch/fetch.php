@@ -16,7 +16,7 @@ if($host == "www.celebutopia.org" || $host == "www.hotflick.net"){
 } else {
     $postPage = file_get_contents($url);
 }
-//file_put_contents("postpage.html", $postPage);
+file_put_contents("postpage.html", $postPage);
 //$postPage = file_get_contents("postpage.html");
 $postPage = str_replace("\n", " ", $postPage);
 $urlParts = parse_url($url);
@@ -44,13 +44,13 @@ switch($host){
         $title = $title[1];
         if(preg_match("#fact of the day#i", $title)){
             fail("No images here.");
-            continue 2;
+            continue;
         }
         $dir = parseTitle($title, "Celebutopia");
         preg_match('#postcontent.+?/blockquote#', $postPage, $post);
         if(count($post) == 0){
             fail("no post found for $url using $host");
-            continue 2;
+            continue;
         }
         $post = array_pop($post);
         preg_match_all('#href="(http.+?)"#', $post, $links);
@@ -247,10 +247,11 @@ switch($host){
         else
             $dir = $baseDir . "Imgur Gallery/" . sanitize($urlParts['path']) . "/";
             
-        preg_match_all('#"(//i.imgur.com/[^"]+?)"#', $postPage, $links);
+        preg_match_all('#property="og:image" content="([^"]*)"#', $postPage, $links);
         $links = array_pop($links);
         foreach($links as $linkid => $link) {
             $link = str_replace('.jpg', '', $link);
+            $link = str_replace('.png', '', $link);
             $links[basename($link)] = "http:$link";
         }
         break;
