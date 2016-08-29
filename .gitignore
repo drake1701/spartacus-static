@@ -5,6 +5,7 @@
 /gallery
 /fetch/cache
 /fetch/index.sqlite
+/fetch/postpage.html
 /migrate/db.php
 /migrate/spartacus
 /spartacus
