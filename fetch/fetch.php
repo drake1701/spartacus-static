@@ -16,7 +16,7 @@ if($host == "www.celebutopia.org" || $host == "www.hotflick.net"){
 } else {
     $postPage = file_get_contents($url);
 }
-//file_put_contents("postpage.html", $postPage);
+file_put_contents("postpage.html", $postPage);
 //$postPage = file_get_contents("postpage.html");
 $postPage = str_replace("\n", " ", $postPage);
 $urlParts = parse_url($url);
@@ -44,13 +44,13 @@ switch($host){
         $title = $title[1];
         if(preg_match("#fact of the day#i", $title)){
             fail("No images here.");
-            continue 2;
+            continue;
         }
         $dir = parseTitle($title, "Celebutopia");
         preg_match('#postcontent.+?/blockquote#', $postPage, $post);
         if(count($post) == 0){
             fail("no post found for $url using $host");
-            continue 2;
+            continue;
         }
         $post = array_pop($post);
         preg_match_all('#href="(http.+?)"#', $post, $links);
@@ -238,15 +238,21 @@ switch($host){
             $links[$linkid] = "http://rosemciversource.net/gallery/displayimage.php?pid={$pid}&fullsize=1";
         }
         break;
+    // ! imgur.com
     case "imgur.com":
         preg_match("#<title>(.+?) - Album on Imgur</title>#s", $postPage, $title);
-        if(count($title) < 2 || count($title[1]) == 0) die("no title found for $url using $host\n");
-        $title = $title[1];
-        $dir = parseTitle("Imgur Gallery ".$title, "Imgur");
-        preg_match_all('#class="post-image-placeholder" src="([^"]+?)"#', $postPage, $links);
+
+        if(count($title) > 0 && count($title[1]) == 0)
+            $dir = parseTitle("Imgur Gallery ".$title[1], "Imgur");
+        else
+            $dir = $baseDir . "Imgur Gallery/" . sanitize($urlParts['path']) . "/";
+            
+        preg_match_all('#property="og:image" content="([^"]*)"#', $postPage, $links);
         $links = array_pop($links);
         foreach($links as $linkid => $link) {
-            $links[$linkid] = "http:$link";
+            $link = str_replace('.jpg', '', $link);
+            $link = str_replace('.png', '', $link);
+            $links[basename($link)] = "http:$link";
         }
         break;
     default:
@@ -406,7 +412,7 @@ if($json) {
     $name = array_pop($nameInfo);
     header('Content-Description: File Transfer');
     header("Content-Type: text/plain");
-    header('Content-Disposition: attachment; filename=' . str_replace(' ', '-', $name.'_'.$title.'.sh')); 
+    header('Content-Disposition: attachment; filename=' . str_replace(' ', '-', $name.'_'.$title.'.fetch')); 
     header('Content-Transfer-Encoding: binary');
     header('Connection: Keep-Alive');
     header('Expires: 0');
@@ -418,7 +424,7 @@ echo "Title: <?php echo $title ?>"
 <?php foreach($largeImages as $largeImage): ?>
 curl --create-dirs "<?php echo $largeImage['url'] ?>" -o "<?php echo str_replace(':', '', $largeImage['file']) ?>"
 <?php endforeach; ?>
-trash /Volumes/Macintosh\ HD/Users/dennis/Downloads/<?php echo str_replace(' ', '-', $name.'_'.$title.'.sh') ?>
+trash /Volumes/Macintosh\ HD/Users/dennis/Downloads/<?php echo str_replace(' ', '-', $name.'_'.$title.'.fetch') ?>
 <?php
 }
 
@@ -458,10 +464,6 @@ function fail($msg){
     fclose($er);
 }
 function linkError($link){
-    global $json;
-    if(!$json) {
-        echo "Link error $link\n";
-    }
     fail("Link error $link");
 }
 function file_url($url){
