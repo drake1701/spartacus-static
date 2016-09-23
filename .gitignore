@@ -1,8 +1,11 @@
 .DS_Store
+.idea/
+/access.php
 /_site/
 /gallery
 /fetch/cache
 /fetch/index.sqlite
+/fetch/postpage.html
 /migrate/db.php
 /migrate/spartacus
 /spartacus

@@ -227,8 +227,9 @@ while($tag = $tagResult->fetchArray()){
         $page+=1;
     
         $tagPage = '<div class="row entry-grid">';
+        $count = count($entryPages) > 1 ? $page_size : count($pageEntries);
         foreach($pageEntries as $entry) {
-            $tagPage .= tag_entry($entry, $tagLayout, count($pageEntries));
+            $tagPage .= tag_entry($entry, $tagLayout, $count);
         }
         $tagPage .= '</div>';
         
@@ -477,7 +478,11 @@ foreach($entryPages as $page => $pageEntries) {
     
 }
 
-copy($assets_dir.'.htaccess', $site_dir.'.htaccess');
+if(strpos($base_dir, 'development'))
+    copy($assets_dir.'.htaccess.dev', $site_dir.'.htaccess');
+else
+    copy($assets_dir.'.htaccess', $site_dir.'.htaccess');
+
 
 // ! reports
 $result = $db->query("SELECT count(*) as count FROM entry WHERE published IS NULL AND queue = 1;")->fetchArray();

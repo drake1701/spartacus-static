@@ -3,9 +3,11 @@
  * @author		Dennis Rogers
  * @address		www.drogers.net
  */
- require_once("../app.php");
- require_once("../queue.php");
- $queue = new Queue();
+
+session_start();
+require_once("../app.php");
+require_once("../queue.php");
+$queue = new Queue();
 ?>
 <html>
 <head>
@@ -104,13 +106,22 @@
             border-bottom: 1px solid #A4B070;
         }
         .calendar > div {
-            width: 14.285714286%;
+            width: 5%;
             vertical-align: top;
             float:left;
             border: 1px solid #A4B070;
             border-width: 1px 1px 0 0;
             background: #1B2000;
             padding: 0 5px;
+        }
+        .calendar > div:nth-child(7n-5), .calendar > div:nth-child(7n-2), .calendar > div:nth-child(7n) {
+            width: 25%;
+        }
+        .calendar > div:nth-child(7n-6) {
+            width: 10%;
+        }
+        .calendar.reposts > div {
+            width:14%;
         }
         .calendar .entry-title {
             font-size:.9em;
@@ -123,10 +134,11 @@
 <body>
 <br/>
 <div class="container" id="main">
+    <?php require_once __DIR__ . '/../access.php' ?>
 <?php if(!empty($_GET['action'])): ?>
 <?php switch($_GET['action']): 
           case "edit": ?>
-    <?php case "newprocess" ?>
+    <?php case "newprocess": ?>
     <?php /* !new and edit form */ ?>
     <?php 
     if(!empty($_GET['id'])){
@@ -153,6 +165,9 @@
     </a>
 <form enctype="application/x-www-form-urlencoded" action="?action=save" method="post">
     <dl class="zend_form">
+        <?php if($entry['published_at']): ?>
+            <dd><?php echo format_date($entry['published_at']) ?></dd>
+        <?php endif; ?>
         <dt id="title-label"><label for="title" class="required">title:</label></dt>
         <dd id="title-element">
             <input type="text" name="title" id="title" value="<?php echo $entry['title'] ?>">
@@ -297,7 +312,7 @@
     }
     break; ?>
     <?php case 'reorder': 
-        /* !reordering */
+        /** !reordering */
         $data = $_POST;
         foreach($data['entry_id'] as $queueId => $postIds) {
             $queueDate = $queue->getLastPublishedDate($queueId);
@@ -561,6 +576,7 @@ $last = new DateTime($last['published_at']);
 $now = new DateTime();
 $marker = new DateTime();
 
+/** @var DateTime $marker */
 $marker = $marker->sub(new DateInterval('P' . $now->format('w') . 'D'));
 $increment = new DateInterval('P1D');
 $month = $marker->format('m');
@@ -581,10 +597,10 @@ $reposts = $repost->execute();
 	<?php while($marker < $last): ?>
 	<?php for($day = 0; $day < 7; $day++): ?>
 	    <?php 
-    	    $entry = $db->prepare('SELECT e.*, group_concat(t.slug) AS tags FROM entry e JOIN entry_tag et ON et.entry_id = e.id JOIN tag t ON t.id = et.tag_id WHERE date(e.published_at) = date(:published_at) GROUP BY et.entry_id LIMIT 1');
-    	    $entry->bindValue(':published_at', $marker->format('Y-m-d'));
-            $entry = $entry->execute();
-            $entry = $entry->fetchArray();
+    	    $sql = $db->prepare('SELECT e.*, group_concat(t.slug) AS tags FROM entry e JOIN entry_tag et ON et.entry_id = e.id JOIN tag t ON t.id = et.tag_id WHERE date(e.published_at) = date(:published_at) GROUP BY et.entry_id');
+            $sql->bindValue(':published_at', $marker->format('Y-m-d'));
+            $entries = $sql->execute();
+            $entry = $entries->fetchArray();
             $class = $entry['id'] ? 'item' : '';
             $class .= $entry['published'] ? ' live' : '';
         ?>
@@ -612,6 +628,11 @@ $reposts = $repost->execute();
             <?php else: ?>
                 &nbsp;
     	    <?php endif; ?>
+            <?php while($entry = $entries->fetchArray()): ?>
+                <?php if(new DateTime($entry['published_at']) > $now): ?>
+                    <input type="hidden" name="entry_id[<?php echo $entry['queue'] ?>][]" value="<?php echo $entry['id'] ?>" />
+                <?php endif; ?>
+            <?php endwhile; ?>
 	    </div>
 	    <?php $marker->add($increment); ?>
 	<?php endfor; ?>
@@ -620,7 +641,7 @@ $reposts = $repost->execute();
 <button type="submit"><span>Save</span></button>
 </form>
 <h4>Reposts</h4>
-<div class="calendar">
+<div class="calendar reposts">
 <?php
 while($entry = $reposts->fetchArray()){
     ?>
