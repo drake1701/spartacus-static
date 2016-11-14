@@ -14,7 +14,7 @@ ExpiresDefault "access 2 days"
 ## EXPIRES CACHING ##
 
 RewriteEngine On
-RewriteCond %{REMOTE_ADDR} !=67.236.82.42
+RewriteCond %{REMOTE_ADDR} !=67.236.115.146
 RewriteRule ^([^?]*)$ http://spartacuswallpaper.com/ [R=301,L]
 
 RewriteCond %{REQUEST_FILENAME} !-f
