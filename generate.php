@@ -373,7 +373,7 @@ while($year >= 2000) {
         );
     }
     
-    $logs = $db->query("SELECT l.created_at, l.message, e.title, e.url_path FROM entry_log l JOIN entry e ON l.entry_id = e.id WHERE l.created_at LIKE('{$year}%') ORDER BY l.created_at DESC;");
+    $logs = $db->query("SELECT l.created_at, l.message, e.title, e.url_path FROM entry_log l JOIN entry e ON l.entry_id = e.id WHERE l.created_at LIKE('{$year}%') AND e.published IS NOT NULL ORDER BY l.created_at DESC;");
     while($log = $logs->fetchArray()) {
         $changes[date('Y-m-d', strtotime($log['created_at']))][] = array(
             'date' => $log['created_at'],
