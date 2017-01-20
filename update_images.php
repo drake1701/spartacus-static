@@ -22,7 +22,9 @@ while($entry = $entries->fetchArray()) {
     foreach($imageFiles as $key => $imageFile){
         $path = explode('/', dirname($imageFile));
         $kind = array_pop($path);
-        $imageFiles[$kind] = basename($imageFile);
+        if(in_array($kind, array_keys($kinds))) {
+            $imageFiles[$kind] = basename($imageFile);
+        }
         unset($imageFiles[$key]);
     }
     // get image db records
@@ -57,7 +59,7 @@ while($entry = $entries->fetchArray()) {
                 echo $kind.'/'.$filename."\n";
                 $change = true;
             }
-        } 
+        }
         elog('Added '.count($add).' image formats.', $entry['id']);
     }
     $del = array_diff_assoc($imageRows, $imageFiles);

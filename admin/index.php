@@ -454,7 +454,9 @@ $queue = new Queue();
         foreach($imageFiles as $key => $imageFile){
             $path = explode('/', dirname($imageFile));
             $kind = array_pop($path);
-            $imageFiles[$kind] = basename($imageFile);
+            if(in_array($kind, array_keys($kinds))) {
+                $imageFiles[$kind] = basename($imageFile);
+            }
             unset($imageFiles[$key]);
         }
         // get image db records
