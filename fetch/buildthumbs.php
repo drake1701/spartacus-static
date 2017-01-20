@@ -5,10 +5,10 @@
  * 
  * Verify link and get thumbnail url for posts without a thumb url.
  */
-    
+
+require_once 'functions.php';
     
 $debug = isset($argv[1]) && !empty($argv[1]);
-$db = new PDO('sqlite:'.dirname(__FILE__).'/index.sqlite');
 
 $postsCount = array_pop($db->query('SELECT count(*) FROM posts WHERE `thumb` IS NULL;')->fetch());
 
@@ -29,6 +29,7 @@ $stats = array(
 );
 $i = 0;
 foreach($posts as $post){
+    //if($i++ > 0) break;
     $fetchResults = array();
     if ($debug)
         echo $post['url']."\n";
@@ -89,13 +90,3 @@ foreach($posts as $post){
 print_r($stats);
 $postsCount = array_pop($db->query('SELECT count(*) FROM posts WHERE `thumb` IS NULL ;')->fetch());
 echo "Current count: $postsCount\n";
-
-function doCurl($url){
-    $ch = curl_init($url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_AUTOREFERER, true);
-    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-    curl_setopt($ch, CURLOPT_USERAGENT, 'Googlebot/2.1 (+http://www.google.com/bot.html)');
-    return curl_exec($ch);
-}
-?>

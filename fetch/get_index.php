@@ -11,6 +11,8 @@ echo date(DATE_RFC2822) . "\n";
 $postsCount = array_pop($db->query('SELECT count(*) FROM posts;')->fetch());
 echo "Current count: $postsCount\n";
 
+$report = array();
+
 $superiorpics = array(
     "http://www.superiorpics.com/c/Actresses_A_F/",
     "http://www.superiorpics.com/c/Actresses_G_K/",
@@ -62,9 +64,9 @@ foreach($superiorpics as $category){
     } while(1);
 }
 
-echo 'superiorpics.com: ' . (array_pop($db->query('SELECT count(*) FROM posts;')->fetch()) - $postsCount) . "\n";
+$report['superiorpics.com'] = (array_pop($db->query('SELECT count(*) FROM posts;')->fetch()) - $postsCount);
 $postsCount = array_pop($db->query('SELECT count(*) FROM posts;')->fetch());
-
+/*
 $i = 1;
 $base = "http://celebutopia.net/forums/forumdisplay.php?f=15&order=desc";
 
@@ -94,7 +96,7 @@ do {
 
 echo 'celebutopia.net: ' . (array_pop($db->query('SELECT count(*) FROM posts;')->fetch()) - $postsCount) . "\n";
 $postsCount = array_pop($db->query('SELECT count(*) FROM posts;')->fetch());
-
+*/
 $base = "http://www.hawtcelebs.com/";
 $i = 0;
 do {
@@ -119,7 +121,7 @@ do {
     }
 } while(1);
 
-echo 'hawtcelebs.com: ' . (array_pop($db->query('SELECT count(*) FROM posts;')->fetch()) - $postsCount) . "\n";
+$report['hawtcelebs.com'] = (array_pop($db->query('SELECT count(*) FROM posts;')->fetch()) - $postsCount);
 $postsCount = array_pop($db->query('SELECT count(*) FROM posts;')->fetch());
 
 foreach(array("http://www.gotceleb.com/", "http://www.fabzz.com/") as $base) {
@@ -147,7 +149,7 @@ foreach(array("http://www.gotceleb.com/", "http://www.fabzz.com/") as $base) {
     } while(1);
 }
 
-echo 'gotceleb.com: ' . (array_pop($db->query('SELECT count(*) FROM posts;')->fetch()) - $postsCount) . "\n";
+$report['gotceleb.com'] = (array_pop($db->query('SELECT count(*) FROM posts;')->fetch()) - $postsCount);
 $postsCount = array_pop($db->query('SELECT count(*) FROM posts;')->fetch());
 
 $base = "http://www.carreck.com/pictures/";
@@ -156,8 +158,12 @@ do {
     $url = $base;
     if(++$i > 1) $url = $base . "page/" . $i;
     if($debug)
-    	echo $url . "\n";
-    $listPage = doCurl($url);
+        echo $url . "\n";
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_AUTOREFERER, true);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+    $listPage = curl_exec($ch);
     preg_match_all('#<h2 class="posttitle".+?<a href="([^"]+?)"[^<]+?title="Permanent Link to ([^"]+?)"#s', $listPage, $posts);
     if(count($posts[0]) == 0) {
         echo 'ERROR: No posts found for '.$url."\n";
@@ -169,57 +175,105 @@ do {
         $title = preg_replace("/#(.+?) /", '\1 ', $title);
         $title = preg_replace("/([a-z])([A-Z])/", '\1 \2', $title);
         $sql->bindValue(':name', $title);
-        $sql->bindValue(':url',  $posts[1][$key]);    
+        $sql->bindValue(':url',  $posts[1][$key]);
         $sql->execute();
         if($debug)
-        	echo $title."\n";
+            echo $title."\n";
         if($i > 2 && $sql->rowCount() == 0) break 2;
     }
 } while(1);
 
-echo 'carreck.com: ' . (array_pop($db->query('SELECT count(*) FROM posts;')->fetch()) - $postsCount) . "\n";
+$report['carreck.com'] = (array_pop($db->query('SELECT count(*) FROM posts;')->fetch()) - $postsCount);
 $postsCount = array_pop($db->query('SELECT count(*) FROM posts;')->fetch());
 
 $base = "http://forums.lazygirls.info/";
-$i = 60;
+$i = 0;
 do {
     $url = $base;
-    if($i > 60) $url = $base . "?aloc=" . $i;
+    if($i >= 60) $url = $base . "?aloc=" . $i;
     if($debug)
-    	echo $url . "\n";
+        echo $url . "\n";
     $listPage = doCurl($url);
     preg_match_all('#<div class="f_[d|c]".+?<div class="f_i"#s', $listPage, $posts);
     if(count($posts[0]) == 0) {
         echo 'ERROR: No posts found for '.$url."\n";
         break;
     }
+    $newPosts = 0;
     foreach($posts[0] as $post){
-        preg_match('#lz-no-underline">([^<]+?)</span>#', $post, $name);
+        preg_match('#lz-heavy-font[^>]*>([^<]*)<#', $post, $name);
+        if(count($name) < 1) {
+            echo 'ERROR: No names found for '.$url."\n";
+            break 2;
+        }
         preg_match('#(http://forums.lazygirls.info/\d*.html)" >([^<]+?)<#', $post, $postParts);
-        
+        if(count($postParts) < 2) {
+            echo 'ERROR: No posts found for '.$url."\n";
+            break 2;
+        }
+
         $sql = $db->prepare('INSERT INTO `posts` (`name`, `url`) VALUES (:name, :url);');
         $title = $name[1] . ' - ' . $postParts[2];
         $sql->bindValue(':name', $title);
-        $sql->bindValue(':url',  $postParts[1]); 
+        $sql->bindValue(':url',  $postParts[1]);
         $sql->execute();
-        if($debug)
-        	echo $title."\n";
-        if($i > 60 && $sql->rowCount() == 0) break 2;
+        if($sql->rowCount()) {
+            if ($debug)
+                echo $title . "\n";
+            $newPosts++;
+        }
     }
+    if($i > 60 && $newPosts == 0) break;
     $i += 60;
 } while(1);
 
-echo 'forums.lazygirls.info: ' . (array_pop($db->query('SELECT count(*) FROM posts;')->fetch()) - $postsCount) . "\n";
+$report['forums.lazygirls.info'] = (array_pop($db->query('SELECT count(*) FROM posts;')->fetch()) - $postsCount);
+$postsCount = array_pop($db->query('SELECT count(*) FROM posts;')->fetch());
 
+$base = "http://www.theplace2.ru/forum/";
+$i = 1;
+do {
+    $url = $base;
+    if($i > 1) $url .= "page$i/";
+    if($debug)
+        echo $url . "\n";
+    $listPage = doCurl($url);
+    preg_match_all('#\'(/forum/message[^\']+?)\'>\s*<[^>]*p-icon.+?>\s*<[^>]*picture.+?>[\s\S]+?numPics[\s\S]+?p-title.>([^<]+?)<#s', $listPage, $posts);
+    if(count($posts[0]) == 0) {
+        echo 'ERROR: No posts found for '.$url."\n";
+        break;
+    }
+    $newPosts = 0;
+    foreach($posts[0] as $k => $post){
+        $title = $posts[2][$k];
+        $postUrl = 'http://www.theplace2.ru' . $posts[1][$k];
+        $sql = $db->prepare('INSERT INTO `posts` (`name`, `url`) VALUES (:name, :url);');
+        $sql->bindValue(':name', $title);
+        $sql->bindValue(':url',  $postUrl);
+        $sql->execute();
+        if($sql->rowCount()) {
+            if ($debug)
+                echo $title."\n";
+            $newPosts++;
+        }
+    }
+    if($i++ > 1 && $newPosts == 0) break;
+} while(1);
+
+$report['theplace2.ru'] = (array_pop($db->query('SELECT count(*) FROM posts;')->fetch()) - $postsCount);
+$postsCount = array_pop($db->query('SELECT count(*) FROM posts;')->fetch());
+
+
+print_r($report);
 // Cleanup
 $postsCount = array_pop($db->query('SELECT count(*) FROM posts WHERE `reject` = 1;')->fetch());
-$rejects = array('party', 'arrives', 'leaves', 'arriving', 'leaving', 'shopping', 'out', 'gala', 'award', 'awards', 'airport', 'premiere', 'at % in', 'candids', 'fashion show');
+$rejects = array('party', 'arrives', 'leaves', 'arriving', 'leaving', 'shopping', 'out', 'gala', 'award', 'awards', 'airport', 'premiere', 'at % in', 'candids', 'fashion show', 'on the set', 'heads to', 'press tour', 'benefit', 'live');
 foreach($rejects as $reject) {
     $sql = $db->prepare('UPDATE `posts` SET `reject` = 1 WHERE `name` NOT LIKE "%photoshoot%" AND `name` LIKE :name;');
     $sql->bindValue(':name', '% '.$reject.' %');
     $sql->execute();
 }
-echo 'rejected: ' . (array_pop($db->query('SELECT count(*) FROM posts WHERE `reject` = 1;')->fetch()) - $postsCount) . "\n";
+echo 'rejected' . (array_pop($db->query('SELECT count(*) FROM posts WHERE `reject` = 1;')->fetch()) - $postsCount) . "\n";
 
 
 function doCurl($url){
