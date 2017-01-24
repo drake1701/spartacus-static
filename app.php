@@ -10,7 +10,7 @@ date_default_timezone_set("UTC");
 $site_dir   = $base_dir . "_site/";
 $theme_dir  = $base_dir . "theme/";
 $assets_dir = $base_dir . "assets/";
-$page_size  = 15;
+$page_size  = 18;
 $rebuild = false;
 $baseurl = strpos($base_dir, 'development') ?  "http://dev.spartacuswallpaper.com/" : "http://spartacuswallpaper.com/";
 

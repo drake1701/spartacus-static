@@ -1,25 +1,25 @@
 <!-- Entry ID {{entry id}} -->
-<div class="entry-view">
+<div class="entry-view" vocab="http://schema.org/" typeof="CreativeWorkSeries">
+    <div style="display:none;">
+        <span property="author" typeof="Thing">
+            <span property="name">Spartacus Wallpaper</span>
+            <span property="url">http://spartacuswallpaper.com/about</span>
+        </span>
+        <span property="contentRating">MPAA PG-13</span>
+        <span property="thumbnailUrl">{{entry preview}}</span>
+    </div>
     <div class="clearfix">
         <p class="pull-left">{{entry prev_link}}</p>
         <p class="pull-right text-right">{{entry next_link}}</p>
     </div>
-	<h2 class="entry-title">{{entry title}}</h2>
-	<p class="entry-date">{{entry published_at}}</p>
+	<h2 class="entry-title" property="name">{{entry title}}</h2>
+	<p class="entry-date" property="datePublished">{{entry published_at}}</p>
 	<a href="{{entry first_image}}" class="entry-preview-image" title="{{entry title}}">
         <img src="{{entry preview}}" alt="{{entry title}}"/>
         <span class="visible-xs">Desktop</span>
     </a>
 	<div class="entry-content">{{entry content}}</div>
 	<div class="row">
-<!--
-    	<div class="entry-versions col-sm-5 col-xs-12">
-    		<h4>Versions</h4>
-    		<ul>
-    		{{entry kinds}}
-    		</ul>
-    	</div>
--->
     	<div class="entry-tags pull-left col-xs-12 col-sm-7">
             {{entry tags}}
     	</div>

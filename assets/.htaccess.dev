@@ -1,20 +1,17 @@
 ## EXPIRES CACHING ##
 <IfModule mod_expires.c>
-ExpiresActive On
-ExpiresByType image/jpg "access 1 year"
-ExpiresByType image/jpeg "access 1 year"
-ExpiresByType image/gif "access 1 year"
-ExpiresByType image/png "access 1 year"
-ExpiresByType image/x-icon "access 1 year"
-
-ExpiresByType text/css "access 1 month"
-ExpiresByType application/javascript "access plus 1 month"
-ExpiresDefault "access 2 days"
+  FileETag None
+  <ifModule mod_headers.c>
+     Header unset ETag
+     Header set Cache-Control "max-age=0, no-cache, no-store, must-revalidate"
+     Header set Pragma "no-cache"
+     Header set Expires "Wed, 11 Jan 1984 05:00:00 GMT"
+  </ifModule>
 </IfModule>
-## EXPIRES CACHING ##
+## EXPIRES CACHING ###
 
 RewriteEngine On
-RewriteCond %{REMOTE_ADDR} !=67.236.115.146
+RewriteCond %{REMOTE_ADDR} !=67.236.81.245
 RewriteRule ^([^?]*)$ http://spartacuswallpaper.com/ [R=301,L]
 
 RewriteCond %{REQUEST_FILENAME} !-f
