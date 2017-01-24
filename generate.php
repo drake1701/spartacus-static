@@ -138,6 +138,9 @@ while($entry = $result->fetchArray()){
     $imageGallery = '<div class="desktop hidden-xs">';
     $mobile = 0;
     foreach($images as $image){
+        if(!file_exists($site_dir."gallery/".$image['dir']."/".$image['filename'])) continue;
+        $fileInfo = getimagesize($site_dir."gallery/".$image['dir']."/".$image['filename']);
+
         $imageUrl = $baseurl."gallery/".$image['dir']."/".$image['filename'];
         if(!isset($entry['first_image'])) {
             $entry['first_image'] = $imageUrl;
@@ -153,7 +156,14 @@ while($entry = $result->fetchArray()){
         else
             $cache = get_cache_url($imageUrl, 340);
 
-        $imageGallery .= '<a property="hasPart" typeof="ImageObject" href="'.$imageUrl.'" class="image" title="'.$entry['title'].'"><meta property="url" content="'.$imageUrl.'"><img property="thumbnailUrl" src="'.$cache.'" alt="'.$entry['title'].'"/><span property="caption" content="'.$entry['title'].' - '.$image['label'].'">'.$image['label'].'</span></a>';
+        $imageGallery .= '
+        <a property="hasPart" typeof="ImageObject" href="'.$imageUrl.'" class="image" title="'.$entry['title'].'">
+            <meta property="url" content="'.$imageUrl.'">
+            <meta property="width" content="'.$fileInfo[0].' px">
+            <meta property="height" content="'.$fileInfo[1].' px">
+            <img property="thumbnailUrl" src="'.$cache.'" alt="'.$entry['title'].'"/>
+            <span property="caption" content="'.$entry['title'].' - '.$image['label'].'">'.$image['label'].'</span>
+        </a>';
     }
 
     $imageGallery .= '</div>';
@@ -172,6 +182,9 @@ while($entry = $result->fetchArray()){
     $switch = false;
     while($tag = $tagResult->fetchArray()){
         $tagIds[] = $tag['id'];
+        if($tag['name'] == true) {
+            $tags .= '<span class="hidden" property="about" typeof="Person"><span property="name">'.$tag['title'].'</span></span>';
+        }
         if($switch == false && $tag['name'] == 0) {
             $switch = true;
             $tags .= '</ul><h4>Tags</h4><ul>';
