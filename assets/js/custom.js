@@ -31,7 +31,14 @@ jQuery(document).ready(function(){
         curPage += 1;
         var newUrl = jQuery('.pager .current').prev().find('a').prop('href');
         
-        jQuery('nav').append('<img src="../images/ajax-loader.gif" />');
+        //jQuery('nav').append('<img class="loader" src="../images/ajax-loader.gif" />');
+
+        var loader = setInterval(function() {
+            jQuery('.btn-lg').animate({backgroundPositionY: '44px'}, 300, function () {
+                jQuery(this).removeAttr('style');
+            })
+        }, 300);
+
         ajaxing = true;
         jQuery('.btn-more').prop('disabled', 1);
         
@@ -39,6 +46,7 @@ jQuery(document).ready(function(){
             url: newUrl,
             success: function(response) {
                 processAjaxData(response, newUrl);
+                clearInterval(loader);
             },
             error: function() {
                 ajaxing = false;

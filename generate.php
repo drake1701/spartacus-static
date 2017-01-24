@@ -246,12 +246,15 @@ if(!$dev || $mode == 't') {
             $tagPage .= '</div>';
 
             $tagHtml = get_layout();
-            if ($page > 1)
+            $title = $tag['title'] . ' Wallpaper';
+            if ($page > 1) {
                 $tagPage = '<button class="btn btn-home btn-lg pull-right"><a href="' . $baseurl . 'tag/' . $tag['slug'] . '">Newest Entries</a></button><div class="clearfix"></div>' . $tagPage;
+                $title .= ' - Page ' . $page;
+            }
             $tagHtml = tag("content", $tagPage, $tagHtml);
             $tagHtml = tag('pager', pager('tag/' . $tag['slug'], $page, count($entryPages)), $tagHtml);
-            $tagHtml = tag("title", $tag['title'] . ' | ', $tagHtml);
-            $tagHtml = tag("content_title", $tag['title'] . ' Wallpaper', $tagHtml);
+            $tagHtml = tag("title", $title . ' | ', $tagHtml);
+            $tagHtml = tag("content_title", $title, $tagHtml);
             $tagHtml = tags_parse($tagHtml);
             write_file('tag/' . $tag['slug'] . '/page/' . $page, $tagHtml);
             if ($page == 1)
@@ -320,12 +323,15 @@ if(!$dev || $mode == 'y') {
             $tagPage .= '</div>';
 
             $tagHtml = get_layout();
-            if ($page > 1)
+            $title = "Wallpaper from {$year}";
+            if ($page > 1) {
                 $tagPage = '<button class="btn btn-home btn-lg pull-right"><a href="' . $baseurl . 'tag/' . $year . '">Newest Entries</a></button><div class="clearfix"></div>' . $tagPage;
+                $title .= " - Page $page";
+            }
             $tagHtml = tag("content", $tagPage, $tagHtml);
             $tagHtml = tag('pager', pager('tag/' . $year, $page, count($entryPages)), $tagHtml);
-            $tagHtml = tag("title", $year . " | ", $tagHtml);
-            $tagHtml = tag("content_title", "Wallpaper from {$year}", $tagHtml);
+            $tagHtml = tag("title", $title . " | ", $tagHtml);
+            $tagHtml = tag("content_title", $title, $tagHtml);
             $tagHtml = tags_parse($tagHtml);
             write_file('tag/' . $year . '/page/' . $page, $tagHtml);
             if ($page == 1)
@@ -361,12 +367,15 @@ if(!$dev || $mode == 'k') {
             $tagPage .= '</div>';
 
             $tagHtml = get_layout();
-            if ($page > 1)
+            $title = "Wallpaper with {$kind['label']} Version";
+            if ($page > 1) {
                 $tagPage = '<button class="btn btn-home btn-lg pull-right"><a href="' . $baseurl . 'tag/' . $kind['path'] . '">Newest Entries</a></button><div class="clearfix"></div>' . $tagPage;
+                $title .= " - Page $page";
+            }
             $tagHtml = tag("content", $tagPage, $tagHtml);
             $tagHtml = tag('pager', pager('tag/' . $kind['path'], $page, count($entryPages)), $tagHtml);
-            $tagHtml = tag("title", $kind['path'] . " | ", $tagHtml);
-            $tagHtml = tag("content_title", "Wallpaper with {$kind['label']} Version", $tagHtml);
+            $tagHtml = tag("title", $title . " | ", $tagHtml);
+            $tagHtml = tag("content_title", $title, $tagHtml);
             $tagHtml = tags_parse($tagHtml);
             write_file('tag/' . $kind['path'] . '/page/' . $page, $tagHtml);
             if ($page == 1)
@@ -418,8 +427,8 @@ while($year >= 2000) {
     
     $html = get_layout(true);
     $html = tag("content", $page, $html);
-    $html = tag("title", "Changelog, $year | ", $html);
-    $html = tag("content_title", "Changelog $year", $html);
+    $html = tag("title", "Changelog for $year | ", $html);
+    $html = tag("content_title", "Changelog for $year", $html);
     $html = tags_parse($html);
     write_file('changelog/'.$year, $html); 
     if($year == date('Y'))
@@ -447,9 +456,11 @@ $first = 0;
 foreach ($entryPages as $page => $pageEntries) {
     $page += 1;
 
-    if ($page > 1)
+    $title = 'Home';
+    if ($page > 1) {
         $entriesHtml = '<button class="btn btn-home btn-lg pull-right"><a href="' . $baseurl . '">Newest Entries</a></button><div class="clearfix"></div>';
-    else
+        $title .= " - Page $page";
+    } else
         $entriesHtml = '';
 
     foreach ($pageEntries as $index => $entry) {
@@ -485,6 +496,7 @@ foreach ($entryPages as $page => $pageEntries) {
     }
 
     $html = tag("content", $entriesHtml, $layout);
+    $html = tag("title", $title.' | ', $html);
     $html = tag('side_more', getMore(7, null, 'col-sm-12', $homeEntryIds), $html);
     $html = tag('pager', pager('', $page, count($entryPages)), $html);
     $html = tags_parse($html);
