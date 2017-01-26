@@ -110,9 +110,8 @@ $queue = new Queue();
             width: 5%;
             vertical-align: top;
             float:left;
-            border: 1px solid #A4B070;
+            border: 1px solid rgb(222,209,167);
             border-width: 1px 1px 0 0;
-            background: #1B2000;
             padding: 0 5px;
         }
         .calendar > div:nth-child(7n-5), .calendar > div:nth-child(7n-2), .calendar > div:nth-child(7n) {

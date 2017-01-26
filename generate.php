@@ -152,9 +152,9 @@ while($entry = $result->fetchArray()){
             $mobile = true;
         }
         if($image['dir'] == 'ultrawide')
-            $cache = get_cache_url($imageUrl, 450);
+            $cache = get_cache_url($imageUrl, 575);
         else
-            $cache = get_cache_url($imageUrl, 340);
+            $cache = get_cache_url($imageUrl, 430);
 
         $imageGallery .= '
         <a property="hasPart" typeof="ImageObject" href="'.$imageUrl.'" class="image" title="'.$entry['title'].'">
