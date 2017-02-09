@@ -23,7 +23,7 @@ if (!$_SESSION['loggedIn']): ?>
                     <input type="password" id="password" name="password" placeholder="Password" required autofocus>
                 </dd>
             </dl>
-            <button type="submit">Sign in</button>
+            <button type="submit" class="btn-lg">Sign in</button>
         </form>
     </div>
     <?php

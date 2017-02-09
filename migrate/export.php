@@ -1,8 +1,8 @@
 <?php
 /**
  * @package		PaperRoll
- * @author		Dennis Rogers
- * @address		www.drogers.net
+ * @author		Spartacus
+ * @address		www.spartacuswallpaper.com
  */
 
 require_once('db.php');

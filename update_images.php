@@ -1,7 +1,7 @@
 <?php
 /**
- * @author     Dennis Rogers <dennis@drogers.net>
- * @address    www.drogers.net
+ * @author     Spartacus <spartacuswallpaper@gmail.com>
+ * @address    www.spartacuswallpaper.com
  */
 
 require_once(dirname(__FILE__).'/app.php');
@@ -17,6 +17,7 @@ foreach($kinds as $key => $kind) {
 $entries = $db->query('SELECT * FROM `entry`;');
 
 while($entry = $entries->fetchArray()) {
+    $change = false;
     // get image files
     $imageFiles = glob($site_dir.'gallery/*/'.$entry['filename']);
     foreach($imageFiles as $key => $imageFile){
@@ -34,18 +35,18 @@ while($entry = $entries->fetchArray()) {
     $imageRows = $db->fetchAll($imageResult);
     $first = false;
     foreach($imageRows as $key => $row) {
-        if($first == false) {                
+        if($first == false && $entry['thumb'] != $row['dir'] . '/' . $row['filename']) {
             $thumb = $db->prepare("UPDATE entry SET thumb = :thumb WHERE id = :id;");
             $thumb->bindValue(":id", $entry['id']);
             $thumb->bindValue(":thumb", $row['dir'] . '/' . $row['filename']);
-            $thumb->execute();            
-            $first = true;
+            $result = $thumb->execute();
+            $change = true;
             echo 'Set thumb for '.$entry['id'].' to '.$row['dir'] . '/' . $row['filename']."\n";
         }
+        $first = true;
         $imageRows[$row['dir']] = $row['filename'];
         unset($imageRows[$key]);
     }
-    $change = false;
     $add = array_diff_assoc($imageFiles, $imageRows);
     if(count($add) > 0) {
         echo 'Adding to '.$entry['title']."\n";
@@ -78,10 +79,16 @@ while($entry = $entries->fetchArray()) {
         }
     }
     if($change) {
-        echo "---\n";
         $flag = $db->prepare('UPDATE `entry` SET `published` = NULL, modified_at = datetime("now") WHERE `id` = :id');
         $flag->bindValue(':id', $entry['id']);
         $flag->execute();
+        $cachefile = transcode(str_replace('.jpg', '', $entry['filename'])).'.jpg';
+        $cache = glob($site_dir.'gallery/cache/*/*/'.$cachefile);
+        foreach($cache as $file) {
+            unlink($file);
+        }
+        echo "Cleared ".count($cache)." cache files.\n";
+        echo "---\n";
     }
 }
 echo "--- Done ---\n";

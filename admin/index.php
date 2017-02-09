@@ -1,7 +1,7 @@
 <?php
 /**
- * @author		Dennis Rogers
- * @address		www.drogers.net
+ * @author		Spartacus
+ * @address		www.spartacuswallpaper.com
  */
 
 session_start();
@@ -429,7 +429,7 @@ $queue = new Queue();
                 <?php endif; ?>
             <?php endwhile; ?>
             </div> 
-            <button type="submit"><span>Add Tag</span></button>
+            <button class="btn-lg" type="submit"><span>Add Tag</span></button>
             <dt id="tags-label"><label for="tags" class="required">tags:</label></dt>
             <dd id="tags-element">
                 <textarea class="tags" name="tags" id="tags" cols="40" rows="2"></textarea>
@@ -548,7 +548,7 @@ $queue = new Queue();
                 </td>
                 <td class="text-right">
                     <a href="?action=tags&delete=1&tag_id=<?php echo $tag['id'] ?>">Delete</a>
-                    <input type="submit" value="switch" />&nbsp;
+                    <input type="submit" class="btn-lg" value="switch" />&nbsp;
                 </td>
                 </form>
             </tr>
@@ -640,7 +640,7 @@ $reposts = $repost->execute();
 	<?php endfor; ?>
 	<?php endwhile; ?>
 </div>
-<button type="submit"><span>Save</span></button>
+<button type="submit" class="btn-lg"><span>Save</span></button>
 </form>
 <h4>Reposts</h4>
 <div class="calendar reposts">

@@ -419,6 +419,9 @@ foreach($links as $linkId => $link){
             case "oncelebrity.com":
                 preg_match('#<img.+?src="(.+?)".+?id="full_pic"#', $imagePage, $largeImg);
                 break;
+	        case "hotflick.net":
+		        preg_match('#<img.+?id="img".+?src="(.+?)"#', $imagePage, $largeImg);
+		        break;
             case "rosemciversource.net":
                 preg_match('#<img.+?src="(.+?)".+?id="fullsize_image"#', $imagePage, $largeImg);
                 $largeImg = "http://rosemciversource.net/gallery/".$largeImg[1];

@@ -1,6 +1,6 @@
 <?php
 /**
- * @author		Dennis Rogers
+ * @author		Spartacus
  */
 class MySqlite extends SQLite3 {
 

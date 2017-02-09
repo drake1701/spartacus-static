@@ -1,6 +1,6 @@
 /**
- * @author     Dennis Rogers <dennis@drogers.net>
- * @address    www.drogers.net
+ * @author     Spartacus <spartacuswallpaper@gmail.com>
+ * @address    www.spartacuswallpaper.com
  * @date       2/9/16
  */
 

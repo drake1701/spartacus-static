@@ -1,7 +1,7 @@
 <?php
 /**
- * @author		Dennis Rogers
- * @address		www.drogers.net
+ * @author		Spartacus
+ * @address		www.spartacuswallpaper.com
  */
 error_reporting(E_ERROR | E_WARNING | E_PARSE);
 $base_dir = dirname(__FILE__).'/';
@@ -42,12 +42,14 @@ function tag_parse($tagName, $arg = null){
     global $db, $theme_dir, $assets_dir, $baseurl;
     switch($tagName){
         case "kinds":
-            $result = $db->query("SELECT * FROM image_kind WHERE position IS NOT NULL ORDER BY position ASC;");
-            $html = "";
+            $result = $db->query("SELECT * FROM image_kind WHERE position IS NOT NULL AND exclude = 0 ORDER BY mobile, position ASC;");
+            $kindsHtml = array();
             while($kind = $result->fetchArray()){
-                $html .= "<li><a href='{$baseurl}tag/{$kind['path']}'>{$kind['label']}</a></li>";
+                $kindsHtml[(Int)$kind['mobile']][] = "<li><a href='{$baseurl}tag/{$kind['path']}'>{$kind['label']}</a></li>";
             }
-            return $html;
+            $html = "<li><span>Desktop Computer</span><ul>".implode($kindsHtml[0])."</ul></li>";
+	        $html .= "<li><span>Phone</span><ul>".implode($kindsHtml[1])."</ul></li>";
+	        return $html;
         case "tag_years":
             $result = $db->query("SELECT SUBSTR(published_at, 0, 5) as year FROM entry GROUP BY year ORDER BY published_at DESC;");
             $html = "";
@@ -68,9 +70,9 @@ function tag_parse($tagName, $arg = null){
             }
             return $html;
         case "calendar":
-            $calEntry = $db->query("SELECT e.*, k.path as kind, i.path as image FROM entry e JOIN image i ON i.entry_id = e.id JOIN image_kind k ON i.kind = k.id AND k.exclude != 1 WHERE `queue` = 2 AND `published_at` <= date('now') ORDER BY k.position ASC, `published_at` DESC LIMIT 1;");
+            $calEntry = $db->query("SELECT e.*, k.path as kind, i.path as image FROM entry e JOIN image i ON i.entry_id = e.id JOIN image_kind k ON i.kind = k.id AND k.exclude != 1 WHERE `queue` = 2 AND date(`published_at`) <= date('now') ORDER BY k.position ASC, `published_at` DESC LIMIT 1;");
             $calEntry = $calEntry->fetchArray();
-            $html = '<div class="col-md-12 col-sm-6 col-xs-6"><a href="'.$baseurl.'tag/calendar" title="Calendar Series"><span>'.$calEntry['title'].'</span><img src="'.get_cache_url($calEntry['kind'].'/'.$calEntry['filename'], 360).'" title="'.$calEntry['title'].'" /></a></div>';
+            $html = '<div class="col-md-12 col-sm-6 col-xs-6"><a href="'.$baseurl.'tag/calendar" title="Calendar Series"><span>'.$calEntry['title'].'</span><img src="'.get_cache_url($calEntry['kind'].'/'.$calEntry['filename'], 400).'" title="'.$calEntry['title'].'" /></a></div>';
             return $html;
         case "baseurl":
             return $baseurl;
@@ -102,12 +104,13 @@ function tag_entry($entry, $layout = null, $count, $layoutType = 'tag', $classes
     $entry['slug'] = $baseurl . $entry['url_path'];
 
     $preview = $count >= $page_size ? 'thumb' : 'preview';
+    $thumbsize = 660;
     if($classes) {
         $entry['classes'] = $classes;
     } else {
         if($preview == 'thumb')
             $entry['classes'] = 'col-sm-4';
-        else 
+        else
             $entry['classes'] = 'col-sm-6';
             
         if($mobile)
@@ -138,7 +141,7 @@ function tag_entry($entry, $layout = null, $count, $layoutType = 'tag', $classes
         $image = $imageResult->fetchArray();        
         $entry['thumb'] = $image['thumb'];
     }    
-    $entry['thumb'] = get_cache_url($entry['thumb'], 340);
+    $entry['thumb'] = get_cache_url($entry['thumb'], $thumbsize);
     
     if($hasMobile) {
         $entry['mobile_images'] = $mobileImages . '</div>';
@@ -179,13 +182,14 @@ function getMore($count = 1, $tagIds = null, $class='col-xs-4', $excludeIds = nu
             $entries = $db->fetchAll($entries);
             
             if(count($entries) == 0) continue;
-            $html .= '<h3 class="col-xs-12">More <a href="'.$baseurl.'tag/'.$tag['slug'].'" title="'.$tag['title'].'">'.$tag['title'].'</a> Wallpaper</h3>';
+            $html .= '<h3 class="col-xs-12">More <a href="'.$baseurl.'tag/'.$tag['slug'].'" title="'.$tag['title'].'">'.$tag['title'].'</a> Wallpaper</h3><div class="row">';
             foreach($entries as $entry) {
                 $excludeIds[] = $entry['id'];
                 $tail = ' AND e.id NOT IN('.implode(',', $excludeIds).') ORDER BY RANDOM() LIMIT ' . $count . ';';
                 $html .= tag_entry($entry, $tagLayout, 99, 'tag', $class);
                 $moreCount++;
             }
+            $html .= '</div>';
         }
     }
     if($moreCount == 0) {

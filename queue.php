@@ -1,7 +1,7 @@
 <?php
 /**
  * @author 	dennis
- * @site 	www.drogers.net
+ * @site 	www.spartacuswallpaper.com
  */
  
 class Queue {

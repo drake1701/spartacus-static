@@ -2,8 +2,8 @@
 /**
  * Script to cache images 
  *
- * @author      Dennis Rogers <dennis@drogers.net>
- * @address     www.drogers.net
+ * @author      Spartacus <spartacuswallpaper@gmail.com>
+ * @address     www.spartacuswallpaper.com
  */
 
 require_once dirname(dirname(dirname(__FILE__))).'/app.php';

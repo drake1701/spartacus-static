@@ -1,14 +1,16 @@
 <?php
 /**
- * @author		Dennis Rogers
- * @address		www.drogers.net
+ * @author		Spartacus
+ * @address		www.spartacuswallpaper.com
  */
 require_once("app.php");
 
 $dev = strpos($base_dir, 'development');
 
-if($dev)
-    $db->query("UPDATE entry SET published = null WHERE id IN(SELECT id from entry WHERE published IS NOT NULL ORDER BY published_at DESC LIMIT 2);");
+if($dev) {
+    //$db->query("UPDATE entry SET published = NULL WHERE id IN(SELECT id FROM entry WHERE published IS NOT NULL ORDER BY published_at DESC LIMIT 2);");
+    $db->query("UPDATE entry SET published = null WHERE id in(3754,4102);");
+}
 
 slog('------------------');
 slog('Start Regeneration');
@@ -44,6 +46,7 @@ copy($assets_dir.'.htaccess.maint', $site_dir.'.htaccess');
 // ! generate banner css
 $banners = glob($assets_dir."images/banners/left/*.jpg");
 $banners = array_merge($banners, glob($assets_dir."images/banners/right/*.jpg"));
+sort($banners);
 $html = "";
 foreach($banners as $i => $banner){
     $parts = array_reverse(explode("/", $banner));
@@ -157,7 +160,7 @@ while($entry = $result->fetchArray()){
             $cache = get_cache_url($imageUrl, 430);
 
         $imageGallery .= '
-        <a property="hasPart" typeof="ImageObject" href="'.$imageUrl.'" class="image" title="'.$entry['title'].'">
+        <a property="hasPart" typeof="ImageObject" href="'.$imageUrl.'" class="image" title="'.$entry['title'].'" data-ratio="'.($fileInfo[1] / $fileInfo[0]).'">
             <meta property="url" content="'.$imageUrl.'">
             <meta property="width" content="'.$fileInfo[0].' px">
             <meta property="height" content="'.$fileInfo[1].' px">
@@ -177,7 +180,7 @@ while($entry = $result->fetchArray()){
     }
     $entry['kinds'] = $kinds;
     $tagResult = $db->query("SELECT t.* FROM entry_tag e JOIN tag t ON e.tag_id = t.id WHERE entry_id = {$entry['id']} ORDER BY t.name DESC, t.title ASC;");
-    $tags = '<h4>Subjects</h4><ul>';
+    $tags = '<h4>Featuring</h4><ul>';
     $tagIds = array();
     $switch = false;
     while($tag = $tagResult->fetchArray()){
@@ -187,7 +190,7 @@ while($entry = $result->fetchArray()){
         }
         if($switch == false && $tag['name'] == 0) {
             $switch = true;
-            $tags .= '</ul><h4>Tags</h4><ul>';
+            $tags .= '</ul><h4>Tagged</h4><ul>';
         }
         $tags .= "<li><a href='{$baseurl}tag/{$tag['slug']}' title='{$tag['title']}'>{$tag['title']}</a></li>";
         $changedTags[] = $tag['slug'];
