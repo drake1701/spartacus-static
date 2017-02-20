@@ -1,6 +1,7 @@
 <?php
 
 function doCurl($url){
+	slog('Curl '.$url);
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_AUTOREFERER, true);
@@ -38,9 +39,15 @@ function get_http_response_code($url) {
     return substr($headers[0], 9, 3);
 }
 function fail($msg){
-    $er = fopen('error.log', 'a');
+    $er = fopen('logs/error.log', 'a');
     fputs($er, date('c') . ': '.$msg."\n");
     fclose($er);
+}
+function slog($msg) {
+	if(is_array($msg)) $msg = print_r($msg, 1);
+	$er = fopen('logs/system.log', 'a');
+	fputs($er, date('c') . ': '.$msg."\n");
+	fclose($er);
 }
 function linkError($link){
     fail("Link error $link");

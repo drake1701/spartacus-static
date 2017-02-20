@@ -2,14 +2,21 @@
 
 require_once 'functions.php';
 
-$url = $_GET['url'];
-$json = !empty($_GET['json']);
+if(!empty($_GET)) {
+	$url  = $_GET['url'];
+	$json = ! empty( $_GET['json'] );
+} else {
+    $cli = true;
+    $url = $argv[1];
+    $json = ! empty($argv[2]);
+}
 $baseDir = "/Volumes/Dropbox/scratch/";
 
 if(substr($url, 0, 10) == 'showthread')
     $url = 'http://celebutopia.net/forums/' . $url;
 
 $url = html_entity_decode($url);
+slog('Fetching '.$url);
 $headers = get_headers($url, 1);
 $urlParts = parse_url($url);
 $host = $urlParts['host'];
@@ -18,11 +25,12 @@ if($host == "www.theplace2.ru" || $host == "www.hotflick.net"){
 } else {
     $postPage = file_get_contents($url);
 }
-//file_put_contents("postpage.html", $postPage);
+file_put_contents("postpage.html", $postPage);
 //$postPage = file_get_contents("postpage.html");
 $postPage = str_replace("\n", " ", $postPage);
 $urlParts = parse_url($url);
 $host = $urlParts['host'];
+slog('Host '.$host);
 switch($host){
     // ! celebutopia blog post
     case "www.celebutopia.org":
@@ -214,15 +222,15 @@ switch($host){
         $name = strtolower(str_replace(' ', '-', $dirParts[2]));
         preg_match_all("#href='.+?\/viewimage\/(.+?)'#", $postPage, $pageLinks);
         $links = $pageLinks[1];
-        
+        preg_match("#&\\#187; (\\d*)#", $postPage, $lastPage);
+        $lastPage = !empty($lastPage[1]) ? $lastPage[1] : 100;
         $page = 2;
         do {
             unset($pageLinks);
-            $postPage = doCurl($url . '//' . $page++);
+            $postPage = doCurl($url . '/' . $page++);
             preg_match_all("#href='.+?\/viewimage\/(.+?)'#", $postPage, $pageLinks);
-            if(count($pageLinks[1]) == 0) break;
-            $links = array_merge($links, $pageLinks[1]);
-        } while (1);
+            $links = array_unique(array_merge($links, $pageLinks[1]));
+        } while ($page <= $lastPage);
         
         foreach($links as $id => $value){
             $links[$id] = 'http://iv1.lisimg.com/image/' . $value . '/10000full-' . $name . '.jpg';
@@ -471,9 +479,21 @@ foreach($links as $linkId => $link){
 // ! End Main Block
 // ! output
 if($json) {
-    header("Content-Type: application/json");
-    echo json_encode($largeImages);
-    
+	header( "Content-Type: application/json" );
+	echo json_encode( $largeImages );
+} elseif ($cli) {
+    $getDir = __DIR__ . '/get';
+    if(!is_dir($getDir)) mkdir($getDir, 0777);
+    foreach($largeImages as $image) {
+        $file = basename($image['file']);
+        $parts = explode('/', $image['file']);
+        array_pop($parts);
+        $dest = array_pop($parts);
+        $dest = $getDir . '/' . array_pop($parts) . '/' . $dest . '/';
+        if(!is_dir($dest)) mkdir($dest, 0777, true);
+        file_put_contents($dest . $file, doCurl($image['url']));
+        echo "$dest $file \n";
+    }
 } else {
     $nameInfo = $largeImages[0]['file'];
     $nameInfo = dirname($nameInfo);
