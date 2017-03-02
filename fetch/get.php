@@ -44,7 +44,7 @@ if(!empty($_GET['files'])) {
 function showDir($pattern) {
 	$files = glob($pattern);
 	foreach($files as $i => $file) {
-		$files[$i] = str_replace(__DIR__.'/get/', '', $file);
+		$files[$i] = str_replace(__DIR__, '', $file);
 	}
 	return(implode('<br/>', $files));
 }

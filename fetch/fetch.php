@@ -223,11 +223,16 @@ switch($host){
         preg_match_all("#href='.+?\/viewimage\/(.+?)'#", $postPage, $pageLinks);
         $links = $pageLinks[1];
         preg_match("#&\\#187; (\\d*)#", $postPage, $lastPage);
-        $lastPage = !empty($lastPage[1]) ? $lastPage[1] : 100;
+        if(empty($lastPage[1]))
+	        preg_match("#>(\\d*)</a>\\s<[^>]+?>Next#", $postPage, $lastPage);
+
+        $lastPage = empty($lastPage[1]) ? 100 : $lastPage[1];
+        slog('last Page is '.$lastPage);
         $page = 2;
         do {
             unset($pageLinks);
-            $postPage = doCurl($url . '/' . $page++);
+            $postPage = doCurl($url . '//' . $page++);
+            slog('Listal page '.$page);
             preg_match_all("#href='.+?\/viewimage\/(.+?)'#", $postPage, $pageLinks);
             $links = array_unique(array_merge($links, $pageLinks[1]));
         } while ($page <= $lastPage);
@@ -483,16 +488,26 @@ if($json) {
 	echo json_encode( $largeImages );
 } elseif ($cli) {
     $getDir = __DIR__ . '/get';
-    if(!is_dir($getDir)) mkdir($getDir, 0777);
+    if(!is_dir($getDir)) {
+        mkdir($getDir, 0775);
+	    chmod($getDir, 0775);
+    }
+    $k = 1;
     foreach($largeImages as $image) {
         $file = basename($image['file']);
         $parts = explode('/', $image['file']);
         array_pop($parts);
-        $dest = array_pop($parts);
-        $dest = $getDir . '/' . array_pop($parts) . '/' . $dest . '/';
-        if(!is_dir($dest)) mkdir($dest, 0777, true);
+        $shoot = array_pop($parts);
+        $name = array_pop($parts);
+        $dest = $getDir . '/' . $name . '/' . $shoot . '/';
+        if(!is_dir($dest)) {
+            mkdir($dest, 0775, true);
+	        chmod($dest, 0775);
+	        chmod($getDir . '/' . $name, 0775);
+        }
         file_put_contents($dest . $file, doCurl($image['url']));
         echo "$dest $file \n";
+        slog($file . ' (' . $k++ . ' of ' . count($largeImages) . ')');
     }
 } else {
     $nameInfo = $largeImages[0]['file'];

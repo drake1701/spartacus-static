@@ -1,7 +1,7 @@
 <?php
 
 function doCurl($url){
-	slog('Curl '.$url);
+	//slog('Curl '.$url);
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_AUTOREFERER, true);
@@ -39,6 +39,7 @@ function get_http_response_code($url) {
     return substr($headers[0], 9, 3);
 }
 function fail($msg){
+	slog($msg);
     $er = fopen('logs/error.log', 'a');
     fputs($er, date('c') . ': '.$msg."\n");
     fclose($er);
