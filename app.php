@@ -214,7 +214,7 @@ function pager($url, $current, $count) {
     </script>';
     if($count > 1) {
         if($current < $count) 
-            $html .= '<button class="btn btn-more btn-lg"><a id="show_more">Show More</a></button>';
+            $html .= '<a id="show_more" class="btn btn-more btn-lg">Show More</a>';
     
         $html .= '<ul class="pager /* hidden */">';
         

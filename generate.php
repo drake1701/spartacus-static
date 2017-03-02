@@ -105,7 +105,9 @@ foreach($pages as $page){
     $html = get_layout();
     $content = tags_parse(file_get_contents($page));
     $html = tag("content", $content, $html);
-    $html = tag("title", ucwords($file['filename'])." | ", $html);
+    $title = ucwords($file['filename']);
+    $html = tag("title", $title." | ", $html);
+    $html = tag('meta_description', "Spartacus Wallpaper $title Page.", $html);
     $html = tags_parse($html);
     
     write_file("page/".$file['filename'], $html);
@@ -180,23 +182,26 @@ while($entry = $result->fetchArray()){
     }
     $entry['kinds'] = $kinds;
     $tagResult = $db->query("SELECT t.* FROM entry_tag e JOIN tag t ON e.tag_id = t.id WHERE entry_id = {$entry['id']} ORDER BY t.name DESC, t.title ASC;");
-    $tags = '<h4>Featuring</h4><ul>';
+    $tags = array();
     $tagIds = array();
-    $switch = false;
     while($tag = $tagResult->fetchArray()){
         $tagIds[] = $tag['id'];
-        if($tag['name'] == true) {
-            $tags .= '<span class="hidden" property="about" typeof="Person"><span property="name">'.$tag['title'].'</span></span>';
-        }
-        if($switch == false && $tag['name'] == 0) {
-            $switch = true;
-            $tags .= '</ul><h4>Tagged</h4><ul>';
-        }
-        $tags .= "<li><a href='{$baseurl}tag/{$tag['slug']}' title='{$tag['title']}'>{$tag['title']}</a></li>";
+        $line = "<li><a href='{$baseurl}tag/{$tag['slug']}' title='{$tag['title']}'>{$tag['title']}</a></li>";
+		if($tag['name'] == true)
+			$line .= '<span class="hidden" property="about" typeof="Person"><span property="name">'.$tag['title'].'</span></span>';
+
+        $tags[($tag['name'] ? 0 : 1)][] = $line;
         $changedTags[] = $tag['slug'];
     }
-    $tags .= '</ul>';
-    $entry['tags'] = $tags;
+    $tagHtml = '';
+    if(count($tags[0])) {
+    	$tagHtml .= '<div><strong>Featuring</strong><ul>' . implode($tags[0]) . '</ul></div>';
+    	$html = tag('meta_description', 'Desktop and mobile wallpaper featuring '.strip_tags(implode($tags[0])).'.', $html);
+    }
+	if(count($tags[1]))
+		$tagHtml .= '<div><strong>Tagged</strong><ul>' . implode($tags[1]) . '</ul></div>';
+
+    $entry['tags'] = $tagHtml;
     
     $excludeIds = array($entry['id']);
     $prev = $db->query('SELECT e.* FROM entry e JOIN entry o ON o.id = "'.$entry['id'].'" WHERE e.published_at < o.published_at ORDER BY e.published_at DESC LIMIT 1;')->fetchArray();
@@ -504,6 +509,19 @@ foreach ($entryPages as $page => $pageEntries) {
             $entry['mobile'] = '';
         }
 
+	    $tagResult = $db->query("SELECT t.* FROM entry_tag e JOIN tag t ON e.tag_id = t.id WHERE entry_id = {$entry['id']} ORDER BY t.name DESC, t.title ASC;");
+	    $tags = array();
+	    while($tag = $tagResult->fetchArray()){
+		    $tags[($tag['name'] ? 0 : 1)][] = "<a href='{$baseurl}tag/{$tag['slug']}' title='{$tag['title']}'>{$tag['title']}</a>";
+	    }
+	    $entry['tags'] = '<span>';
+	    if(count($tags[0]))
+		    $entry['tags'] .= 'Featuring '.implode(', ', $tags[0]).'. ';
+	    if(count($tags[1]))
+		    $entry['tags'] .= 'Tagged '.implode(', ', $tags[1]).'. ';
+	    $entry['tags'] .= '</span>';
+
+
         $entriesHtml .= tag_all("entry", $entry, $entryLayout);
         if ($index == 0) {
             $entriesHtml .= "{{include ad-middle.phtml}}";
@@ -513,6 +531,7 @@ foreach ($entryPages as $page => $pageEntries) {
 
     $html = tag("content", $entriesHtml, $layout);
     $html = tag("title", $title.' | ', $html);
+    $html = tag('meta_description', 'Desktop and mobile wallpaper featuring beautiful celebrities, actresses and singers.', $html);
     $html = tag('side_more', getMore(7, null, 'col-sm-12', $homeEntryIds), $html);
     $html = tag('pager', pager('', $page, count($entryPages)), $html);
     $html = tags_parse($html);

@@ -19,7 +19,7 @@ function heightsFix() {
     jQuery('#main').css('height', '');
     jQuery('#sidebar').css('height', '');
     if(width > 991) {
-        if(jQuery('#sidebar').css('height') < jQuery('#main').css('height')) {
+        if(parseInt(jQuery('#sidebar').css('height')) < parseInt(jQuery('#main').css('height'))) {
             jQuery('#sidebar').css('height', jQuery('#main').css('height'));
         } else {
             jQuery('#main').css('height', jQuery('#sidebar').css('height'));
@@ -112,6 +112,9 @@ jQuery(document).ready(function(){
     } else {
         jQuery('#sidebar').insertAfter(jQuery('#main'));
     }
+
+    jQuery('.entry-images img').load(heightsFix);
+
 });
 
 function processAjaxData(response, urlPath){
