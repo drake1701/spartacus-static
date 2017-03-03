@@ -72,7 +72,7 @@ function tag_parse($tagName, $arg = null){
         case "calendar":
             $calEntry = $db->query("SELECT e.*, k.path as kind, i.path as image FROM entry e JOIN image i ON i.entry_id = e.id JOIN image_kind k ON i.kind = k.id AND k.exclude != 1 WHERE `queue` = 2 AND date(`published_at`) <= date('now') ORDER BY k.position ASC, `published_at` DESC LIMIT 1;");
             $calEntry = $calEntry->fetchArray();
-            $html = '<div class="col-md-12 col-sm-6 col-xs-6"><a href="'.$baseurl.'tag/calendar" title="Calendar Series"><span>'.$calEntry['title'].'</span><img src="'.get_cache_url($calEntry['kind'].'/'.$calEntry['filename'], 400).'" title="'.$calEntry['title'].'" /></a></div>';
+            $html = '<div class="col-md-12 col-sm-6 col-xs-6"><a href="'.$baseurl.'tag/calendar" title="Calendar Series"><span>'.$calEntry['title'].'</span><img class="lazy" data-original="'.get_cache_url($calEntry['kind'].'/'.$calEntry['filename'], 400).'" title="'.$calEntry['title'].'" /></a></div>';
             return $html;
         case "baseurl":
             return $baseurl;
@@ -130,7 +130,7 @@ function tag_entry($entry, $layout = null, $count, $layoutType = 'tag', $classes
             $mobileImage = $baseurl."gallery/".$image['dir']."/".$image['file'];
             if($i%2 == 0)
                 $mobileImages .= '<div class="image-box col-xs-12 col-sm-4">';
-                $mobileImages .= '<a href="'.$entry['slug'].'" class="image col-xs-6" title="'.$entry['title'].'"><img src="'.get_cache_url($mobileImage, 340).'" alt="'.$entry['title'].'"/></a>';
+                $mobileImages .= '<a href="'.$entry['slug'].'" class="image col-xs-6" title="'.$entry['title'].'"><img class="lazy" data-original="'.get_cache_url($mobileImage, 340).'" alt="'.$entry['title'].'"/></a>';
             if(count($images) == 1 || $i++%2 == 1)
                 $mobileImages .= '</div>';
         }

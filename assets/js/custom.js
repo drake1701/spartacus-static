@@ -16,15 +16,15 @@ jQuery(window).load(heightsFix).resize(function(){
 
 function heightsFix() {
     var width = jQuery(document).width();
-    jQuery('#main').css('height', '');
-    jQuery('#sidebar').css('height', '');
-    if(width > 991) {
-        if(parseInt(jQuery('#sidebar').css('height')) < parseInt(jQuery('#main').css('height'))) {
-            jQuery('#sidebar').css('height', jQuery('#main').css('height'));
-        } else {
-            jQuery('#main').css('height', jQuery('#sidebar').css('height'));
-        }
-    }
+    // jQuery('#main').css('height', '');
+    // jQuery('#sidebar').css('height', '');
+    // if(width > 991) {
+    //     if(parseInt(jQuery('#sidebar').css('height')) < parseInt(jQuery('#main').css('height'))) {
+    //         jQuery('#sidebar').css('height', jQuery('#main').css('height'));
+    //     } else {
+    //         jQuery('#main').css('height', jQuery('#sidebar').css('height'));
+    //     }
+    // }
 
     if(jQuery('.entry-images .image').length){
         var desktop = jQuery('.entry-images .desktop');
@@ -44,8 +44,8 @@ function heightsFix() {
             } else {
                 setHeights(imagesD, desktop.width());
             }
-            var width = ((1/6) * imagesM.length * mobile.width()) - (imagesM.length * 1.5);
-            setHeights(imagesM, width);
+            var boxwidth = ((1/6) * imagesM.length * mobile.width()) - (imagesM.length * 1.5);
+            setHeights(imagesM, boxwidth);
 
         } else {
             jQuery('.entry-images .image, .entry-images .image span').css({'height': '', 'width': ''});
@@ -77,6 +77,15 @@ var ajaxContent;
 
 jQuery(document).ready(function(){
 
+    var lazyConfig = {
+        effect : "fadeIn",
+        skip_invisible : true,
+        placeholder: '/images/blank.png'
+    };
+
+    jQuery('#main img.lazy').lazyload(lazyConfig);
+    jQuery('#sidebar img.lazy').lazyload(lazyConfig);
+
     jQuery('#main').on('click', '#show_more', function(){
         if(ajaxing) return;
         if(typeof curPage != 'number') return;
@@ -107,10 +116,10 @@ jQuery(document).ready(function(){
         });
     });
 
-    if(jQuery(window).width() > 991) {
-        jQuery('#sidebar').insertBefore(jQuery('#main'));
-    } else {
+    if(jQuery(window).width() <= 991) {
         jQuery('#sidebar').insertAfter(jQuery('#main'));
+    } else {
+        jQuery('#sidebar').insertBefore(jQuery('#main'));
     }
 
     jQuery('.entry-images img').load(heightsFix);

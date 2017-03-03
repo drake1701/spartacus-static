@@ -166,7 +166,7 @@ while($entry = $result->fetchArray()){
             <meta property="url" content="'.$imageUrl.'">
             <meta property="width" content="'.$fileInfo[0].' px">
             <meta property="height" content="'.$fileInfo[1].' px">
-            <img property="thumbnailUrl" src="'.$cache.'" alt="'.$entry['title'].'"/>
+            <img property="thumbnailUrl" class="lazy" data-original="'.$cache.'" alt="'.$entry['title'].'"/>
             <span property="caption" content="'.$entry['title'].' - '.$image['label'].'">'.$image['label'].'</span>
         </a>';
     }
@@ -206,7 +206,7 @@ while($entry = $result->fetchArray()){
     $excludeIds = array($entry['id']);
     $prev = $db->query('SELECT e.* FROM entry e JOIN entry o ON o.id = "'.$entry['id'].'" WHERE e.published_at < o.published_at ORDER BY e.published_at DESC LIMIT 1;')->fetchArray();
     if(isset($prev['id'])) {
-        $entry['prev'] = '<a href="'.$baseurl.$prev['url_path'].'" title="'.$prev['title'].'"><span>Previous</span><img src="'.get_cache_url($prev['thumb'], 360).'" alt="'.$prev['title'].'" /><span>'.$prev['title'].'</span></a>';
+        $entry['prev'] = '<a href="'.$baseurl.$prev['url_path'].'" title="'.$prev['title'].'"><span>Previous</span><img class="lazy" data-original="'.get_cache_url($prev['thumb'], 360).'" alt="'.$prev['title'].'" /><span>'.$prev['title'].'</span></a>';
         $entry['prev_link'] = '<a href="'.$baseurl.$prev['url_path'].'" title="'.$prev['title'].'"><span>&laquo; Previous Wallpaper</span></a>';
         $excludeIds[] = $prev['id'];
     }
@@ -214,7 +214,7 @@ while($entry = $result->fetchArray()){
     $next = $db->query('SELECT e.* FROM entry e JOIN entry o ON o.id = "'.$entry['id'].'" WHERE e.published_at > o.published_at ORDER BY e.published_at ASC LIMIT 1;')->fetchArray();
     if(isset($next['id'])) {
         $nexturl = $baseurl.$next['url_path'];
-        $nextImg = '<span>Next</span><img src="'.get_cache_url($next['thumb'], 360).'" alt="'.$next['title'].'" /><span>'.$next['title'].'</span>';
+        $nextImg = '<span>Next</span><img class="lazy" data-original="'.get_cache_url($next['thumb'], 360).'" alt="'.$next['title'].'" /><span>'.$next['title'].'</span>';
         
         $entry['next'] = $next['published'] ? 
             '<a href="'.$nexturl.'" title="'.$next['title'].'">'.$nextImg.'</a>' :
@@ -254,33 +254,33 @@ if(!$dev || $mode == 't') {
 
         $tagEntryResult = $db->query("SELECT e.id, title, url_path, published_at FROM entry e JOIN entry_tag t ON t.entry_id = e.id WHERE t.tag_id = {$tag['id']} AND published IS NOT NULL ORDER BY published_at DESC;");
         $entries = $db->fetchAll($tagEntryResult);
-        $entryPages = array_chunk($entries, $page_size);
+        //$entryPages = array_chunk($entries, $page_size);
 
-        foreach ($entryPages as $page => $pageEntries) {
-            $page += 1;
+        //foreach ($entryPages as $page => $pageEntries) {
+        //    $page += 1;
 
             $tagPage = '<div class="row entry-grid">';
-            $count = count($entryPages) > 1 ? $page_size : count($pageEntries);
-            foreach ($pageEntries as $entry) {
+            $count = count($entries); //count($entryPages) > 1 ? $page_size : count($pageEntries);
+            foreach ($entries as $entry) {
                 $tagPage .= tag_entry($entry, $tagLayout, $count);
             }
             $tagPage .= '</div>';
 
             $tagHtml = get_layout();
             $title = $tag['title'] . ' Wallpaper';
-            if ($page > 1) {
+            /* if ($page > 1) {
                 $tagPage = '<button class="btn btn-home btn-lg pull-right"><a href="' . $baseurl . 'tag/' . $tag['slug'] . '">Newest Entries</a></button><div class="clearfix"></div>' . $tagPage;
                 $title .= ' - Page ' . $page;
-            }
+            } */
             $tagHtml = tag("content", $tagPage, $tagHtml);
-            $tagHtml = tag('pager', pager('tag/' . $tag['slug'], $page, count($entryPages)), $tagHtml);
+            //$tagHtml = tag('pager', pager('tag/' . $tag['slug'], $page, count($entryPages)), $tagHtml);
             $tagHtml = tag("title", $title . ' | ', $tagHtml);
             $tagHtml = tag("content_title", $title, $tagHtml);
             $tagHtml = tags_parse($tagHtml);
-            write_file('tag/' . $tag['slug'] . '/page/' . $page, $tagHtml);
-            if ($page == 1)
+            //write_file('tag/' . $tag['slug'] . '/page/' . $page, $tagHtml);
+            //if ($page == 1)
                 write_file("tag/" . $tag['slug'], $tagHtml);
-        }
+        //}
         $tagCount++;
     }
     slog('updated ' . $tagCount . ' tag pages');
@@ -302,7 +302,7 @@ if(!$dev || $mode == 't') {
     }
     $viewAll .= '</div>';
 
-    $tagResult = $db->query("SELECT * FROM tag t WHERE name = 0 AND count > 0 ORDER BY title ASC;");
+    $tagResult = $db->query("SELECT * FROM tag t WHERE name = 0 AND count > 0 ORDER BY count DESC;");
     $tagResult = $db->fetchAll($tagResult);
     $tagResult = array_chunk($tagResult, ceil(count($tagResult) / 3));
     $viewAll .= '<h2>Other Tags</h2>';
@@ -332,33 +332,22 @@ if(!$dev || $mode == 'y') {
         slog("update $year index");
         $tagEntryResult = $db->query("SELECT e.id, title, url_path, published_at FROM entry e WHERE published_at LIKE('{$year}%') AND published IS NOT NULL ORDER BY published_at DESC;");
         $entries = $db->fetchAll($tagEntryResult);
-        $entryPages = array_chunk($entries, $page_size);
 
-        foreach ($entryPages as $page => $pageEntries) {
-            $page += 1;
-
-            $tagPage = '<div class="row entry-grid">';
-            foreach ($pageEntries as $entry) {
-                $tagPage .= tag_entry($entry, $tagLayout, $page_size);
-            }
-            $tagPage .= '</div>';
-
-            $tagHtml = get_layout();
-            $title = "Wallpaper from {$year}";
-            if ($page > 1) {
-                $tagPage = '<button class="btn btn-home btn-lg pull-right"><a href="' . $baseurl . 'tag/' . $year . '">Newest Entries</a></button><div class="clearfix"></div>' . $tagPage;
-                $title .= " - Page $page";
-            }
-            $tagHtml = tag("content", $tagPage, $tagHtml);
-            $tagHtml = tag('pager', pager('tag/' . $year, $page, count($entryPages)), $tagHtml);
-            $tagHtml = tag("title", $title . " | ", $tagHtml);
-            $tagHtml = tag("content_title", $title, $tagHtml);
-            $tagHtml = tags_parse($tagHtml);
-            write_file('tag/' . $year . '/page/' . $page, $tagHtml);
-            if ($page == 1)
-                write_file("tag/" . $year, $tagHtml);
+        $tagPage = '<div class="row entry-grid">';
+        foreach ($entries as $entry) {
+            $tagPage .= tag_entry($entry, $tagLayout, count($entries));
         }
-        if (!$rebuild)
+        $tagPage .= '</div>';
+
+        $tagHtml = get_layout();
+        $title = "Wallpaper from {$year}";
+        $tagHtml = tag("content", $tagPage, $tagHtml);
+        $tagHtml = tag("title", $title . " | ", $tagHtml);
+        $tagHtml = tag("content_title", $title, $tagHtml);
+        $tagHtml = tags_parse($tagHtml);
+        write_file("tag/" . $year, $tagHtml);
+
+        if (!$rebuild && $mode != 'y')
             break;
         $year--;
     }
@@ -497,7 +486,7 @@ foreach ($entryPages as $page => $pageEntries) {
         while ($image = $imageResult->fetchArray()) {
             $hasMobile = true;
             $mobileImage = $baseurl . "gallery/" . $image['dir'] . "/" . $image['file'];
-            $mobileImages .= '<a href="' . $baseurl . $entry['url_path'] . '" class="image col-xs-6" title="' . $entry['title'] . '"><img src="' . get_cache_url($mobileImage, 340) . '" alt="' . $entry['title'] . '"/></a>';
+            $mobileImages .= '<a href="' . $baseurl . $entry['url_path'] . '" class="image col-xs-6" title="' . $entry['title'] . '"><img class="lazy" data-original="' . get_cache_url($mobileImage, 340) . '" alt="' . $entry['title'] . '"/></a>';
         }
 
         $entry['published_at'] = format_date($entry['published_at']);

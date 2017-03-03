@@ -12,27 +12,28 @@
         <p class="pull-left">{{entry prev_link}}</p>
         <p class="pull-right text-right">{{entry next_link}}</p>
     </div>
-	<h2 class="entry-title" property="name">{{entry title}}</h2>
-	<p class="entry-date" property="datePublished">{{entry published_at}}</p>
-	<a href="{{entry first_image}}" class="entry-preview-image" title="{{entry title}}">
-        <img src="{{entry preview}}" alt="{{entry title}}"/>
-        <span class="visible-xs">Desktop</span>
-    </a>
-	<div class="entry-content">{{entry content}}</div>
-	<div class="row-fluid">
-    	<div class="entry-tags pull-left">
+    <div class="col-sm-9">
+        <h2 class="entry-title" property="name">{{entry title}}</h2>
+        <p class="entry-date" property="datePublished">{{entry published_at}}</p>
+        <a href="{{entry first_image}}" class="entry-preview-image" title="{{entry title}}">
+            <img class="lazy" data-original="{{entry preview}}" alt="{{entry title}}"/>
+            <span class="visible-xs">Desktop</span>
+        </a>
+    </div>
+    <div class="col-sm-3">
+        <div class="entry-tags col-xs-6 col-sm-12">
             {{entry tags}}
-    	</div>
-    	<div class="social-media pull-right">
-    		<strong>Share</strong>
+        </div>
+        <div class="social-media col-xs-6 col-sm-12">
+            <strong>Share</strong>
             <ul>
                 <li><a class="facebook" href="javascript:share();">Share</a></li>
                 <li><a class="twitter" href="http://twitter.com/intent/tweet?url={{entry url}}&text={{entry title}}+-+{{entry preview}}&hashtags=wallpaper,background">Tweet</a></li>
                 <li><a class="pinterest" href="http://pinterest.com/pin/create/bookmarklet/?media={{entry preview}}&url={{entry url}}&is_video=false&description={{entry title}}">Pin</a></li>
             </ul>
-    	</div>
-	</div>
-	<div class="clearfix"></div>
+        </div>
+    </div>
+	<div class="entry-content clearfix">{{entry content}}</div>
     <strong>Wallpaper Types</strong>
 	<div class="entry-images">
         {{entry image_gallery}}	

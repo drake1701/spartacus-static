@@ -3,9 +3,12 @@
 	<div class="container-fluid">
     {{include header.phtml}}
 		<div class="row-fluid">
+            <div class="col-md-3" id="sidebar">
+                {{include sidebar.phtml}}
+                {{include ad-sidebar.phtml}}
+            </div>
             <div class="col-md-9" id="main">
                 <div class="ad top">
-                    <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
                     <!-- Content Top -->
                     <ins class="adsbygoogle"
                          style="display:block"
@@ -22,7 +25,6 @@
                     {{pager}}
                 </nav>
                 <div class="ad bottom">
-                    <script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
                     <!-- Content Bottom -->
                     <ins class="adsbygoogle"
                          style="display:block"
@@ -36,10 +38,6 @@
                 <div class="random-entries entry-grid row hidden-xs">
                     {{content_more}}
                 </div>
-            </div>
-            <div class="col-md-3" id="sidebar">
-                {{include sidebar.phtml}}
-                {{include ad-sidebar.phtml}}
             </div>
 		</div>
 {{include footer.phtml}}

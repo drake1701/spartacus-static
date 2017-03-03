@@ -11,6 +11,8 @@
 
 img {
     width: 100%;
+    height: auto;
+    background:rgb(68,114,88);
 }
 
 #main {
@@ -63,11 +65,10 @@ img {
     font-weight:400;
     margin: 0;
 }
-.entry-view .entry-date {    
+.entry-view .entry-date {
     font-family: Courgette;
     font-size:15px;
-    bottom: -5px;
-    position: relative;
+    float: right;
 }
 
 .entry-title {
@@ -101,7 +102,7 @@ img {
 .entry-tags,
 .social-media {
     font-size:14px;
-    margin-top: 40px;
+    margin-top: 30px;
 }
 
 .mobile-preview img {
@@ -156,6 +157,7 @@ img {
 .logo img {
     height: 80%;
     width:auto;
+    background: transparent;
 }
 
 .logo {
@@ -191,7 +193,7 @@ img {
 .social-media li a.pinterest { background-position: 0 -72px; }
 
 .entry-view .social-media li {
-    /* float:none; */
+    float:none;
 }
 
 #sidebar {
@@ -242,7 +244,7 @@ img {
     left:0;
 }
 
-#sidebar .section-head, .social-contact {
+#sidebar .section-head, .social-contact, #sidebar .ad {
     font-size: 18px;
     margin: 0 0 -2px;
     border-top: 1px solid rgba(0,0,0,.5);
@@ -514,7 +516,7 @@ td {
         clear:left;
     }
     #main {
-        padding-right:0;
+        padding-right: 0;
     }
 }
 
@@ -522,6 +524,10 @@ td {
     body > .container-fluid {
         padding-left: 10px;
         padding-right: 10px;
+    }
+    #copy {
+        margin-left:-10px;
+        margin-right:-10px;
     }
     #sidebar .years {
         width:50%;
