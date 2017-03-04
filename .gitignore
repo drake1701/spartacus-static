@@ -12,3 +12,6 @@
 /phpliteadmin.php
 *.log
 /var/
+
+/paperroll/composer.lock
+/paperroll/vendor/

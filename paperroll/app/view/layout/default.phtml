@@ -1,0 +1,43 @@
+{{include head.phtml}}
+<body>
+	<div class="container-fluid">
+    {{include header.phtml}}
+		<div class="row-fluid">
+            <div class="col-md-3" id="sidebar">
+                {{include sidebar.phtml}}
+                {{include ad-sidebar.phtml}}
+            </div>
+            <div class="col-md-9" id="main">
+                <div class="ad top">
+                    <!-- Content Top -->
+                    <ins class="adsbygoogle"
+                         style="display:block"
+                         data-ad-client="ca-pub-9622612302631221"
+                         data-ad-slot="8363371851"
+                         data-ad-format="auto"></ins>
+                    <script>
+                        (adsbygoogle = window.adsbygoogle || []).push({});
+                    </script>
+                </div>
+                <h2 class="content-title">{{content_title}}</h2>
+                {{content}}
+                <nav class="pager">
+                    {{pager}}
+                </nav>
+                <div class="ad bottom">
+                    <!-- Content Bottom -->
+                    <ins class="adsbygoogle"
+                         style="display:block"
+                         data-ad-client="ca-pub-9622612302631221"
+                         data-ad-slot="6328235454"
+                         data-ad-format="auto"></ins>
+                    <script>
+                        (adsbygoogle = window.adsbygoogle || []).push({});
+                    </script>
+                </div>
+                <div class="random-entries entry-grid row hidden-xs">
+                    {{content_more}}
+                </div>
+            </div>
+		</div>
+{{include footer.phtml}}
