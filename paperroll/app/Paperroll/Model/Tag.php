@@ -11,7 +11,7 @@ namespace Paperroll\Model;
  * Tag
  *
  * @Table(name="tag")
- * @Entity
+ * @Entity(repositoryClass="Paperroll\Model\Repository\Tag")
  */
 class Tag
 {

@@ -7,8 +7,6 @@
 
 namespace Paperroll\Theme;
 
-use Paperroll\Helper\File;
-
 class Generic
 {
     /** @var  string */
@@ -17,6 +15,8 @@ class Generic
     /** @var  string */
     protected $_html;
 
+    protected $viewDir;
+
     /** @var  array */
     protected $_data;
 
@@ -24,7 +24,7 @@ class Generic
      * Generic constructor.
      */
     public function __construct() {
-
+        $this->viewDir = BASEDIR . '/app/Paperroll/view/';
     }
 
     /**
@@ -37,45 +37,13 @@ class Generic
             $class = str_replace("\\", '/', $class);
             $file = preg_replace('/(?<=\\w)(?=[A-Z])/',"_$1", $class);
             $file = strtolower($file);
-            $file = BASEDIR . '/app/view/' . $file . '.phtml';
+            $file = $this->viewDir . $file . '.phtml';
         }
         $this->_template = $file;
     }
 
-    /**
-     * @return string
-     */
     public function toHtml() {
-        if(!$this->_template)
-            $this->setTemplate();
-
-        $this->loadLayout();
-
-        $this->tagAll();
-
-        return $this->_html;
-    }
-
-    /**
-     * Loads theme template/layout from file
-     * and assigns data from includes
-     */
-    public function loadLayout() {
-        if(!$this->_html)
-            $this->_html = File::readFile($this->_template);
-
-        preg_match_all("#{{%(\\S*)}}#", $this->_html, $tags);
-        if(count($tags[1])) {
-            foreach ($tags[1] as $tag) {
-                $blockName = "Paperroll\\Theme\\Block\\{$tag}";
-                if(class_exists($blockName))
-                    $block = new $blockName();
-                else
-                    $block = new Block($tag);
-
-                $this->setData("%{$tag}", $block);
-            }
-        }
+        return '';
     }
 
     /**
@@ -83,28 +51,25 @@ class Generic
      */
     public function tagAll() {
         preg_match_all("#{{([^}]+?)}}#", $this->_html, $tags);
+        //print_r(array_keys($this->_data));
         if(count($tags[1])) {
             foreach ($tags[1] as $tag) {
+                if($this->getData($tag) == '') echo "No value for $tag\n";
                 $this->_html = str_replace('{{' . $tag . '}}', $this->getData($tag), $this->_html);
             }
         }
     }
 
     /**
-     * @return string
-     */
-    function __toString() {
-        return $this->toHtml();
-    }
-
-    /**
      * @param string|null $key
-     * @return array
+     * @return mixed
      */
     public function getData($key = null) {
-        if($key && isset($this->_data[$key]))
-            return $this->_data[$key];
-
+        if($key) {
+            if (isset($this->_data[$key]))
+                return $this->_data[$key];
+            return '';
+        }
         return $this->_data;
     }
 
@@ -115,11 +80,17 @@ class Generic
      */
     public function setData($key, $value = null) {
         if(is_array($key)) {
-            $this->_data = $key;
+            $this->_data = $value;
         } else {
             $this->_data[$key] = $value;
         }
     }
 
+    /**
+     * @return string
+     */
+    function __toString() {
+        return $this->toHtml();
+    }
 
 }

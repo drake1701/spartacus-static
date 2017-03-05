@@ -6,12 +6,13 @@
  */
 
 namespace Paperroll\Model;
+use Paperroll\Helper\File;
 
 /**
  * Image
  *
- * @Table(name="image", indexes={@Index(name="image_post-fk", columns={"entry_id"}), @Index(name="image_kind-fk", columns={"kind"}), @Index(name="image_entry_id", columns={"entry_id", "kind"}), @Index(name="image_entry", columns={"entry_id"})})
- * @Entity
+ * @Table(name="image", indexes={@Index(name="image_post_fk", columns={"entry_id"}), @Index(name="image_kind_fk", columns={"kind"}), @Index(name="image_entry_id", columns={"entry_id", "kind"}), @Index(name="image_entry", columns={"entry_id"})})
+ * @Entity(repositoryClass="Paperroll\Model\Repository\Image")
  */
 class Image
 {
@@ -30,6 +31,13 @@ class Image
     private $entryId;
 
     /**
+     * @var Entry
+     * @ManyToOne(targetEntity="Paperroll\Model\Entry", inversedBy="images")
+     * @JoinColumn(name="entry_id", referencedColumnName="id", onDelete="CASCADE")
+     */
+    private $entry;
+
+    /**
      * @var string
      * @Column(name="path", type="string", length=255, nullable=true)
      */
@@ -39,8 +47,19 @@ class Image
      * @var integer
      * @Column(name="kind", type="integer", nullable=false)
      */
+    private $kindId;
+
+    /**
+     * @var ImageKind
+     * @OneToOne(targetEntity="Paperroll\Model\ImageKind")
+     * @JoinColumn(name="kind");
+     */
     private $kind;
 
+    /**
+     * @var string
+     */
+    private $filePath;
 
     /**
      * Get id
@@ -73,7 +92,7 @@ class Image
      * @param string $path
      * @return Image
      */
-    public function setPath($path) {
+    public function setFilename($path) {
         $this->path = $path;
         return $this;
     }
@@ -82,25 +101,58 @@ class Image
      * Get path
      * @return string
      */
-    public function getPath() {
+    public function getFilename() {
         return $this->path;
     }
 
     /**
-     * Set kind
-     * @param integer $kind
-     * @return Image
-     */
-    public function setKind($kind) {
-        $this->kind = $kind;
-        return $this;
-    }
-
-    /**
      * Get kind
-     * @return integer
+     * @return ImageKind
      */
     public function getKind() {
         return $this->kind;
     }
+
+    /**
+     * @return Entry
+     */
+    public function getEntry() {
+        return $this->entry;
+    }
+
+    public function getUrl($size = null) {
+        if ($size)
+            return File::getCacheUrl($this->getPath(), $size);
+        else
+            return File::baseUrl() . 'gallery/' . $this->getKind()->getPath() . '/' . $this->getFilename();
+    }
+
+    public function getPath() {
+        if(!$this->filePath) {
+            $this->filePath = BASEDIR . '/gallery/' . $this->getKind()->getPath() . '/' . $this->getFilename();
+        }
+        return $this->filePath;
+    }
+
+    /**
+     * @return int
+     */
+    public function getKindId() {
+        return $this->kindId;
+    }
+
+    /**
+     * @param int $kindId
+     */
+    public function setKindId($kindId) {
+        $this->kindId = $kindId;
+    }
+
+    /**
+     * @return int
+     */
+    public function getPosition() {
+        return $this->getKind()->getPosition();
+    }
+
 }

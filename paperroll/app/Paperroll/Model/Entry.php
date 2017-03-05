@@ -7,11 +7,14 @@
 
 namespace Paperroll\Model;
 
+use Doctrine\Common\Collections\ArrayCollection;
+use Paperroll\Helper\File;
+
 /**
  * \Paperroll\Model\Entry
  *
- * @Table(name="entry", indexes={@Index(name="queue-fk", columns={"queue"}), @Index(name="entry_url_path_UNIQUE", columns={"url_path"})})
- * @Entity
+ * @Table(name="entry", indexes={@Index(name="queue_fk", columns={"queue"}), @Index(name="entry_url_path_UNIQUE", columns={"url_path"})})
+ * @Entity(repositoryClass="Paperroll\Model\Repository\Entry")
  */
 class Entry
 {
@@ -82,6 +85,34 @@ class Entry
      * @Column(name="thumb", type="text", nullable=true)
      */
     private $thumb;
+
+    /**
+     * @var ArrayCollection
+     * @OneToMany(targetEntity="Paperroll\Model\Image", mappedBy="entry")
+     * @SortBy({"position" = "ASC"})
+     */
+    private $images;
+
+    /**
+     * @var array
+     */
+    private $desktopImages;
+
+    /**
+     * @var array
+     */
+    private $mobileImages;
+
+    /** @var  Image */
+    private $mainImage;
+
+    /**
+     * Entry constructor.
+     */
+    public function __construct()
+    {
+        $this->images = new ArrayCollection();
+    }
 
 
     /**
@@ -213,8 +244,9 @@ class Entry
      * Get publishedAt
      * @return \DateTime
      */
-    public function getPublishedAt() {
-        return $this->publishedAt;
+    public function getPublishedAt($short = false) {
+        $format = $short ? "M j, Y" : "l, F jS, Y";
+        return $this->publishedAt->format($format);
     }
 
     /**
@@ -270,5 +302,67 @@ class Entry
     public function getThumb() {
         return $this->thumb;
     }
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getImages() {
+        return $this->images;
+    }
+
+    /**
+     * @return Image
+     */
+    public function getMainImage() {
+        if(!$this->mainImage) {
+            $min = 99;
+            foreach($this->getImages() as $image) {
+                if($image->getKind()->getPosition() < $min) {
+                    $min = $image->getKind()->getPosition();
+                    $this->mainImage = $image;
+                }
+            }
+        }
+        return $this->mainImage;
+    }
+
+    /**
+     * @return array
+     */
+    public function getDesktopImages() {
+        if(!$this->desktopImages) {
+            $images = [];
+            foreach($this->getImages() as $image) {
+                if($image->getKind()->getMobile() == 0) {
+                    $images[$image->getKind()->getPosition()] = $image;
+                }
+            }
+            ksort($images);
+            $this->desktopImages = $images;
+        }
+        return $this->desktopImages;
+    }
+
+    /**
+     * @return array
+     */
+    public function getMobileImages() {
+        if(!$this->mobileImages) {
+            $images = [];
+            foreach($this->getImages() as $image) {
+                if($image->getKind()->getMobile()) {
+                    $images[$image->getKind()->getPosition()] = $image;
+                }
+            }
+            ksort($images);
+            $this->mobileImages = $images;
+        }
+        return $this->mobileImages;
+    }
+
+    public function getUrl() {
+        return File::baseUrl() . $this->getUrlPath();
+    }
+
 
 }

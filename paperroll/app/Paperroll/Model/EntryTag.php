@@ -11,8 +11,8 @@ namespace Paperroll\Model;
 /**
  * EntryTag
  *
- * @Table(name="entry_tag", indexes={@Index(name="entry_tag_tag-fk", columns={"tag_id"}), @Index(name="entry_tag_entry-fk", columns={"entry_id"})})
- * @Entity
+ * @Table(name="entry_tag", indexes={@Index(name="entry_tag_tag_fk", columns={"tag_id"}), @Index(name="entry_tag_entry_fk", columns={"entry_id"})})
+ * @Entity(repositoryClass="Paperroll\Model\Repository\EntryTag")
  */
 class EntryTag
 {

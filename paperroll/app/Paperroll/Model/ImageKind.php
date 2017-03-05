@@ -11,7 +11,7 @@ namespace Paperroll\Model;
  * ImageKind
  *
  * @Table(name="image_kind")
- * @Entity
+ * @Entity(repositoryClass="Paperroll\Model\Repository\ImageKind")
  */
 class ImageKind
 {

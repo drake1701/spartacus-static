@@ -13,6 +13,6 @@ try {
     $command = new $class($argv);
     $command->execute();
 } Catch (\Exception $e) {
-    $this->logger->crit($e->getMessage()."\n".$e->getTraceAsString());
-    print_r($e->getTrace());
+    echo $e->getMessage()."\n";
+    echo $e->getTraceAsString()."\n";
 }

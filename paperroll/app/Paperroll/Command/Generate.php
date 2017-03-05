@@ -7,25 +7,23 @@
 
 namespace Paperroll\Command;
 
+use Paperroll\Helper\Entity;
 use Paperroll\Model\Entry;
 use Paperroll\Helper\File;
 use Paperroll\Theme\Block;
-use Paperroll\Theme\Layout\Blank;
+use Paperroll\Theme\Layout;
 
 class Generate extends Generic {
 
-    /** @var \Doctrine\ORM\EntityRepository  */
-    protected $entryRepo;
-    /** @var \Paperroll\Helper\Entry  */
-    protected $entryHelper;
     /** @var string  */
     protected $siteUrl;
 
+    /** @var array */
+    protected $layoutData;
+
     public function __construct( array $argv = [] ) {
         parent::__construct( $argv );
-        $this->entryRepo = $this->entityManger->getRepository(Entry::class);
-        $this->entryHelper = new \Paperroll\Helper\Entry();
-        $this->siteUrl = $this->dev ? 'http://dev.spartacuswallpaper.com' : 'http://www.spartacuswallpaper.com';
+        $this->siteUrl = File::baseUrl();
     }
 
     public function execute() {
@@ -45,13 +43,27 @@ class Generate extends Generic {
             $this->buildChangelog();
         } else {
             if($this->dev) {
-                $entries = $this->entryRepo->findBy(['id' => [3754,4102]]);
-                /** @var Entry $entry */
+                $em = Entity::init();
+                /** @var \Paperroll\Model\Repository\Entry $entryRepo */
+                $entryRepo = $em->getRepository(Entry::class);
+                $entries = $entryRepo->findBy(['id' => [3754,4102]]);
+                /** @var \Paperroll\Model\Entry $entry */
                 foreach($entries as $entry)
-                    $this->entryHelper->rePublish($entry);
+                    $entryRepo->rePublish($entry);
 
-                $entry = $this->entryHelper->getLastPublishedEntry();
-                $this->entryHelper->rePublish($entry);
+                $entry = $entryRepo->getLastPublishedEntry();
+                $entryRepo->rePublish($entry);
+
+                if($this->getArg('b')) $this->buildBanners();
+                if($this->getArg('p')) $this->buildPages();
+                $this->buildEntries();
+                if($this->getArg('t')) {
+                    $this->buildTagPages();
+                    $this->buildTagIndex();
+                }
+                if($this->getArg('k')) $this->buildKinds();
+                if($this->getArg('y')) $this->buildYears();
+                $this->buildHome();
             } else {
                 $this->buildEntries();
                 $this->buildTagPages();
@@ -113,7 +125,7 @@ class Generate extends Generic {
         File::writeFile(File::siteDir()."/js/banner.js", $bannerJs);
 
         /** @var Block $header */
-        $header = new Block('header.phtml');
+        $header = new Block('header');
         $testHtml = /** @lang html */
             <<<'HTML'
         <script type="text/javascript">
@@ -133,7 +145,7 @@ class Generate extends Generic {
         </style>
 HTML;
         $testHtml .= str_repeat("<br/>".$header, (count($banners)-1));
-        $testPage = new Blank();
+        $testPage = new Layout('blank');
         $testPage->setData('content', $testHtml);
         $testPage = str_replace('col-md-9', 'col-md-12', $testPage);
         File::writeFile(File::siteDir() ."/banner-test.html", $testPage);
@@ -141,6 +153,20 @@ HTML;
 
     private function buildPages() {
         $this->debug('Building Static Pages');
+        $pages = glob(BASEDIR."/page/*");
+
+        foreach($pages as $pageFile){
+            $file = pathinfo($pageFile);
+
+            $page = new Layout('default');
+            $page->loadLayout();
+            $page->setData('content', File::readFile($pageFile));
+            $title = ucwords($file['filename']);
+            $page->setData("title", $title." | ");
+            $page->setData('meta_description', "Spartacus Wallpaper $title Page.");
+
+            File::writePage("page/".$file['filename'], $page);
+        }
     }
 
     private function buildEntries() {

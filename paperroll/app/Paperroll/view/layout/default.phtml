@@ -1,11 +1,13 @@
-{{include head.phtml}}
+<!DOCTYPE html>
+<html xmlns:fb="http://ogp.me/ns/fb#">
+{{%head%}}
 <body>
 	<div class="container-fluid">
-    {{include header.phtml}}
+    {{%header%}}
 		<div class="row-fluid">
             <div class="col-md-3" id="sidebar">
-                {{include sidebar.phtml}}
-                {{include ad-sidebar.phtml}}
+                {{%sidebar%}}
+                {{%ad/sidebar%}}
             </div>
             <div class="col-md-9" id="main">
                 <div class="ad top">
@@ -24,20 +26,12 @@
                 <nav class="pager">
                     {{pager}}
                 </nav>
-                <div class="ad bottom">
-                    <!-- Content Bottom -->
-                    <ins class="adsbygoogle"
-                         style="display:block"
-                         data-ad-client="ca-pub-9622612302631221"
-                         data-ad-slot="6328235454"
-                         data-ad-format="auto"></ins>
-                    <script>
-                        (adsbygoogle = window.adsbygoogle || []).push({});
-                    </script>
-                </div>
+                {{%ad/bottom%}}
                 <div class="random-entries entry-grid row hidden-xs">
                     {{content_more}}
                 </div>
             </div>
 		</div>
-{{include footer.phtml}}
+    {{%footer%}}
+    </div>
+</body>

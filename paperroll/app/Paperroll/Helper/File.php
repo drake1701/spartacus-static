@@ -9,9 +9,12 @@ namespace Paperroll\Helper;
 
 class File {
 
-    public static function siteDir()
-    {
-        return BASEDIR . '/../_site';
+    public static function siteDir() {
+        return BASEDIR . '/_site';
+    }
+
+    public static function baseUrl() {
+        return strpos(__DIR__, 'development') ? 'http://dev.spartacuswallpaper.com/' : 'http://www.spartacuswallpaper.com/';
     }
 
     public static function delTree($dir) {
@@ -39,7 +42,12 @@ class File {
         closedir($dir);
     }
 
-    public static function writeFile( $filename, $content ) {
+    /**
+     * Write file, create directory if needed
+     * @param $filename
+     * @param $content
+     */
+    public static function writeFile($filename, $content ) {
         $dir = dirname($filename);
         if(!is_dir($dir)) {
             mkdir($dir, 0775, true);
@@ -48,8 +56,50 @@ class File {
         file_put_contents($filename, $content);
     }
 
+    /**
+     * Read file
+     * @param $filename
+     * @return string
+     */
     public static function readFile($filename) {
         return file_get_contents($filename);
+    }
+
+    /**
+     * Write site page, both direct and folder version
+     * @param $slug
+     * @param $content
+     */
+    public static function writePage($slug, $content) {
+        $slug = str_replace(".html", "", $slug);
+
+        self::writeFile(self::siteDir()."/$slug.html", $content);
+        self::writeFile(self::siteDir()."/$slug/index.html", $content);
+    }
+
+    public static function getCacheUrl($image, $size) {
+
+        $filename = str_replace('.jpg', '', basename($image));
+        $kind = basename(dirname($image));
+
+        $encoded = self::transcode($kind . '/' . $filename);
+
+        $url = self::baseUrl() . 'gallery/cache/' . $size . '/' . $encoded . '.jpg';
+
+        return $url;
+    }
+
+    public static function transcode($string)
+    {
+        $key = ['0' => 'a', '-' => 'y', '_' => '4', 'a' => '0', 'b' => 'c', 'c' => 'b', 'd' => '3', 'e' => '6', 'f' => 'n', 'g' => 'o', 'h' => 'm', 'i' => 'j', 'j' => 'i', 'k' => 'q', 'l' => '9', 'm' => 'h', 'n' => 'f', 'o' => 'g', 'p' => 't', 'q' => 'k', 'r' => 'w', 's' => '8', 't' => 'p', 'u' => '1', 'v' => '2', 'w' => 'r', 'x' => 'z', 'y' => '-', 'z' => 'x', '1' => 'u', '2' => 'v', '3' => 'd', '4' => '_', '5' => '7', '6' => 'e', '7' => '5', '8' => 's', '9' => 'l', '/' => '/'];
+
+        $in = str_split($string);
+        $out = [];
+        foreach ($in as $v) {
+            $out[] = $key[$v];
+        }
+
+        return implode('', $out);
     }
 
 }
