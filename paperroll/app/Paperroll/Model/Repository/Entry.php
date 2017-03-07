@@ -8,12 +8,13 @@
 namespace Paperroll\Model\Repository;
 
 use Doctrine\ORM\Query\Expr;
-use Paperroll\Model\Image;
-use Paperroll\Model\ImageKind;
-use Paperroll\Model\Tag;
+use Paperroll\Model;
 
 class Entry extends Generic
 {
+    /**
+     * @return Model\Entry
+     */
     public function getLastPublishedEntry() {
         $qb = $this->createQueryBuilder('e');
         $query = $qb
@@ -25,11 +26,31 @@ class Entry extends Generic
         return array_pop($query->getResult());
     }
 
-    public function rePublish(\Paperroll\Model\Entry $entry) {
+    /**
+     * @return array
+     */
+    public function getPublishable() {
+        $qb = $this->createQueryBuilder('e');
+        $query = $qb
+            ->where($qb->expr()->isNull('e.published'))
+            ->andWhere("e.publishedAt < date('now')")
+            ->orderBy('e.publishedAt', 'ASC')
+            ->getQuery();
+
+        return $query->getResult();
+    }
+
+    /**
+     * @param Model\Entry $entry
+     */
+    public function rePublish(Model\Entry $entry) {
         $this->logger->debug("Mark {$entry->getTitle()} ({$entry->getId()}) to be republished.");
         $entry->setPublished(null);
     }
 
+    /**
+     * @return array
+     */
     public function getYears()
     {
         $qb = $this->createQueryBuilder('e');
@@ -43,13 +64,16 @@ class Entry extends Generic
         return $query->getResult();
     }
 
+    /**
+     * @return bool|Model\Entry
+     */
     public function getLastPublishedCalendar()
     {
         $qb = $this->createQueryBuilder('e');
         $query = $qb
             ->addSelect('k.path as kind')
-            ->join(Image::class, 'i', Expr\Join::WITH, 'i.entryId = e.id')
-            ->join(ImageKind::class, 'k', Expr\Join::WITH, 'i.kind = k.id')
+            ->join(Model\Image::class, 'i', Expr\Join::WITH, 'i.entryId = e.id')
+            ->join(Model\ImageKind::class, 'k', Expr\Join::WITH, 'i.kind = k.id')
             ->where("e.queue = 2 AND date(e.publishedAt) <= date('now')")
             ->orderBy('k.position', 'ASC')
             ->addOrderBy('e.publishedAt', 'DESC')
@@ -67,18 +91,56 @@ class Entry extends Generic
         return false;
     }
 
+    /**
+     * @return array
+     */
     public function getTopTen() {
 
         /** @var \Paperroll\Model\Repository\Tag $tags */
-        $tags = $this->getEntityManager()->getRepository(Tag::class);
+        $tags = $this->getEntityManager()->getRepository(Model\Tag::class);
         $topTen = $tags->getTopTen();
 
         $entries = [];
-        /** @var Tag $tag */
+        /** @var Model\Tag $tag */
         foreach($topTen as $tag) {
             $entries[] = $tags->getRandom($tag->getId());
         }
         return $entries;
+    }
+
+
+    /**
+     * @param Model\Entry $entry
+     * @return Model\Entry
+     */
+    public function getNext(Model\Entry $entry)
+    {
+        $qb = $this->createQueryBuilder('e');
+        $query = $qb
+            ->join(Model\Entry::class, 'o', Expr\Join::WITH, "o.id = {$entry->getId()}")
+            ->where('e.publishedAt > o.publishedAt')
+            ->orderBy('e.publishedAt', 'asc')
+            ->setMaxResults(1)
+            ->getQuery();
+
+        return $query->getSingleResult();
+    }
+
+    /**
+     * @param Model\Entry $entry
+     * @return Model\Entry
+     */
+    public function getPrev(Model\Entry $entry)
+    {
+        $qb = $this->createQueryBuilder('e');
+        $query = $qb
+            ->join(Model\Entry::class, 'o', Expr\Join::WITH, "o.id = {$entry->getId()}")
+            ->where('e.publishedAt < o.publishedAt')
+            ->orderBy('e.publishedAt', 'desc')
+            ->setMaxResults(1)
+            ->getQuery();
+
+        return $query->getSingleResult();
     }
 
 }

@@ -10,6 +10,8 @@ namespace Paperroll\Command;
 use Paperroll\Helper\Entity;
 use Paperroll\Model\Entry;
 use Paperroll\Helper\File;
+use Paperroll\Model\Image;
+use Paperroll\Model\Tag;
 use Paperroll\Theme\Block;
 use Paperroll\Theme\Layout;
 
@@ -20,6 +22,9 @@ class Generate extends Generic {
 
     /** @var array */
     protected $layoutData;
+
+    /** @var array */
+    protected $touchedTags;
 
     public function __construct( array $argv = [] ) {
         parent::__construct( $argv );
@@ -53,6 +58,7 @@ class Generate extends Generic {
 
                 $entry = $entryRepo->getLastPublishedEntry();
                 $entryRepo->rePublish($entry);
+                $em->flush();
 
                 if($this->getArg('b')) $this->buildBanners();
                 if($this->getArg('p')) $this->buildPages();
@@ -171,6 +177,93 @@ HTML;
 
     private function buildEntries() {
         $this->debug('Build Entry Pages');
+        $entries = $this->entityManger->getRepository(Entry::class)->getPublishable();
+        /** @var Entry $entry */
+        foreach($entries as $entry) {
+            $this->debug('Building ' . $entry->getUrl());
+            $entryPage = new Layout('entry');
+            $entryPage->loadLayout();
+
+            $entryPage->setData('title', $entry->getTitle() . ' | ');
+
+            $entryBlock = new Block('entry/default');
+            $entryData = $entry->getBlockVariables();
+
+            if($entry->getNext()->getPublished()) {
+                $entryData['nextLink'] = '<a href="'.$entry->getNext()->getUrl().'" title="'.$entry->getNext()->getTitle().'"><span>Next Wallpaper &raquo;</span></a>';
+                $entryData['next'] = '<a href="'.$entry->getNext()->getUrl().'" title="'.$entry->getNext()->getTitle().'"><span>Next</span><img class="lazy" data-original="'.$entry->getNext()->getMainImage()->getUrl(360).'" alt="'.$entry->getNext()->getTitle().'" /><span>'.$entry->getNext()->getTitle().'</span></a>';
+            }
+            if($entry->getPrev()->getPublished()) {
+                $entryData['prevLink'] = '<a href="'.$entry->getPrev()->getUrl().'" title="'.$entry->getPrev()->getTitle().'"><span>Prev Wallpaper &laquo;</span></a>';
+                $entryData['prev'] = '<a href="'.$entry->getPrev()->getUrl().'" title="'.$entry->getPrev()->getTitle().'"><span>Prev</span><img class="lazy" data-original="'.$entry->getPrev()->getMainImage()->getUrl(360).'" alt="'.$entry->getPrev()->getTitle().'" /><span>'.$entry->getPrev()->getTitle().'</span></a>';
+            }
+
+            $desktopImages = [];
+            $mobileImages = [];
+            /** @var Image $image */
+            foreach ($entry->getVisibleImages() as $image) {
+                $fileInfo = @getimagesize($image->getPath());
+                if(count($fileInfo) < 2) {
+                    $this->logger->error('No file found at '.$image->getPath());
+                    continue;
+                }
+                $thumbWidth = $image->getKind()->getPath() == 'ultrawide' ? 575 : 430;
+                $imageBlock = new Block('entry/image');
+                $imageData = [
+                    'title'     => $entry->getTitle(),
+                    'url'       => $image->getUrl(),
+                    'thumb'     => $image->getUrl($thumbWidth),
+                    'ratio'     => ($fileInfo[1] / $fileInfo[0]),
+                    'height'    => $fileInfo[1],
+                    'width'     => $fileInfo[0],
+                    'kind'      => $image->getKind()->getLabel()
+                ];
+                $imageBlock->setData($imageData);
+                if($image->getKind()->getMobile())
+                    $mobileImages[] = $imageBlock->toHtml();
+                else
+                    $desktopImages[] = $imageBlock->toHtml();
+            }
+            $entryBlock->setData('desktopImages', implode($desktopImages));
+            $entryBlock->setData('mobileImages', implode($mobileImages));
+
+            $entryTags = [];
+            $names = [];
+            /** @var Tag $tag */
+            foreach($entry->getTags() as $tag) {
+                $this->touchedTags[$tag->getId()] = $tag;
+                $entryTags[$tag->getName()][] = '<li><a href="'.$tag->getUrl().'" title="'.$tag->getTitle().'">'.$tag->getTitle().'</a></li>';
+                if($tag->getName()) $names[] = $tag->getTitle();
+            }
+            $tagHtml = '';
+            if(!empty($entryTags[1])) {
+                $tagHtml .= '<div><strong>Featuring</strong><ul>' . implode($entryTags[1]) . '</ul></div>';
+                $entryPage->setData('meta_description',
+                    'Desktop and mobile wallpaper featuring '
+                    . strip_tags(implode($names)).'.'
+                );
+                foreach($names as $name) {
+                    $tagHtml .= '<span class="hidden" property="about" typeof="Person"><span property="name">'.$name.'</span></span>';
+                }
+            }
+            if(!empty($entryTags[0]))
+                $tagHtml .= '<div><strong>Tagged</strong><ul>' . implode($entryTags[0]) . '</ul></div>';
+
+            $entryData['tags'] = $tagHtml;
+
+            $entryBlock->setData($entryData);
+
+            $entryPage->setData('content', $entryBlock->toHtml());
+
+            $entryHead = new Block('entry/head');
+            $entryHead->setData($entryData);
+            $entryPage->setData('head', $entryHead->toHtml());
+
+            File::writePage($entry->getUrlPath(), $entryPage);
+
+            $entry->setPublished(1);
+        }
+        $this->entityManger->flush();
     }
 
     private function buildTagPages() {

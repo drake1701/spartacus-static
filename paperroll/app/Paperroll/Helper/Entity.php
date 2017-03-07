@@ -14,7 +14,12 @@ use Doctrine\ORM\Tools\Setup;
 class Entity {
 
     public static function init() {
-        $config = Setup::createAnnotationMetadataConfiguration( [ BASEDIR . "/app/Paperroll/Model/Resource" ] );
+
+        $devMode = strpos(BASEDIR, 'development');
+        $config = Setup::createAnnotationMetadataConfiguration(
+            [ BASEDIR . "/app/Paperroll/Model" ],
+            $devMode
+        );
 
         // database configuration parameters
         $conn = [

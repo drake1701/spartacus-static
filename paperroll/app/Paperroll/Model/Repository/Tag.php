@@ -7,9 +7,7 @@
 
 namespace Paperroll\Model\Repository;
 
-
 use Paperroll\Model\EntryTag;
-use Paperroll\Model\Image;
 use Paperroll\Model;
 
 class Tag extends Generic
@@ -29,7 +27,7 @@ class Tag extends Generic
         $qb = $this->getEntityManager()->getRepository(\Paperroll\Model\Entry::class)->createQueryBuilder('e');
         $query = $qb
             ->join(EntryTag::class, 'et', 'WITH', 'et.entryId = e.id')
-            ->join(Image::class, 'i', 'WITH', 'i.entryId = e.id')
+            ->join(Model\Image::class, 'i', 'WITH', 'i.entryId = e.id')
             ->join(Model\ImageKind::class, 'ik', 'WITH', 'ik.id = i.kind AND ik.mobile = 1')
             ->where($qb->expr()->eq('et.tagId', $tagId))
             ->getQuery();

@@ -8,12 +8,13 @@
 namespace Paperroll\Model;
 
 use Doctrine\Common\Collections\ArrayCollection;
+use Paperroll\Helper\Entity;
 use Paperroll\Helper\File;
 
 /**
- * \Paperroll\Model\Entry
+ * Entry
  *
- * @Table(name="entry", indexes={@Index(name="queue_fk", columns={"queue"}), @Index(name="entry_url_path_UNIQUE", columns={"url_path"})})
+ * @Table(name="entry")
  * @Entity(repositoryClass="Paperroll\Model\Repository\Entry")
  */
 class Entry
@@ -36,7 +37,7 @@ class Entry
      * @var string
      * @Column(name="content", type="text", nullable=true)
      */
-    private $content;
+    private $note;
 
     /**
      * @var string
@@ -88,10 +89,19 @@ class Entry
 
     /**
      * @var ArrayCollection
-     * @OneToMany(targetEntity="Paperroll\Model\Image", mappedBy="entry")
-     * @SortBy({"position" = "ASC"})
+     * @OneToMany(targetEntity="Paperroll\Model\Image", mappedBy="entry", fetch="EAGER")
      */
     private $images;
+
+    /**
+     * @var ArrayCollection
+     * @ManyToMany(targetEntity="Paperroll\Model\Tag")
+     * @JoinTable(name="entry_tag",
+     *      joinColumns={@JoinColumn(name="entry_id", referencedColumnName="id")},
+     *      inverseJoinColumns={@JoinColumn(name="tag_id", referencedColumnName="id", unique=true)}
+     *      )
+     */
+    private $tags;
 
     /**
      * @var array
@@ -105,6 +115,9 @@ class Entry
 
     /** @var  Image */
     private $mainImage;
+    private $visibleImages;
+    private $next;
+    private $prev;
 
     /**
      * Entry constructor.
@@ -142,11 +155,11 @@ class Entry
 
     /**
      * Set content
-     * @param string $content
+     * @param string $note
      * @return Entry
      */
-    public function setContent($content) {
-        $this->content = $content;
+    public function setNote($note) {
+        $this->note = $note;
         return $this;
     }
 
@@ -154,8 +167,8 @@ class Entry
      * Get content
      * @return string
      */
-    public function getContent() {
-        return $this->content;
+    public function getNote() {
+        return $this->note;
     }
 
     /**
@@ -242,7 +255,8 @@ class Entry
 
     /**
      * Get publishedAt
-     * @return \DateTime
+     * @param bool $short
+     * @return string
      */
     public function getPublishedAt($short = false) {
         $format = $short ? "M j, Y" : "l, F jS, Y";
@@ -360,8 +374,83 @@ class Entry
         return $this->mobileImages;
     }
 
+    /**
+     * @return array
+     */
+    public function getVisibleImages() {
+        if(!$this->visibleImages) {
+            $images = [];
+            foreach($this->getImages() as $image) {
+                if($image->getKind()->getExclude() == 0) {
+                    $images[$image->getKind()->getPosition()] = $image;
+                }
+            }
+            ksort($images);
+            $this->visibleImages = $images;
+        }
+        return $this->visibleImages;
+    }
+
     public function getUrl() {
         return File::baseUrl() . $this->getUrlPath();
+    }
+
+    /**
+     * @return array
+     */
+    public function getBlockVariables() {
+        $data = get_object_vars($this);
+        $blockData = [];
+        foreach($data as $key => $value) {
+            if(is_string($value) or is_numeric($value)) {
+                $blockData[$key] = $value;
+            }
+        }
+        $blockData = array_merge($blockData, [
+            'mainImage'     => $this->getMainImage()->getUrl(),
+            'preview'       => $this->getMainImage()->getUrl(924),
+            'url'           => $this->getUrl(),
+            'publishedAt'   => $this->getPublishedAt(),
+            'short_content' => substr(strip_tags($blockData['note']), 0, 45)
+        ]);
+        if(!empty($blockData['note'])) $blockData['note'] = '<div class="std">'.$blockData['note'].'</div>';
+        return $blockData;
+    }
+
+    /**
+     * @return Entry null
+     */
+    public function getNext() {
+        if(!$this->next) {
+            $em = Entity::init();
+            $this->next = $em->getRepository(self::class)->getNext($this);
+        }
+        return $this->next;
+    }
+
+    /**
+     * @return Entry null
+     */
+    public function getPrev() {
+        if(!$this->prev) {
+            $em = Entity::init();
+            $this->prev = $em->getRepository(self::class)->getPrev($this);
+        }
+        return $this->prev;
+    }
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getTags() {
+        return $this->tags;
+    }
+
+    /**
+     * @param ArrayCollection $tags
+     */
+    public function setTags($tags) {
+        $this->tags = $tags;
     }
 
 

@@ -11,7 +11,7 @@ use Paperroll\Helper\File;
 /**
  * Image
  *
- * @Table(name="image", indexes={@Index(name="image_post_fk", columns={"entry_id"}), @Index(name="image_kind_fk", columns={"kind"}), @Index(name="image_entry_id", columns={"entry_id", "kind"}), @Index(name="image_entry", columns={"entry_id"})})
+ * @Table(name="image")
  * @Entity(repositoryClass="Paperroll\Model\Repository\Image")
  */
 class Image
@@ -45,14 +45,14 @@ class Image
 
     /**
      * @var integer
-     * @Column(name="kind", type="integer", nullable=false)
+     * @Column(name="kind_id", type="integer", nullable=false)
      */
     private $kindId;
 
     /**
      * @var ImageKind
-     * @OneToOne(targetEntity="Paperroll\Model\ImageKind")
-     * @JoinColumn(name="kind");
+     * @ManyToOne(targetEntity="Paperroll\Model\ImageKind", fetch="EAGER")
+     * @JoinColumn(name="kind_id", referencedColumnName="id")
      */
     private $kind;
 
@@ -120,6 +120,10 @@ class Image
         return $this->entry;
     }
 
+    /**
+     * @param null $size
+     * @return string
+     */
     public function getUrl($size = null) {
         if ($size)
             return File::getCacheUrl($this->getPath(), $size);
@@ -127,6 +131,9 @@ class Image
             return File::baseUrl() . 'gallery/' . $this->getKind()->getPath() . '/' . $this->getFilename();
     }
 
+    /**
+     * @return string
+     */
     public function getPath() {
         if(!$this->filePath) {
             $this->filePath = BASEDIR . '/gallery/' . $this->getKind()->getPath() . '/' . $this->getFilename();

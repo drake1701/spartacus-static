@@ -7,6 +7,8 @@
 
 namespace Paperroll\Model;
 
+use Paperroll\Helper\File;
+
 /**
  * Tag
  *
@@ -174,5 +176,9 @@ class Tag
      */
     public function getName() {
         return $this->name;
+    }
+
+    public function getUrl() {
+        return File::baseUrl() . $this->getSlug();
     }
 }

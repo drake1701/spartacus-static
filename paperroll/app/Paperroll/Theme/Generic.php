@@ -51,12 +51,12 @@ class Generic
      */
     public function tagAll() {
         preg_match_all("#{{([^}]+?)}}#", $this->_html, $tags);
-        //print_r(array_keys($this->_data));
         if(count($tags[1])) {
             foreach ($tags[1] as $tag) {
-                if($this->getData($tag) == '') echo "No value for $tag\n";
+                if($this->getData($tag) == '') echo "$tag ";
                 $this->_html = str_replace('{{' . $tag . '}}', $this->getData($tag), $this->_html);
             }
+            echo "\n";
         }
     }
 
@@ -80,7 +80,8 @@ class Generic
      */
     public function setData($key, $value = null) {
         if(is_array($key)) {
-            $this->_data = $value;
+            foreach($key as $i => $v)
+                $this->_data[$i] = $v;
         } else {
             $this->_data[$key] = $value;
         }

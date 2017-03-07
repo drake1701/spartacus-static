@@ -1,4 +1,4 @@
-<!-- Entry ID {{entry id}} -->
+<!-- Entry ID {{id}} -->
 <div class="entry-view entry-page" vocab="http://schema.org/" typeof="CreativeWorkSeries">
     <div class="hidden">
         <span property="author" typeof="Thing">
@@ -6,37 +6,44 @@
             <span property="url">http://spartacuswallpaper.com/about</span>
         </span>
         <span property="contentRating">MPAA PG-13</span>
-        <span property="thumbnailUrl">{{entry preview}}</span>
+        <span property="thumbnailUrl">{{preview}}</span>
     </div>
-    <div class="clearfix">
-        <p class="pull-left">{{entry prev_link}}</p>
-        <p class="pull-right text-right">{{entry next_link}}</p>
+    <div class="row">
+        <p class="pull-left">{{prevLink}}</p>
+        <p class="pull-right text-right">{{nextLink}}</p>
     </div>
-    <div class="col-sm-9">
-        <h2 class="entry-title" property="name">{{entry title}}</h2>
-        <p class="entry-date" property="datePublished">{{entry published_at}}</p>
-        <a href="{{entry first_image}}" class="entry-preview-image" title="{{entry title}}">
-            <img class="lazy" data-original="{{entry preview}}" alt="{{entry title}}"/>
-            <span class="visible-xs">Desktop</span>
-        </a>
-    </div>
-    <div class="col-sm-3">
-        <div class="entry-tags col-xs-6 col-sm-12">
-            {{entry tags}}
+    <div class="row">
+        <div class="col-sm-9">
+            <h2 class="entry-title" property="name">{{title}}</h2>
+            <p class="entry-date" property="datePublished">{{publishedAt}}</p>
+            <a href="{{mainImage}}" class="entry-preview-image" title="{{title}}">
+                <img class="lazy" data-original="{{preview}}" alt="{{title}}"/>
+                <span class="visible-xs">Desktop</span>
+            </a>
         </div>
-        <div class="social-media col-xs-6 col-sm-12">
-            <strong>Share</strong>
-            <ul>
-                <li><a class="facebook" href="javascript:share();">Share</a></li>
-                <li><a class="twitter" href="http://twitter.com/intent/tweet?url={{entry url}}&text={{entry title}}+-+{{entry preview}}&hashtags=wallpaper,background">Tweet</a></li>
-                <li><a class="pinterest" href="http://pinterest.com/pin/create/bookmarklet/?media={{entry preview}}&url={{entry url}}&is_video=false&description={{entry title}}">Pin</a></li>
-            </ul>
+        <div class="col-sm-3">
+            <div class="entry-tags col-xs-6 col-sm-12">
+                {{tags}}
+            </div>
+            <div class="social-media col-xs-6 col-sm-12">
+                <strong>Share</strong>
+                <ul>
+                    <li><a class="facebook" href="javascript:share();">Share</a></li>
+                    <li><a class="twitter" href="http://twitter.com/intent/tweet?url={{url}}&text={{title}}+-+{{preview}}&hashtags=wallpaper,background">Tweet</a></li>
+                    <li><a class="pinterest" href="http://pinterest.com/pin/create/bookmarklet/?media={{preview}}&url={{url}}&is_video=false&description={{title}}">Pin</a></li>
+                </ul>
+            </div>
         </div>
     </div>
-	<div class="entry-content clearfix">{{entry content}}</div>
+	<div class="entry-content row">{{note}}</div>
     <strong>Wallpaper Types</strong>
 	<div class="entry-images">
-        {{entry image_gallery}}	
+        <div class="desktop hidden-xs">
+            {{desktopImages}}
+        </div>
+        <div class="mobile">
+            {{mobileImages}}
+        </div>
 	</div>
     <div id="disqus_thread"></div>
     <script type="text/javascript">
@@ -51,10 +58,10 @@
     <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
     <div class="row">
         <div class="prev col-xs-6 col-sm-5 col-md-4">
-            {{entry prev}}
+            {{prev}}
         </div>
         <div class="next col-xs-6 col-sm-5 col-md-4 pull-right text-right">
-            {{entry next}}
+            {{next}}
         </div>
     </div>
 </div>

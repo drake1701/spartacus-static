@@ -15,3 +15,5 @@
 
 /paperroll/composer.lock
 /paperroll/vendor/
+!/gallery/cache/.htaccess
+!/gallery/cache/cache.php
