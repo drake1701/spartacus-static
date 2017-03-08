@@ -16,6 +16,10 @@ use Paperroll\Helper\File;
  */
 class Image
 {
+    CONST PREVIEW = 924;
+    CONST THUMB = 400;
+    CONST MOBILE_THUMB = 340;
+
     /**
      * @var integer
      * @Column(name="id", type="integer", nullable=true)

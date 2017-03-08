@@ -406,9 +406,14 @@ class Entry
                 $blockData[$key] = $value;
             }
         }
+        $i = 1;
+        foreach($this->getMobileImages() as $image) {
+            $blockData["mobile_".$i++] = $image->getUrl(Image::MOBILE_THUMB);
+        }
         $blockData = array_merge($blockData, [
             'mainImage'     => $this->getMainImage()->getUrl(),
-            'preview'       => $this->getMainImage()->getUrl(924),
+            'preview'       => $this->getMainImage()->getUrl(Image::PREVIEW),
+            'thumb'         => $this->getMainImage()->getUrl(Image::THUMB),
             'url'           => $this->getUrl(),
             'publishedAt'   => $this->getPublishedAt(),
             'short_content' => substr(strip_tags($blockData['note']), 0, 45)

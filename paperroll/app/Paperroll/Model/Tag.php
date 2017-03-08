@@ -7,6 +7,7 @@
 
 namespace Paperroll\Model;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Paperroll\Helper\File;
 
 /**
@@ -61,6 +62,15 @@ class Tag
      */
     private $name;
 
+    /**
+     * @var ArrayCollection
+     * @ManyToMany(targetEntity="Paperroll\Model\Entry")
+     * @JoinTable(name="entry_tag",
+     *      joinColumns={@JoinColumn(name="tag_id", referencedColumnName="id", unique=true)},
+     *      inverseJoinColumns={@JoinColumn(name="entry_id", referencedColumnName="id")}
+     *      )
+     */
+    private $entries;
 
     /**
      * Get id
@@ -179,6 +189,14 @@ class Tag
     }
 
     public function getUrl() {
-        return File::baseUrl() . $this->getSlug();
+        return File::baseUrl() . 'tag/' . $this->getSlug();
+    }
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getEntries()
+    {
+        return $this->entries;
     }
 }

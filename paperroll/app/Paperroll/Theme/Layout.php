@@ -18,6 +18,8 @@ class Layout extends Generic
     protected $_data;
     /** @var bool */
     protected $_long;
+    /** @var  array */
+    protected $_topTen;
 
     /**
      * Layout constructor.
@@ -104,26 +106,27 @@ class Layout extends Generic
         /** @var Entry $calEntry */
         $calEntry = $entryRepo->getLastPublishedCalendar();
         $block = new Block('entry/calendar');
-        $block->setData('title', $calEntry->getTitle());
-        $block->setData('image', File::getCacheUrl($calEntry->kind.'/'.$calEntry->getFilename(), 400));
+        $block->setData($calEntry->getBlockVariables());
         $this->setData('calendar', $block);
 
         /** @var Entry $entry */
         $topTen = '';
         foreach($entryRepo->getTopTen() as $entry) {
             $block = new Block('entry/topten');
-            $block->setData('title', $entry->getTitle());
-            $block->setData('url', $entry->getUrl());
-            $block->setData('published_at', $entry->getPublishedAt());
-            $block->setData('thumb', $entry->getMainImage()->getUrl(400));
-            $i = 1;
-            foreach($entry->getMobileImages() as $image) {
-                $block->setData("mobile_" . $i++, $image->getUrl(340));
-            }
+            $block->setData($entry->getBlockVariables());
+            $block->setData('publishedAt', $entry->getPublishedAt(true));
+            $this->_topTen[] = $entry->getId();
             $topTen .= $block->toHtml();
         }
         $this->setData('tag_10', $topTen);
+    }
 
+    /**
+     * @return array
+     */
+    public function getTopTen()
+    {
+        return $this->_topTen;
     }
 
 }

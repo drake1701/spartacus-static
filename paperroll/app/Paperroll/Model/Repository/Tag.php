@@ -23,18 +23,28 @@ class Tag extends Generic
         return $query->getResult();
     }
 
-    public function getRandom($tagId) {
+    /**
+     * @param null $tagId
+     * @param array $excludeIds
+     * @param int $count
+     * @return array
+     */
+    public function getRandom($tagId = null, $excludeIds = [], $count = 1) {
         $qb = $this->getEntityManager()->getRepository(\Paperroll\Model\Entry::class)->createQueryBuilder('e');
         $query = $qb
             ->join(EntryTag::class, 'et', 'WITH', 'et.entryId = e.id')
             ->join(Model\Image::class, 'i', 'WITH', 'i.entryId = e.id')
             ->join(Model\ImageKind::class, 'ik', 'WITH', 'ik.id = i.kind AND ik.mobile = 1')
-            ->where($qb->expr()->eq('et.tagId', $tagId))
-            ->getQuery();
+            ->where($qb->expr()->eq('et.tagId', $tagId));
 
-        $entries = $query->getResult();
+        if(count($excludeIds)) {
+            $query->andWhere($qb->expr()->notIn('e.id', $excludeIds));
+        }
 
-        return $entries[array_rand($entries)];
+        $result = $query->getQuery()->getResult();
+        shuffle($result);
+
+        return $count > 1 ? array_slice($result, 0, $count) : array_pop($result);
     }
 
 }

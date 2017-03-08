@@ -16,4 +16,4 @@ ExpiresDefault "access 2 days"
 RewriteEngine On
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^([^?]*)$ /index.html [NC,L,QSA]
+RewriteRule ^([^?]*)$ /page/404.html [NC,L,QSA]

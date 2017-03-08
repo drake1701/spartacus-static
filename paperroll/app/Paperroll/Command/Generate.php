@@ -48,6 +48,7 @@ class Generate extends Generic {
             $this->buildChangelog();
         } else {
             if($this->dev) {
+                File::recurseCopy(BASEDIR . "/assets", File::siteDir());
                 $em = Entity::init();
                 /** @var \Paperroll\Model\Repository\Entry $entryRepo */
                 $entryRepo = $em->getRepository(Entry::class);
@@ -55,12 +56,9 @@ class Generate extends Generic {
                 /** @var \Paperroll\Model\Entry $entry */
                 foreach($entries as $entry)
                     $entryRepo->rePublish($entry);
-
-                $entry = $entryRepo->getLastPublishedEntry();
-                $entryRepo->rePublish($entry);
                 $em->flush();
 
-                if($this->getArg('b')) $this->buildBanners();
+                $this->buildBanners();
                 if($this->getArg('p')) $this->buildPages();
                 $this->buildEntries();
                 if($this->getArg('t')) {
@@ -177,7 +175,7 @@ HTML;
 
     private function buildEntries() {
         $this->debug('Build Entry Pages');
-        $entries = $this->entityManger->getRepository(Entry::class)->getPublishable();
+        $entries = $this->entityManger->getRepository(Entry::class)->getPublishable($this->getArg('a'));
         /** @var Entry $entry */
         foreach($entries as $entry) {
             $this->debug('Building ' . $entry->getUrl());
@@ -191,11 +189,11 @@ HTML;
 
             if($entry->getNext()->getPublished()) {
                 $entryData['nextLink'] = '<a href="'.$entry->getNext()->getUrl().'" title="'.$entry->getNext()->getTitle().'"><span>Next Wallpaper &raquo;</span></a>';
-                $entryData['next'] = '<a href="'.$entry->getNext()->getUrl().'" title="'.$entry->getNext()->getTitle().'"><span>Next</span><img class="lazy" data-original="'.$entry->getNext()->getMainImage()->getUrl(360).'" alt="'.$entry->getNext()->getTitle().'" /><span>'.$entry->getNext()->getTitle().'</span></a>';
+                $entryData['next'] = '<a href="'.$entry->getNext()->getUrl().'" title="'.$entry->getNext()->getTitle().'"><span>Next</span><img class="lazy" data-original="'.$entry->getNext()->getMainImage()->getUrl(Image::MOBILE_THUMB).'" alt="'.$entry->getNext()->getTitle().'" /><span>'.$entry->getNext()->getTitle().'</span></a>';
             }
             if($entry->getPrev()->getPublished()) {
-                $entryData['prevLink'] = '<a href="'.$entry->getPrev()->getUrl().'" title="'.$entry->getPrev()->getTitle().'"><span>Prev Wallpaper &laquo;</span></a>';
-                $entryData['prev'] = '<a href="'.$entry->getPrev()->getUrl().'" title="'.$entry->getPrev()->getTitle().'"><span>Prev</span><img class="lazy" data-original="'.$entry->getPrev()->getMainImage()->getUrl(360).'" alt="'.$entry->getPrev()->getTitle().'" /><span>'.$entry->getPrev()->getTitle().'</span></a>';
+                $entryData['prevLink'] = '<a href="'.$entry->getPrev()->getUrl().'" title="'.$entry->getPrev()->getTitle().'"><span>&laquo; Prev Wallpaper</span></a>';
+                $entryData['prev'] = '<a href="'.$entry->getPrev()->getUrl().'" title="'.$entry->getPrev()->getTitle().'"><span>Prev</span><img class="lazy" data-original="'.$entry->getPrev()->getMainImage()->getUrl(Image::MOBILE_THUMB).'" alt="'.$entry->getPrev()->getTitle().'" /><span>'.$entry->getPrev()->getTitle().'</span></a>';
             }
 
             $desktopImages = [];
@@ -240,7 +238,7 @@ HTML;
                 $tagHtml .= '<div><strong>Featuring</strong><ul>' . implode($entryTags[1]) . '</ul></div>';
                 $entryPage->setData('meta_description',
                     'Desktop and mobile wallpaper featuring '
-                    . strip_tags(implode($names)).'.'
+                    . strip_tags(implode(', ', $names)).'.'
                 );
                 foreach($names as $name) {
                     $tagHtml .= '<span class="hidden" property="about" typeof="Person"><span property="name">'.$name.'</span></span>';
@@ -259,6 +257,50 @@ HTML;
             $entryHead->setData($entryData);
             $entryPage->setData('head', $entryHead->toHtml());
 
+            $contentMore = '';
+            /** @var \Paperroll\Model\Repository\Tag $tagRepo */
+            $tagRepo = $this->entityManger->getRepository(Tag::class);
+            $visibleIds = [$entry->getId(), $entry->getNext()->getId(), $entry->getPrev()->getId()];
+            $visibleIds = array_merge($visibleIds, $entryPage->getTopTen());
+            $contentMore = '';
+            if(count($entry->getTags())) {
+                foreach ($entry->getTags() as $tag) {
+                    $more = $tagRepo->getRandom($tag->getId(), $visibleIds, 3);
+                    if(!count($more)) continue;
+                    $moreEntries = '';
+                    /** @var Entry $moreEntry */
+                    foreach($more as $moreEntry) {
+                        $moreBlock = new Block('entry/more');
+                        $moreBlock->setData($moreEntry->getBlockVariables());
+                        $moreBlock->setData('publishedAt', $moreEntry->getPublishedAt(1));
+                        $moreEntries .= $moreBlock->toHtml();
+                        $visibleIds[] = $moreEntry->getId();
+                    }
+                    $moreBlock = new Block('tag/more');
+                    $moreBlock->setData([
+                        'url' => $tag->getUrl(),
+                        'title' => $tag->getTitle(),
+                        'more_entries' => $moreEntries
+                    ]);
+                    $contentMore .= $moreBlock->toHtml();
+                }
+            } else {
+                $more = $tagRepo->getRandom(null, $visibleIds, 6);
+                $moreEntries = '';
+                /** @var Entry $moreEntry */
+                foreach($more as $moreEntry) {
+                    $moreBlock = new Block('entry/more');
+                    $moreBlock->setData($moreEntry->getBlockVariables());
+                    $moreBlock->setData('publishedAt', $moreEntry->getPublishedAt(1));
+                    $moreEntries .= $moreBlock->toHtml();
+                    $visibleIds[] = $moreEntry->getId();
+                }
+                $moreBlock = new Block('tag/random');
+                $moreBlock->setData('more_entries', $moreEntries);
+                $contentMore .= $moreBlock->toHtml();
+            }
+            $entryPage->setData('content_more', $contentMore);
+
             File::writePage($entry->getUrlPath(), $entryPage);
 
             $entry->setPublished(1);
@@ -268,6 +310,32 @@ HTML;
 
     private function buildTagPages() {
         $this->debug('Build Tag Pages');
+        if($this->getArg('a')) {
+            $tags = $this->entityManger->getRepository(Tag::class)->findAll();
+        } else {
+            $tags = $this->touchedTags;
+        }
+
+        /** @var Tag $tag */
+        foreach($tags as $tag) {
+            $this->debug("Building ".$tag->getUrl());
+            $tagPage = new Layout('tag');
+            $tagPage->loadLayout();
+            $tagPage->setData('title', $tag->getTitle() . ' | ');
+            $tagPage->setData('contentTitle', $tag->getTitle() . ' Wallpaper');
+
+            $entryContent = '';
+            /** @var Entry $entry */
+            foreach($tag->getEntries() as $entry) {
+                $entryBlock = new Block('entry/tag');
+                $entryBlock->setData($entry->getBlockVariables());
+                $entryContent .= $entryBlock->toHtml();
+            }
+            $tagPage->setData('content', $entryContent);
+
+            File::writePage('tag/'.$tag->getSlug(), $tagPage);
+        }
+
     }
 
     private function buildTagIndex() {

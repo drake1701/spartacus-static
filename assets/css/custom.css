@@ -53,6 +53,7 @@ img {
 .entry-page .entry-content .std {
     padding: 10px;
     border-bottom: 2px solid rgba(222,209,167, .5);
+    margin-bottom: 10px;
 }
 
 .entry-preview-image {
@@ -93,6 +94,7 @@ img {
     font-size: 1.7em;
     font-weight: normal;
     margin:20px 0 5px;
+    font-family:Patua One;
 }
 .entry-images .image-box {
     padding:0 0 10px;
@@ -244,7 +246,7 @@ img {
     left:0;
 }
 
-#sidebar .section-head, .social-contact, #sidebar .ad {
+#sidebar .section-head, .social-contact {
     font-size: 18px;
     margin: 0 0 -2px;
     border-top: 1px solid rgba(0,0,0,.5);
@@ -503,7 +505,9 @@ td {
         overflow: auto;
         clear:both;
     }
-    .col-sm-6:nth-of-type(2n+1) {
+}
+@media screen and (min-width:992px) {
+    .col-sm-6:nth-of-type(3n+1) {
         clear:left;
     }
 }
@@ -604,7 +608,6 @@ td {
         padding:0;
     }
     .entry-grid .entry-title {
-        font-family:Patua One;
         font-size:18px;
     }
     .entry-images .image-box {

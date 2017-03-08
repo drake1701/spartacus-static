@@ -53,10 +53,10 @@ class Generic
         preg_match_all("#{{([^}]+?)}}#", $this->_html, $tags);
         if(count($tags[1])) {
             foreach ($tags[1] as $tag) {
-                if($this->getData($tag) == '') echo "$tag ";
+                //if($this->getData($tag) == '') echo "$tag ";
                 $this->_html = str_replace('{{' . $tag . '}}', $this->getData($tag), $this->_html);
             }
-            echo "\n";
+            //echo "\n";
         }
     }
 

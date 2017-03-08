@@ -27,17 +27,24 @@ class Entry extends Generic
     }
 
     /**
+     * @param bool $all
      * @return array
      */
-    public function getPublishable() {
+    public function getPublishable($all = false) {
         $qb = $this->createQueryBuilder('e');
         $query = $qb
-            ->where($qb->expr()->isNull('e.published'))
-            ->andWhere("e.publishedAt < date('now')")
-            ->orderBy('e.publishedAt', 'ASC')
-            ->getQuery();
+            ->where("e.publishedAt < date('now')")
+            ->orderBy('e.publishedAt', 'DESC');
 
-        return $query->getResult();
+        if($all == false)
+            $query->andWhere($qb->expr()->isNull('e.published'));
+
+
+        $result = $query->getQuery()->getResult();
+        if(count($result)) {
+            $result[] = $result[0]->getPrev();
+        }
+        return $result;
     }
 
     /**
