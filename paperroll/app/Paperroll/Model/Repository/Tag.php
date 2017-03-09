@@ -35,8 +35,12 @@ class Tag extends Generic
             ->join(EntryTag::class, 'et', 'WITH', 'et.entryId = e.id')
             ->join(Model\Image::class, 'i', 'WITH', 'i.entryId = e.id')
             ->join(Model\ImageKind::class, 'ik', 'WITH', 'ik.id = i.kind AND ik.mobile = 1')
-            ->where($qb->expr()->eq('et.tagId', $tagId));
+            ->orderBy('e.publishedAt', 'desc')
+            ->setMaxResults($count * 5);
 
+        if($tagId) {
+            $query->where($qb->expr()->eq('et.tagId', $tagId));
+        }
         if(count($excludeIds)) {
             $query->andWhere($qb->expr()->notIn('e.id', $excludeIds));
         }

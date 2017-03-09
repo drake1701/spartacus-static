@@ -36,13 +36,14 @@ class Entry extends Generic
             ->where("e.publishedAt < date('now')")
             ->orderBy('e.publishedAt', 'DESC');
 
-        if($all == false)
+        if($all) {
+            $result = $query->getQuery()->iterate();
+        } else {
             $query->andWhere($qb->expr()->isNull('e.published'));
-
-
-        $result = $query->getQuery()->getResult();
-        if(count($result)) {
-            $result[] = $result[0]->getPrev();
+            $result = $query->getQuery()->getResult();
+            if (count($result)) {
+                $result[] = $this->getPrev($result[0]);
+            }
         }
         return $result;
     }
@@ -115,6 +116,12 @@ class Entry extends Generic
         return $entries;
     }
 
+    public function rePublishAll() {
+        $entries = $this->findAll();
+        foreach($entries as $entry)
+            $this->rePublish($entry);
+        $this->getEntityManager()->flush();
+    }
 
     /**
      * @param Model\Entry $entry
@@ -130,7 +137,7 @@ class Entry extends Generic
             ->setMaxResults(1)
             ->getQuery();
 
-        return $query->getSingleResult();
+        return array_pop($query->getResult());
     }
 
     /**
@@ -147,7 +154,7 @@ class Entry extends Generic
             ->setMaxResults(1)
             ->getQuery();
 
-        return $query->getSingleResult();
+        return array_pop($query->getResult());
     }
 
 }

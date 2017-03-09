@@ -32,7 +32,12 @@ class Layout extends Generic
         $this->_long = $long;
 
         if($template)
-            $this->setTemplate($this->viewDir . 'layout/' . $template . '.phtml');
+            $this->setTemplate($template);
+    }
+
+    public function setTemplate($template = 'default') {
+        parent::setTemplate($this->viewDir . 'layout/' . $template . '.phtml');
+        $this->_html = File::readFile($this->_template);
     }
 
     /**

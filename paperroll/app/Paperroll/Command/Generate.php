@@ -84,7 +84,8 @@ class Generate extends Generic {
     private function clearSite() {
         $this->debug('Clearing Site Files and Copying Assets');
 
-        exec("rm " . File::siteDir() . "/gallery");
+        if(is_dir(File::siteDir() . "/gallery"))
+            exec("rm " . File::siteDir() . "/gallery");
         File::delTree(File::siteDir());
 
         if(!is_dir(File::siteDir())) {
@@ -175,17 +176,27 @@ HTML;
 
     private function buildEntries() {
         $this->debug('Build Entry Pages');
+
+        $entryPage = new Layout('entry');
+        $entryPage->loadLayout();
         $entries = $this->entityManger->getRepository(Entry::class)->getPublishable($this->getArg('a'));
+        $entryCounter = 1;
         /** @var Entry $entry */
         foreach($entries as $entry) {
+            if($entry instanceof Entry == false)
+                $entry = $entry[0];
+            $bytes_start = memory_get_usage();
             $this->debug('Building ' . $entry->getUrl());
-            $entryPage = new Layout('entry');
-            $entryPage->loadLayout();
+
+            $entryPage->setTemplate('entry');
 
             $entryPage->setData('title', $entry->getTitle() . ' | ');
 
+            $time = microtime(1);
             $entryBlock = new Block('entry/default');
             $entryData = $entry->getBlockVariables();
+            $time = microtime(1) - $time;
+            $this->debug(number_format($time, 8) . " : block vars");
 
             if($entry->getNext()->getPublished()) {
                 $entryData['nextLink'] = '<a href="'.$entry->getNext()->getUrl().'" title="'.$entry->getNext()->getTitle().'"><span>Next Wallpaper &raquo;</span></a>';
@@ -196,11 +207,12 @@ HTML;
                 $entryData['prev'] = '<a href="'.$entry->getPrev()->getUrl().'" title="'.$entry->getPrev()->getTitle().'"><span>Prev</span><img class="lazy" data-original="'.$entry->getPrev()->getMainImage()->getUrl(Image::MOBILE_THUMB).'" alt="'.$entry->getPrev()->getTitle().'" /><span>'.$entry->getPrev()->getTitle().'</span></a>';
             }
 
+            $time = microtime(1);
             $desktopImages = [];
             $mobileImages = [];
             /** @var Image $image */
             foreach ($entry->getVisibleImages() as $image) {
-                $fileInfo = @getimagesize($image->getPath());
+                $fileInfo = [1600,1200];//@getimagesize($image->getPath());
                 if(count($fileInfo) < 2) {
                     $this->logger->error('No file found at '.$image->getPath());
                     continue;
@@ -221,10 +233,14 @@ HTML;
                     $mobileImages[] = $imageBlock->toHtml();
                 else
                     $desktopImages[] = $imageBlock->toHtml();
+                unset($imageBlock);
             }
             $entryBlock->setData('desktopImages', implode($desktopImages));
             $entryBlock->setData('mobileImages', implode($mobileImages));
+            $time = microtime(1) - $time;
+            $this->debug(number_format($time, 8) . " : images");
 
+            $time = microtime(1);
             $entryTags = [];
             $names = [];
             /** @var Tag $tag */
@@ -248,16 +264,21 @@ HTML;
                 $tagHtml .= '<div><strong>Tagged</strong><ul>' . implode($entryTags[0]) . '</ul></div>';
 
             $entryData['tags'] = $tagHtml;
+            $time = microtime(1) - $time;
+            $this->debug(number_format($time, 8) . " : tags");
 
             $entryBlock->setData($entryData);
 
             $entryPage->setData('content', $entryBlock->toHtml());
+            unset($entryBlock);
 
             $entryHead = new Block('entry/head');
             $entryHead->setData($entryData);
             $entryPage->setData('head', $entryHead->toHtml());
+            unset($entryHead);
+            unset($entryData);
 
-            $contentMore = '';
+            $time = microtime(1);
             /** @var \Paperroll\Model\Repository\Tag $tagRepo */
             $tagRepo = $this->entityManger->getRepository(Tag::class);
             $visibleIds = [$entry->getId(), $entry->getNext()->getId(), $entry->getPrev()->getId()];
@@ -265,45 +286,61 @@ HTML;
             $contentMore = '';
             if(count($entry->getTags())) {
                 foreach ($entry->getTags() as $tag) {
-                    $more = $tagRepo->getRandom($tag->getId(), $visibleIds, 3);
-                    if(!count($more)) continue;
-                    $moreEntries = '';
-                    /** @var Entry $moreEntry */
-                    foreach($more as $moreEntry) {
-                        $moreBlock = new Block('entry/more');
-                        $moreBlock->setData($moreEntry->getBlockVariables());
-                        $moreBlock->setData('publishedAt', $moreEntry->getPublishedAt(1));
-                        $moreEntries .= $moreBlock->toHtml();
-                        $visibleIds[] = $moreEntry->getId();
+                    $moreBlock = new Block('tag/more', $tag->getId());
+                    if($moreBlock->isCached() == false) {
+                        $more = $tagRepo->getRandom($tag->getId(), $visibleIds, 3);
+                        if(!count($more)) continue;
+                        $moreEntries = '';
+                        /** @var Entry $moreEntry */
+                        foreach ($more as $moreEntry) {
+                            $moreEntryBlock = new Block('entry/more', $moreEntry->getId());
+                            $moreEntryBlock->setData($moreEntry->getBlockVariables());
+                            $moreEntryBlock->setData('publishedAt', $moreEntry->getPublishedAt(1));
+                            $moreEntries .= $moreEntryBlock->toHtml();
+                            unset($moreEntryBlock);
+                            $visibleIds[] = $moreEntry->getId();
+                        }
+                        $moreBlock->setData([
+                            'url'          => $tag->getUrl(),
+                            'title'        => $tag->getTitle(),
+                            'more_entries' => $moreEntries
+                        ]);
                     }
-                    $moreBlock = new Block('tag/more');
-                    $moreBlock->setData([
-                        'url' => $tag->getUrl(),
-                        'title' => $tag->getTitle(),
-                        'more_entries' => $moreEntries
-                    ]);
                     $contentMore .= $moreBlock->toHtml();
+                    unset($moreBlock);
                 }
-            } else {
+            }
+            if($contentMore == '') {
                 $more = $tagRepo->getRandom(null, $visibleIds, 6);
                 $moreEntries = '';
                 /** @var Entry $moreEntry */
                 foreach($more as $moreEntry) {
-                    $moreBlock = new Block('entry/more');
-                    $moreBlock->setData($moreEntry->getBlockVariables());
-                    $moreBlock->setData('publishedAt', $moreEntry->getPublishedAt(1));
-                    $moreEntries .= $moreBlock->toHtml();
+                    $moreEntryBlock = new Block('entry/more');
+                    $moreEntryBlock->setData($moreEntry->getBlockVariables());
+                    $moreEntryBlock->setData('publishedAt', $moreEntry->getPublishedAt(1));
+                    $moreEntries .= $moreEntryBlock->toHtml();
+                    unset($moreEntryBlock);
                     $visibleIds[] = $moreEntry->getId();
                 }
                 $moreBlock = new Block('tag/random');
                 $moreBlock->setData('more_entries', $moreEntries);
                 $contentMore .= $moreBlock->toHtml();
+                unset($moreBlock);
             }
             $entryPage->setData('content_more', $contentMore);
+            unset($contentMore);
+            $time = microtime(1) - $time;
+            $this->debug(number_format($time, 8) . " : more");
 
+            $time = microtime(1);
             File::writePage($entry->getUrlPath(), $entryPage);
+            $time = microtime(1) - $time;
+            $this->debug(number_format($time, 8) . " : write");
 
             $entry->setPublished(1);
+            $bytes_used = memory_get_usage() - $bytes_start;
+            $this->debug(File::bytesToSize(memory_get_usage()) . " - " . File::bytesToSize($bytes_used));
+            $this->debug($entryCounter++ . ' built');
         }
         $this->entityManger->flush();
     }

@@ -31,14 +31,14 @@ class Generic
      * @param string $file
      */
     public function setTemplate($file = '') {
-        if($file == '') {
-            $class = get_called_class();
-            $class = str_replace("Paperroll\\Theme\\", '', $class);
-            $class = str_replace("\\", '/', $class);
-            $file = preg_replace('/(?<=\\w)(?=[A-Z])/',"_$1", $class);
-            $file = strtolower($file);
-            $file = $this->viewDir . $file . '.phtml';
-        }
+//        if($file == '') {
+//            $class = get_called_class();
+//            $class = str_replace("Paperroll\\Theme\\", '', $class);
+//            $class = str_replace("\\", '/', $class);
+//            $file = preg_replace('/(?<=\\w)(?=[A-Z])/',"_$1", $class);
+//            $file = strtolower($file);
+//            $file = $this->viewDir . $file . '.phtml';
+//        }
         $this->_template = $file;
     }
 
@@ -91,7 +91,11 @@ class Generic
      * @return string
      */
     function __toString() {
-        return $this->toHtml();
+        try {
+            return $this->toHtml();
+        } Catch (\Exception $e) {
+            return $e->getMessage()."\n".$e->getTraceAsString();
+        }
     }
 
 }

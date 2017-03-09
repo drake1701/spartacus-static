@@ -11,15 +11,26 @@ use Paperroll\Helper\File;
 
 class Block extends Generic
 {
+    protected $_cacheFile;
+    protected $_cached = false;
+
     /**
      * Block constructor.
      * @param null $template
+     * @param null $id
      */
-    public function __construct($template = null) {
+    public function __construct($template = null, $id = null) {
         parent::__construct();
 
+        if($id)
+            $this->loadCache($template, $id);
+
         if($template)
-            $this->setTemplate($this->viewDir . 'block/' . $template . '.phtml');
+            $this->setTemplate($template);
+    }
+
+    public function setTemplate($template = 'default') {
+        parent::setTemplate($this->viewDir . 'block/' . $template . '.phtml');
     }
 
     /**
@@ -34,6 +45,9 @@ class Block extends Generic
 
         if(preg_match("#{{([^}]+?)}}#", $this->_html))
             $this->tagAll();
+
+        if($this->_cacheFile && !$this->_cached)
+            $this->writeCache();
 
         return $this->_html;
     }
@@ -50,4 +64,22 @@ class Block extends Generic
             }
         }
     }
+
+    public function isCached() {
+        return $this->_cached;
+    }
+
+    protected function loadCache($template, $id) {
+        $this->_cacheFile = BASEDIR . '/var/cache/' . $template . '-' . $id;
+        $cache = File::readFile($this->_cacheFile);
+        if(strlen($cache)) {
+            $this->_cached = true;
+            $this->_html = $cache;
+        }
+    }
+
+    protected function writeCache() {
+        File::writeFile($this->_cacheFile, $this->_html);
+    }
+
 }

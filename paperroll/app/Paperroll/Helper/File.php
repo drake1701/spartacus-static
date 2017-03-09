@@ -62,7 +62,7 @@ class File {
      * @return string
      */
     public static function readFile($filename) {
-        return file_get_contents($filename);
+        return @file_get_contents($filename);
     }
 
     /**
@@ -89,8 +89,7 @@ class File {
         return $url;
     }
 
-    public static function transcode($string)
-    {
+    public static function transcode($string) {
         $key = ['0' => 'a', '-' => 'y', '_' => '4', 'a' => '0', 'b' => 'c', 'c' => 'b', 'd' => '3', 'e' => '6', 'f' => 'n', 'g' => 'o', 'h' => 'm', 'i' => 'j', 'j' => 'i', 'k' => 'q', 'l' => '9', 'm' => 'h', 'n' => 'f', 'o' => 'g', 'p' => 't', 'q' => 'k', 'r' => 'w', 's' => '8', 't' => 'p', 'u' => '1', 'v' => '2', 'w' => 'r', 'x' => 'z', 'y' => '-', 'z' => 'x', '1' => 'u', '2' => 'v', '3' => 'd', '4' => '_', '5' => '7', '6' => 'e', '7' => '5', '8' => 's', '9' => 'l', '/' => '/'];
 
         $in = str_split($string);
@@ -100,6 +99,32 @@ class File {
         }
 
         return implode('', $out);
+    }
+
+    public static function bytesToSize($bytes, $precision = 2) {
+
+        $kilobyte = 1024;
+        $megabyte = $kilobyte * 1024;
+        $gigabyte = $megabyte * 1024;
+        $terabyte = $gigabyte * 1024;
+
+        if (($bytes >= 0) && ($bytes < $kilobyte)) {
+            return $bytes . ' B';
+
+        } elseif (($bytes >= $kilobyte) && ($bytes < $megabyte)) {
+            return round($bytes / $kilobyte, $precision) . ' KB';
+
+        } elseif (($bytes >= $megabyte) && ($bytes < $gigabyte)) {
+            return round($bytes / $megabyte, $precision) . ' MB';
+
+        } elseif (($bytes >= $gigabyte) && ($bytes < $terabyte)) {
+            return round($bytes / $gigabyte, $precision) . ' GB';
+
+        } elseif ($bytes >= $terabyte) {
+            return round($bytes / $terabyte, $precision) . ' TB';
+        } else {
+            return $bytes . ' B';
+        }
     }
 
 }
