@@ -69,6 +69,7 @@ class Tag
      *      joinColumns={@JoinColumn(name="tag_id", referencedColumnName="id", unique=true)},
      *      inverseJoinColumns={@JoinColumn(name="entry_id", referencedColumnName="id")}
      *      )
+     * @OrderBy({"publishedAt" = "DESC"})
      */
     private $entries;
 

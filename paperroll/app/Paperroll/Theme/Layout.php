@@ -9,6 +9,7 @@ namespace Paperroll\Theme;
 
 use Paperroll\Helper\Entity;
 use Paperroll\Helper\File;
+use Paperroll\Helper\Registry;
 use Paperroll\Model\Entry;
 use Paperroll\Model\ImageKind;
 
@@ -44,16 +45,20 @@ class Layout extends Generic
      * @return string
      */
     public function toHtml() {
-        if(!$this->_template)
-            $this->setTemplate();
+        try {
+            if(!$this->_template)
+                $this->setTemplate();
 
-        if(!$this->_html)
-            $this->loadLayout();
+            if(!$this->_html)
+                $this->loadLayout();
 
-        while(preg_match("#{{([^}]+?)}}#", $this->_html))
-            $this->tagAll();
+            while(preg_match("#{{([^}]+?)}}#", $this->_html))
+                $this->tagAll();
 
-        return $this->_html;
+            return $this->_html;
+        } Catch (\Exception $e) {
+            return "<pre>".$e->getMessage()."\n".$e->getTraceAsString()."</pre>";
+        }
     }
 
     /**
@@ -83,7 +88,7 @@ class Layout extends Generic
     protected function setDefaultData() {
         $baseUrl = File::baseUrl();
         $this->setData('baseurl', $baseUrl);
-        $em = Entity::init();
+        $em = Registry::get('entityManager');
 
         $this->setData('date_year', date('Y'));
 

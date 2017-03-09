@@ -30,9 +30,8 @@ class Generic {
 
         $this->dev = strpos(__DIR__, 'development');
 
-        $this->logger = Helper\Logger::init();
-
-        $this->entityManger = Helper\Entity::init();
+        $this->logger = Helper\Registry::get('logger');
+        $this->entityManger = Helper\Registry::get('entityManager');
 
         array_shift($argv);
         array_shift($argv);
@@ -45,15 +44,5 @@ class Generic {
     }
 
     public function execute() {}
-
-    public function debug($msg) {
-        $this->logger->debug($msg);
-        echo "$msg\n";
-    }
-
-    public function error($msg) {
-        $this->logger->error($msg);
-        echo "$msg\n";
-    }
 
 }

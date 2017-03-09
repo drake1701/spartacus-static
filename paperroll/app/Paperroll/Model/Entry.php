@@ -423,28 +423,6 @@ class Entry
     }
 
     /**
-     * @return Entry null
-     */
-    public function getNext() {
-        if(!$this->next) {
-            $em = Entity::init();
-            $this->next = $em->getRepository(self::class)->getNext($this);
-        }
-        return $this->next;
-    }
-
-    /**
-     * @return Entry null
-     */
-    public function getPrev() {
-        if(!$this->prev) {
-            $em = Entity::init();
-            $this->prev = $em->getRepository(self::class)->getPrev($this);
-        }
-        return $this->prev;
-    }
-
-    /**
      * @return ArrayCollection
      */
     public function getTags() {

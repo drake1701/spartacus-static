@@ -14,6 +14,7 @@ use Doctrine\ORM\Tools\Setup;
 class Entity {
 
     public static function init() {
+        echo "init db\n";
 
         $devMode = strpos(BASEDIR, 'development');
         $config = Setup::createAnnotationMetadataConfiguration(

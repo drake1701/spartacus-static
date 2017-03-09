@@ -12,6 +12,7 @@ use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\Mapping;
 use Paperroll\Helper\Logger;
+use Paperroll\Helper\Registry;
 
 class Generic extends EntityRepository
 {
@@ -26,7 +27,7 @@ class Generic extends EntityRepository
         $emConfig->addCustomDatetimeFunction('YEAR', 'DoctrineExtensions\Query\Sqlite\Year');
         $emConfig->addCustomDatetimeFunction('DATE', 'DoctrineExtensions\Query\Sqlite\Date');
 
-        $this->logger = Logger::init();
+        $this->logger = Registry::get('logger');
     }
 
 }

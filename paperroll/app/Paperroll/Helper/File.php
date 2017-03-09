@@ -72,6 +72,8 @@ class File {
      */
     public static function writePage($slug, $content) {
         $slug = str_replace(".html", "", $slug);
+        $logger = Registry::get('logger');
+        $logger->debug("Write ".self::baseUrl()."$slug/");
 
         self::writeFile(self::siteDir()."/$slug.html", $content);
         self::writeFile(self::siteDir()."/$slug/index.html", $content);
