@@ -96,6 +96,10 @@ class Generate extends Generic {
         if(is_dir(File::siteDir() . "/gallery"))
             exec("rm " . File::siteDir() . "/gallery");
         File::delTree(File::siteDir());
+        File::delTree(BASEDIR."/var/cache");
+//        $caches = glob(BASEDIR."/gallery/cache/*", GLOB_ONLYDIR);
+//        foreach($caches as $cache)
+//            File::delTree($cache);
 
         if(!is_dir(File::siteDir())) {
             mkdir( File::siteDir(), 0775 );
@@ -106,7 +110,7 @@ class Generate extends Generic {
             exec("ln -s " . BASEDIR . "/gallery " . File::siteDir() . "/gallery");
 
         File::recurseCopy(BASEDIR . "/assets", File::siteDir());
-        File::delTree(BASEDIR."/vsn");
+        File::delTree(File::siteDir()."/vsn");
         File::recurseCopy(BASEDIR . "/assets/vsn", File::siteDir() . '/' . Registry::get('version') . '/');
         copy(BASEDIR . "/assets/.htaccess.maint", File::siteDir().'/.htaccess');
     }
@@ -299,6 +303,7 @@ HTML;
                         $moreEntryBlock = new Block('entry/more', $moreEntryId);
                         if(!$moreEntryBlock->isCached()) {
                             $moreEntry = $entryRepo->find($moreEntryId);
+                            if(count($moreEntry->getMobileImages())) $moreEntryBlock->setTemplate('entry/mobile/more');
                             $moreEntryBlock->setData($moreEntry->getBlockVariables());
                             $moreEntryBlock->setData('publishedAt', $moreEntry->getPublishedAt(1));
                         }
@@ -320,7 +325,8 @@ HTML;
                 $moreEntries = '';
                 /** @var Entry $moreEntry */
                 foreach($more as $moreEntry) {
-                    $moreEntryBlock = new Block('entry/more', $moreEntry->getId());
+                    $template = count($entry->getMobileImages()) ? 'entry/mobile/more' : 'entry/more';
+                    $moreEntryBlock = new Block($template, $moreEntry->getId());
                     if(!$moreEntryBlock->isCached()) {
                         $moreEntryBlock->setData($moreEntry->getBlockVariables());
                         $moreEntryBlock->setData('publishedAt', $moreEntry->getPublishedAt('short'));
@@ -363,7 +369,8 @@ HTML;
             $entryContent = '';
             /** @var Entry $entry */
             foreach($tag->getEntries() as $entry) {
-                $entryBlock = new Block('entry/tag', $entry->getId());
+                $template = count($entry->getMobileImages()) ? 'entry/mobile/tag' : 'entry/tag';
+                $entryBlock = new Block($template, $entry->getId());
                 if(!$entryBlock->isCached()) {
                     $entryBlock->setData($entry->getBlockVariables());
                 }
@@ -428,23 +435,53 @@ HTML;
         $kindPage->loadLayout();
         /** @var ImageKind $kind */
         foreach($kindRepo->findAll() as $kind) {
-            $kindPage->setTemplate('tag');
-            $kindPage->setData('title', $kind->getLabel() . ' Wallpaper | ');
-            $kindPage->setData('contentTitle', $kind->getLabel() . ' Wallpaper');
+            $size = $kind->getPath() == 'ultrawide' ? Image::PREVIEW : Image::THUMB;
+            $template = $kind->getPath() == 'ultrawide' ? 'entry/ultrawide' : 'entry/tag';
 
-            $entryContent = '';
+            $entryCount = 0;
+            $entryContent = [];
             foreach($kindRepo->getEntries($kind) as $row) {
                 /** @var Entry $entry */
                 $entry = array_pop($row);
-                $entryBlock = new Block('entry/tag');
+                if(!isset($entryContent[$entry->getYear()])) $entryContent[$entry->getYear()] = '';
+                $entryBlock = new Block($template);
                 $entryBlock->setData($entry->getBlockVariables());
                 $image = File::baseUrl() . 'gallery/' . $kind->getPath() . '/' . $entry->getFilename();
-                $entryBlock->setData('thumb', File::getCacheUrl($image, Image::THUMB));
-                $entryContent .= $entryBlock->toHtml();
+                $entryBlock->setData('thumb', File::getCacheUrl($image, $size));
+                $entryContent[$entry->getYear()] .= $entryBlock->toHtml();
+                $entryCount++;
             }
-            $kindPage->setData('content', $entryContent);
-
-            File::writePage('tag/'.$kind->getPath(), $kindPage->toHtml());
+            if($entryCount > 50) {
+                $menu = [];
+                foreach ($entryContent as $year => $content) {
+                    $menu[] = '<a href="' . $this->siteUrl . 'tag/' . $kind->getPath() . '/' . $year . '" title="' . $year . '">' . $year . '</a>';
+                }
+                $menu = implode(',&nbsp;', $menu);
+                $first = false;
+                foreach ($entryContent as $year => $content) {
+                    $kindPage->setTemplate('tag');
+                    $kindPage->setData([
+                        'title'        => $kind->getLabel() . ' Wallpaper, ' . $year . ' | ',
+                        'contentTitle' => $kind->getLabel() . ' Wallpaper, ' . $year,
+                        'menu'         => $menu,
+                        'content'      => $content
+                    ]);
+                    if (!$first) {
+                        File::writePage('tag/' . $kind->getPath(), $kindPage->toHtml());
+                        $first = true;
+                    }
+                    File::writePage('tag/' . $kind->getPath() . "/$year", $kindPage->toHtml());
+                }
+            } else {
+                $kindPage->setTemplate('tag');
+                $kindPage->setData([
+                    'title'        => $kind->getLabel() . ' Wallpaper | ',
+                    'contentTitle' => $kind->getLabel() . ' Wallpaper',
+                    'content'      => implode($entryContent),
+                    'menu'         => ''
+                ]);
+                File::writePage('tag/' . $kind->getPath(), $kindPage->toHtml());
+            }
         }
     }
 
@@ -457,7 +494,10 @@ HTML;
         $yearPage = new Layout('tag');
         $yearPage->loadLayout();
         $year = date('Y');
-        $entryContent = '';
+        $yearPage->setData('contentTitle', "Wallpapers posted in $year");
+        $yearPage->setData('title', "Wallpapers posted in $year | ");
+        $month = date('F');
+        $entryContent = '<h3 class="subtitle">'.$month.'</h3>';
         /** @var Entry $entry */
         foreach($entryRepo->findBy(['published' => '1'], ['publishedAt' => 'DESC']) as $entry) {
             if($entry->getYear() != $year) {
@@ -465,9 +505,16 @@ HTML;
                 File::writePage("tag/$year", $yearPage->toHtml());
                 $year = $entry->getYear();
                 $yearPage->setTemplate('tag');
+                $yearPage->setData('contentTitle', "Wallpapers posted in $year");
+                $yearPage->setData('title', "Wallpapers posted in $year | ");
                 $entryContent = '';
             }
-            $entryBlock = new Block('entry/tag', $entry->getId());
+            if($month != $entry->getPublishedAt()->format('F')) {
+                $month = $entry->getPublishedAt()->format('F');
+                $entryContent .= '<h3 class="subtitle">'.$month.'</h3>';
+            }
+            $template = count($entry->getMobileImages()) ? 'entry/mobile/tag' : 'entry/tag';
+            $entryBlock = new Block($template, $entry->getId());
             if(!$entryBlock->isCached()) {
                 $entryBlock->setData($entry->getBlockVariables());
             }
@@ -483,10 +530,19 @@ HTML;
         $entryRepo = $this->entityManger->getRepository(Entry::class);
         $logPage = new Layout('tag');
         $logPage->loadLayout();
-        foreach($entryRepo->getChangeLog() as $year => $dates) {
+        $menu = [];
+        $changeLog = $entryRepo->getChangeLog();
+        foreach ($changeLog as $year => $content) {
+            $menu[] = '<li><a href="' . $this->siteUrl . 'changelog/' . $year . '" title="' . $year . '">' . $year . '</a></li>';
+        }
+        $menu = implode($menu);
+        foreach($changeLog as $year => $dates) {
             $logPage->setTemplate('tag');
-            $logPage->setData('contentTitle', "Changelog for $year");
-            $logPage->setData('title', "Changelog for $year | ");
+            $logPage->setData([
+                'contentTitle'  => "Changelog for $year",
+                'title'         => "Changelog for $year | ",
+                'menu'          => $menu
+            ]);
             $logHtml = '';
             foreach($dates as $date => $items) {
                 $dateBlock = new Block('log/view');

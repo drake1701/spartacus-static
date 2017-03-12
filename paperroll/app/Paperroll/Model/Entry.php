@@ -256,7 +256,7 @@ class Entry
     /**
      * Get publishedAt
      * @param string $format
-     * @return string
+     * @return string|\DateTime
      */
     public function getPublishedAt($format = '') {
         if($format)
@@ -419,12 +419,13 @@ class Entry
             $i++;
         }
         $blockData = array_merge($blockData, [
-            'mainImage'     => $this->getMainImage()->getUrl(),
-            'preview'       => $this->getMainImage()->getUrl(Image::PREVIEW),
-            'thumb'         => $this->getMainImage()->getUrl(Image::THUMB),
-            'url'           => $this->getUrl(),
-            'publishedAt'   => $this->getPublishedAt('long'),
-            'short_content' => substr(strip_tags($blockData['note']), 0, 45)
+            'mainImage'         => $this->getMainImage()->getUrl(),
+            'preview'           => $this->getMainImage()->getUrl(Image::PREVIEW),
+            'thumb'             => $this->getMainImage()->getUrl(Image::THUMB),
+            'url'               => $this->getUrl(),
+            'publishedAt'       => $this->getPublishedAt('long'),
+            'publishedAt_short' => $this->getPublishedAt('short'),
+            'short_content'     => substr(strip_tags($blockData['note']), 0, 45)
         ]);
         if(!empty($blockData['note'])) $blockData['note'] = '<div class="std">'.$blockData['note'].'</div>';
         return $blockData;

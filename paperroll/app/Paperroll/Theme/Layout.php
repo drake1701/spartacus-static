@@ -12,6 +12,7 @@ use Paperroll\Helper\File;
 use Paperroll\Helper\Registry;
 use Paperroll\Model\Entry;
 use Paperroll\Model\ImageKind;
+use Paperroll\Model\Tag;
 
 class Layout extends Generic
 {
@@ -121,14 +122,16 @@ class Layout extends Generic
         $block->setData($calEntry->getBlockVariables());
         $this->setData('calendar', $block);
 
-        /** @var Entry $entry */
         $topTen = '';
-        foreach($entryRepo->getTopTen() as $entryId) {
+        /** @var Tag $tag */
+        foreach($entryRepo->getTopTen() as $tag) {
+            $entryId = $tag->getRandom();
             $block = new Block('entry/topten', $entryId);
             if(!$block->isCached()) {
                 $entry = $entryRepo->find($entryId);
+                if(count($entry->getMobileImages())) $block->setTemplate('entry/mobile/topten');
                 $block->setData($entry->getBlockVariables());
-                $block->setData('publishedAt', $entry->getPublishedAt('short'));
+                $block->setData('title', $tag->getTitle());
             }
             $this->_topTen[] = $entryId;
             $topTen .= $block->toHtml();

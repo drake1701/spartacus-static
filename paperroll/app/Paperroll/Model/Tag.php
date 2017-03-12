@@ -198,8 +198,9 @@ class Tag
      * @return array
      */
     public function getRandom($excludeIds = [], $count = 1) {
-
-        $entryIds = array_diff($this->getEntryIds(), $excludeIds);
+        $entryIds = $this->getEntryIds();
+        $entryIds = array_slice($entryIds, 0, ceil(count($entryIds) * .8));
+        $entryIds = array_diff($entryIds, $excludeIds);
         shuffle($entryIds);
 
         return $count > 1 ? array_slice($entryIds, 0, $count) : array_pop($entryIds);

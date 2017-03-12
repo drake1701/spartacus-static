@@ -107,14 +107,8 @@ class Entry extends Generic
 
         /** @var \Paperroll\Model\Repository\Tag $tags */
         $tags = $this->getEntityManager()->getRepository(Model\Tag::class);
-        $topTen = $tags->getTopTen();
+        return $tags->getTopTen();
 
-        $entries = [];
-        /** @var Model\Tag $tag */
-        foreach($topTen as $tag) {
-            $entries[] = $tag->getRandom($excludeIds);
-        }
-        return $entries;
     }
 
     public function rePublishAll() {

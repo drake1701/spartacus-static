@@ -91,10 +91,16 @@ img {
 }
 
 .content-title {
-    font-size: 1.7em;
+    font-size: 26px;
     font-weight: normal;
-    margin:20px 0 5px;
+    margin:20px 0;
+    font-family: 'Courgette', sans-serif;
+    color:rgb(68,114,88);
+}
+.subtitle {
     font-family:'Patua One', serif;
+    margin-bottom:0;
+    clear: both;
 }
 .entry-images .image-box {
     padding:0 0 10px;
@@ -251,7 +257,7 @@ img {
     margin: 0 0 -2px;
     border-top: 1px solid rgba(0,0,0,.5);
     padding-top: 6px;
-    font-family: ''Courgette', sans-serif', sans-serif;
+    font-family: 'Courgette', sans-serif;
 }
 #sidebar .section-head:first-of-type,
 #sidebar .social-contact:first-of-type {
@@ -276,11 +282,11 @@ img {
     text-indent: -10px;
 }
 
-#sidebar ul.years {
+ul.years {
     overflow: auto;
 }
 
-#sidebar ul.years li {
+ul.years li {
     float:left;
     margin-right:10px;
 }
@@ -508,7 +514,7 @@ td {
 }
 @media screen and (min-width:992px) {
     .col-sm-6:nth-of-type(3n+1) {
-        clear:left;
+        /* clear:left; */
     }
 }
 @media screen and (min-width: 990px) {
@@ -517,7 +523,7 @@ td {
     }
     .entry-grid .col-md-6:nth-of-type(2n+1),
     .entry-grid .col-md-4:nth-of-type(3n+1) {
-        clear:left;
+        /* clear:left; */
     }
     #main {
         padding-right: 0;
@@ -554,7 +560,7 @@ td {
 }
 @media screen and (min-width: 768px) and (max-width: 990px) {
     .entry-grid .col-sm-6:nth-of-type(2n+1), .entry-grid .col-sm-4:nth-of-type(3n+1) {
-        clear:left;
+        /* clear:left; */
     }
 }
 
@@ -572,6 +578,9 @@ td {
         margin-left:-7px;
         margin-right:-7px;
     }
+    #sidebar .entry-images .image {
+        padding-top:0;
+    }
     .container-fluid > .row > .col-md-3,
     .container-fluid > .row > .col-md-9,
     .col-xs-12 {
@@ -585,8 +594,8 @@ td {
     }
     .col-xs-6:nth-child(2n+1),
     .entry-images .image:nth-child(2n+1) {
-        padding-right: 3px;
-        padding-left: 10px;
+        padding-right: 3px; 
+        padding-left: 10px; 
     }
     .tops > div:nth-child(2n+1) {
         clear:left;
@@ -691,9 +700,13 @@ td {
     .entry-title {
         float: none
     }
-    .entry-title a {
+    .subtitle {
+        text-align:center;
+    }
+    #sidebar .entry-title a {
         white-space:nowrap;
-        font-size:18px;
+        overflow: hidden;
+        font-size: 12px;
     }
     .entry-view .entry-date {
         float: none;

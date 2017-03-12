@@ -70,7 +70,8 @@ class Block extends Generic
     }
 
     protected function loadCache($template, $id) {
-        $this->_cacheFile = BASEDIR . '/var/cache/' . $template . '-' . $id;
+        $cacheTag = array_pop(explode('/', $template)) . '-' . $id;
+        $this->_cacheFile = BASEDIR . '/var/cache/' . $cacheTag;
         $cache = File::readFile($this->_cacheFile);
         if(strlen($cache)) {
             $this->_cached = true;
