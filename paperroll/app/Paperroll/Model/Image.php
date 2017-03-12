@@ -12,7 +12,7 @@ use Paperroll\Helper\File;
  * Image
  *
  * @Table(name="image")
- * @Entity(repositoryClass="Paperroll\Model\Repository\Image")
+ * @Entity()
  */
 class Image
 {

@@ -42,6 +42,20 @@ class File {
         closedir($dir);
     }
 
+    public static function copy($src, $dst) {
+        $dir = opendir($src);
+        @mkdir($dst, 0775);
+        @chmod($dst, 0775);
+        while(false !== ( $file = readdir($dir)) ) {
+            if (( $file != '.' ) && ( $file != '..' )) {
+                if ( !is_dir($src . '/' . $file) ) {
+                    copy($src . '/' . $file,$dst . '/' . $file);
+                }
+            }
+        }
+        closedir($dir);
+    }
+
     /**
      * Write file, create directory if needed
      * @param $filename

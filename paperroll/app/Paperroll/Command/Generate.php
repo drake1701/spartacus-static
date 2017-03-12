@@ -7,8 +7,10 @@
 
 namespace Paperroll\Command;
 
+use Paperroll\Helper\Registry;
 use Paperroll\Model\Entry;
 use Paperroll\Helper\File;
+use Paperroll\Model\EntryLog;
 use Paperroll\Model\Image;
 use Paperroll\Model\ImageKind;
 use Paperroll\Model\Tag;
@@ -29,6 +31,13 @@ class Generate extends Generic {
     public function __construct( array $argv = [] ) {
         parent::__construct( $argv );
         $this->siteUrl = File::baseUrl();
+        if($this->getArg('a')) {
+            $version = 'v' . time();
+            File::writeFile(BASEDIR . '/assets/vsn/version.txt', $version);
+        } else {
+            $version = File::readFile(BASEDIR . '/assets/vsn/version.txt');
+        }
+        \Paperroll\Helper\Registry::set('version', $version);
     }
 
     public function execute() {
@@ -48,7 +57,6 @@ class Generate extends Generic {
             $this->buildChangelog();
         } else {
             if($this->dev) {
-                File::recurseCopy(BASEDIR . "/assets", File::siteDir());
                 $em = $this->entityManger;
                 /** @var \Paperroll\Model\Repository\Entry $entryRepo */
                 $entryRepo = $em->getRepository(Entry::class);
@@ -67,6 +75,7 @@ class Generate extends Generic {
                 }
                 if($this->getArg('k')) $this->buildKinds();
                 if($this->getArg('y')) $this->buildYears();
+                if($this->getArg('c')) $this->buildChangelog();
                 $this->buildHome();
             } else {
                 $this->buildEntries();
@@ -97,28 +106,31 @@ class Generate extends Generic {
             exec("ln -s " . BASEDIR . "/gallery " . File::siteDir() . "/gallery");
 
         File::recurseCopy(BASEDIR . "/assets", File::siteDir());
+        File::delTree(BASEDIR."/vsn");
+        File::recurseCopy(BASEDIR . "/assets/vsn", File::siteDir() . '/' . Registry::get('version') . '/');
         copy(BASEDIR . "/assets/.htaccess.maint", File::siteDir().'/.htaccess');
     }
 
     private function buildBanners() {
+        $vsn = Registry::get('version');
         $this->logger->debug('Building Banner Files');
-        $banners = glob(BASEDIR . "/assets/images/banners/left/*.jpg");
-        $banners = array_merge($banners, glob(BASEDIR . "/assets/images/banners/right/*.jpg"));
+        $banners = glob(BASEDIR . "/assets/vsn/images/banners/left/*.jpg");
+        $banners = array_merge($banners, glob(BASEDIR . "/assets/vsn/images/banners/right/*.jpg"));
         sort($banners);
         $bannerCss = "";
         foreach($banners as $i => $banner){
             $parts = array_reverse(explode("/", $banner));
             $file = $parts[0];
             $align = $parts[1];
-            $imageUrl = $this->siteUrl . '/images/banners/' . $align . '/' . $file;
-            $topUrl = $this->siteUrl . '/images/banners/top/' . str_replace('jpg', 'png', $file);
+            $imageUrl = $this->siteUrl . '/' . $vsn . '/images/banners/' . $align . '/' . $file;
+            $topUrl = $this->siteUrl . '/' . $vsn . '/images/banners/top/' . str_replace('jpg', 'png', $file);
             $bannerCss .= ".banner_$i, .banner_$i .banner-background { background-image: url({$imageUrl}); }\n";
             $bannerCss .= ".banner_$i .banner-feature { background-image: url({$topUrl}); }\n";
             if($align == "right"){
                 $bannerCss .= ".banner_$i .logo { right:10px; left:auto; }\n";
             }
         }
-        File::writeFile(File::siteDir()."/css/banner.css", $bannerCss);
+        File::writeFile(File::siteDir().'/' . $vsn . "/css/banner.css", $bannerCss);
 
         $bannerJs = '
             $(function() {
@@ -127,7 +139,7 @@ class Generate extends Generic {
                 $(".header-banner.banner-border").addClass("banner_"+banner);
             });
         ';
-        File::writeFile(File::siteDir()."/js/banner.js", $bannerJs);
+        File::writeFile(File::siteDir(). '/' . $vsn . "/js/banner.js", $bannerJs);
 
         /** @var Block $header */
         $header = new Block('header');
@@ -151,6 +163,7 @@ class Generate extends Generic {
 HTML;
         $testHtml .= str_repeat("<br/>".$header, (count($banners)-1));
         $testPage = new Layout('blank');
+        $testPage->loadLayout();
         $testPage->setData('content', $testHtml);
         $testPage = str_replace('col-md-9', 'col-md-12', $testPage);
         File::writeFile(File::siteDir() ."/banner-test.html", $testPage);
@@ -274,44 +287,44 @@ HTML;
             unset($entryHead);
             unset($entryData);
 
-            /** @var \Paperroll\Model\Repository\Tag $tagRepo */
-            $tagRepo = $this->entityManger->getRepository(Tag::class);
             $visibleIds = array_merge($visibleIds, $entryPage->getTopTen());
             $contentMore = '';
             if(count($entry->getTags())) {
                 foreach ($entry->getTags() as $tag) {
-                    $moreBlock = new Block('tag/more', $tag->getId());
-                    if($moreBlock->isCached() == false) {
-                        $more = $tagRepo->getRandom($tag->getId(), $visibleIds, 3);
-                        if(!count($more)) continue;
-                        $moreEntries = '';
-                        /** @var Entry $moreEntry */
-                        foreach ($more as $moreEntry) {
-                            $moreEntryBlock = new Block('entry/more', $moreEntry->getId());
+                    $moreBlock = new Block('tag/more');
+                    $more = $tag->getRandom($visibleIds, 3);
+                    if(!count($more)) continue;
+                    $moreEntries = '';
+                    foreach ($more as $moreEntryId) {
+                        $moreEntryBlock = new Block('entry/more', $moreEntryId);
+                        if(!$moreEntryBlock->isCached()) {
+                            $moreEntry = $entryRepo->find($moreEntryId);
                             $moreEntryBlock->setData($moreEntry->getBlockVariables());
                             $moreEntryBlock->setData('publishedAt', $moreEntry->getPublishedAt(1));
-                            $moreEntries .= $moreEntryBlock->toHtml();
-                            unset($moreEntryBlock);
-                            $visibleIds[] = $moreEntry->getId();
                         }
-                        $moreBlock->setData([
-                            'url'          => $tag->getUrl(),
-                            'title'        => $tag->getTitle(),
-                            'more_entries' => $moreEntries
-                        ]);
+                        $moreEntries .= $moreEntryBlock->toHtml();
+                        unset($moreEntryBlock);
+                        $visibleIds[] = $moreEntryId;
                     }
+                    $moreBlock->setData([
+                        'url'          => $tag->getUrl(),
+                        'title'        => $tag->getTitle(),
+                        'more_entries' => $moreEntries
+                    ]);
                     $contentMore .= $moreBlock->toHtml();
                     unset($moreBlock);
                 }
             }
             if($contentMore == '') {
-                $more = $tagRepo->getRandom(null, $visibleIds, 6);
+                $more = $entryRepo->getRandom($visibleIds, 6);
                 $moreEntries = '';
                 /** @var Entry $moreEntry */
                 foreach($more as $moreEntry) {
-                    $moreEntryBlock = new Block('entry/more');
-                    $moreEntryBlock->setData($moreEntry->getBlockVariables());
-                    $moreEntryBlock->setData('publishedAt', $moreEntry->getPublishedAt(1));
+                    $moreEntryBlock = new Block('entry/more', $moreEntry->getId());
+                    if(!$moreEntryBlock->isCached()) {
+                        $moreEntryBlock->setData($moreEntry->getBlockVariables());
+                        $moreEntryBlock->setData('publishedAt', $moreEntry->getPublishedAt('short'));
+                    }
                     $moreEntries .= $moreEntryBlock->toHtml();
                     unset($moreEntryBlock);
                     $visibleIds[] = $moreEntry->getId();
@@ -343,7 +356,6 @@ HTML;
         $tagPage->loadLayout();
         /** @var Tag $tag */
         foreach($tags as $tag) {
-            $this->logger->debug("Building ".$tag->getUrl());
             $tagPage->setTemplate('tag');
             $tagPage->setData('title', $tag->getTitle() . ' | ');
             $tagPage->setData('contentTitle', $tag->getTitle() . ' Wallpaper');
@@ -426,7 +438,8 @@ HTML;
                 $entry = array_pop($row);
                 $entryBlock = new Block('entry/tag');
                 $entryBlock->setData($entry->getBlockVariables());
-                $entryBlock->setData('thumb', File::baseUrl() . 'gallery/' . $kind->getPath() . '/' . $entry->getFilename());
+                $image = File::baseUrl() . 'gallery/' . $kind->getPath() . '/' . $entry->getFilename();
+                $entryBlock->setData('thumb', File::getCacheUrl($image, Image::THUMB));
                 $entryContent .= $entryBlock->toHtml();
             }
             $kindPage->setData('content', $entryContent);
@@ -437,10 +450,59 @@ HTML;
 
     private function buildYears() {
         $this->logger->debug('Build Year Pages');
+
+        /** @var \Paperroll\Model\Repository\Entry $entryRepo */
+        $entryRepo = $this->entityManger->getRepository(Entry::class);
+
+        $yearPage = new Layout('tag');
+        $yearPage->loadLayout();
+        $year = date('Y');
+        $entryContent = '';
+        /** @var Entry $entry */
+        foreach($entryRepo->findBy(['published' => '1'], ['publishedAt' => 'DESC']) as $entry) {
+            if($entry->getYear() != $year) {
+                $yearPage->setData('content', $entryContent);
+                File::writePage("tag/$year", $yearPage->toHtml());
+                $year = $entry->getYear();
+                $yearPage->setTemplate('tag');
+                $entryContent = '';
+            }
+            $entryBlock = new Block('entry/tag', $entry->getId());
+            if(!$entryBlock->isCached()) {
+                $entryBlock->setData($entry->getBlockVariables());
+            }
+            $entryContent .= $entryBlock->toHtml();
+        }
+        $yearPage->setData('content', $entryContent);
+        File::writePage("tag/$year", $yearPage->toHtml());
     }
 
     private function buildChangelog() {
         $this->logger->debug('Build Changelog');
+        /** @var \Paperroll\Model\Repository\Entry $entryRepo */
+        $entryRepo = $this->entityManger->getRepository(Entry::class);
+        $logPage = new Layout('tag');
+        $logPage->loadLayout();
+        foreach($entryRepo->getChangeLog() as $year => $dates) {
+            $logPage->setTemplate('tag');
+            $logPage->setData('contentTitle', "Changelog for $year");
+            $logPage->setData('title', "Changelog for $year | ");
+            $logHtml = '';
+            foreach($dates as $date => $items) {
+                $dateBlock = new Block('log/view');
+                $dateBlock->setData('date', $date);
+                $itemsHtml = '';
+                foreach($items as $item) {
+                    $itemBlock = new Block('log/item');
+                    $itemBlock->setData($item);
+                    $itemsHtml .= $itemBlock->toHtml();
+                }
+                $dateBlock->setData('items', $itemsHtml);
+                $logHtml .= $dateBlock->toHtml();
+            }
+            $logPage->setData('content', $logHtml);
+            File::writePage("changelog/$year", $logPage->toHtml());
+        }
     }
 
     private function buildHome() {

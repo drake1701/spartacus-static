@@ -64,14 +64,12 @@ class Tag
 
     /**
      * @var ArrayCollection
-     * @ManyToMany(targetEntity="Paperroll\Model\Entry")
-     * @JoinTable(name="entry_tag",
-     *      joinColumns={@JoinColumn(name="tag_id", referencedColumnName="id", unique=true)},
-     *      inverseJoinColumns={@JoinColumn(name="entry_id", referencedColumnName="id")}
-     *      )
-     * @OrderBy({"publishedAt" = "DESC"})
+     * @ManyToMany(targetEntity="Paperroll\Model\Entry", mappedBy="tags")
+     * @OrderBy({"publishedAt"="DESC"})
      */
     private $entries;
+
+    private $entryIds;
 
     /**
      * Get id
@@ -193,11 +191,39 @@ class Tag
         return File::baseUrl() . 'tag/' . $this->getSlug();
     }
 
+
+    /**
+     * @param array $excludeIds
+     * @param int $count
+     * @return array
+     */
+    public function getRandom($excludeIds = [], $count = 1) {
+
+        $entryIds = array_diff($this->getEntryIds(), $excludeIds);
+        shuffle($entryIds);
+
+        return $count > 1 ? array_slice($entryIds, 0, $count) : array_pop($entryIds);
+    }
+
     /**
      * @return ArrayCollection
      */
-    public function getEntries()
-    {
+    public function getEntries() {
         return $this->entries;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getEntryIds()
+    {
+        if(empty($this->entryIds)) {
+            $entryIds = [];
+            foreach($this->getEntries() as $entry) {
+                $entryIds[] = $entry->getId();
+            }
+            $this->entryIds = $entryIds;
+        }
+        return $this->entryIds;
     }
 }

@@ -30,6 +30,13 @@ class EntryLog
     private $entryId;
 
     /**
+     * @var Entry
+     * @ManyToOne(targetEntity="Paperroll\Model\Entry")
+     * @JoinColumn(name="entry_id", referencedColumnName="id", onDelete="CASCADE")
+     */
+    private $entry;
+
+    /**
      * @var string
      * @Column(name="message", type="text", nullable=true)
      */
@@ -102,5 +109,13 @@ class EntryLog
      */
     public function getCreatedAt() {
         return $this->createdAt;
+    }
+
+    /**
+     * @return Entry
+     */
+    public function getEntry()
+    {
+        return $this->entry;
     }
 }

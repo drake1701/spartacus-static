@@ -100,9 +100,10 @@ class Entry extends Generic
     }
 
     /**
+     * @param array $excludeIds
      * @return array
      */
-    public function getTopTen() {
+    public function getTopTen($excludeIds = []) {
 
         /** @var \Paperroll\Model\Repository\Tag $tags */
         $tags = $this->getEntityManager()->getRepository(Model\Tag::class);
@@ -111,7 +112,7 @@ class Entry extends Generic
         $entries = [];
         /** @var Model\Tag $tag */
         foreach($topTen as $tag) {
-            $entries[] = $tags->getRandom($tag->getId());
+            $entries[] = $tag->getRandom($excludeIds);
         }
         return $entries;
     }
@@ -155,6 +156,56 @@ class Entry extends Generic
             ->getQuery();
 
         return array_pop($query->getResult());
+    }
+
+    /**
+     * @param array $visibleIds
+     * @param int $count
+     * @return array
+     */
+    public function getRandom($visibleIds, $count) {
+        $qb = $this->createQueryBuilder('e');
+        $query = $qb
+            ->where($qb->expr()->isNotNull('e.published'))
+            ->andWhere($qb->expr()->notIn('e.id', $visibleIds))
+            ->setMaxResults($count * 5)
+            ->getQuery();
+
+        $result = $query->getResult();
+        shuffle($result);
+
+        return array_slice($result, 0, $count);
+    }
+
+    public function getChangeLog() {
+
+        $logs = [];
+        /** @var Model\Entry $entry */
+        foreach($this->findBy(['published' => 1], ['publishedAt' => 'desc']) as $entry) {
+            $logs[$entry->getYear()][$entry->getPublishedAt('short')][] = [
+                'url' => $entry->getUrl(),
+                'title' => $entry->getTitle(),
+                'message' => 'Published.'
+            ];
+        }
+
+        $qb = $this->getEntityManager()->getRepository(Model\EntryLog::class)->createQueryBuilder('el');
+        $query = $qb
+            ->orderBy('el.createdAt', 'DESC');
+
+        foreach($query->getQuery()->iterate() as $row) {
+            /** @var Model\EntryLog $log */
+            $log = array_pop($row);
+            $entry = $log->getEntry();
+            if($entry->getPublishedAt() > new \DateTime('now')) continue;
+            $logs[$log->getCreatedAt()->format('Y')][$log->getCreatedAt()->format('M j, Y')][] = [
+                'url' => $entry->getUrl(),
+                'title' => $entry->getTitle(),
+                'message' => $log->getMessage()
+            ];
+        }
+
+        return $logs;
     }
 
 }

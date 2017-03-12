@@ -95,10 +95,10 @@ class Entry
 
     /**
      * @var ArrayCollection
-     * @ManyToMany(targetEntity="Paperroll\Model\Tag")
+     * @ManyToMany(targetEntity="Paperroll\Model\Tag", inversedBy="tag")
      * @JoinTable(name="entry_tag",
      *      joinColumns={@JoinColumn(name="entry_id", referencedColumnName="id")},
-     *      inverseJoinColumns={@JoinColumn(name="tag_id", referencedColumnName="id", unique=true)}
+     *      inverseJoinColumns={@JoinColumn(name="tag_id", referencedColumnName="id")}
      *      )
      */
     private $tags;
@@ -255,12 +255,18 @@ class Entry
 
     /**
      * Get publishedAt
-     * @param bool $short
+     * @param string $format
      * @return string
      */
-    public function getPublishedAt($short = false) {
-        $format = $short ? "M j, Y" : "l, F jS, Y";
-        return $this->publishedAt->format($format);
+    public function getPublishedAt($format = '') {
+        if($format)
+            return $this->publishedAt->format('short' ? "M j, Y" : "l, F jS, Y");
+        else
+            return $this->publishedAt;
+    }
+
+    public function getYear() {
+        return $this->publishedAt->format('Y');
     }
 
     /**
@@ -408,14 +414,16 @@ class Entry
         }
         $i = 1;
         foreach($this->getMobileImages() as $image) {
-            $blockData["mobile_".$i++] = $image->getUrl(Image::MOBILE_THUMB);
+            $blockData["mobile_$i"] = $image->getUrl();
+            $blockData["mobile_{$i}_thumb"] = $image->getUrl(Image::MOBILE_THUMB);
+            $i++;
         }
         $blockData = array_merge($blockData, [
             'mainImage'     => $this->getMainImage()->getUrl(),
             'preview'       => $this->getMainImage()->getUrl(Image::PREVIEW),
             'thumb'         => $this->getMainImage()->getUrl(Image::THUMB),
             'url'           => $this->getUrl(),
-            'publishedAt'   => $this->getPublishedAt(),
+            'publishedAt'   => $this->getPublishedAt('long'),
             'short_content' => substr(strip_tags($blockData['note']), 0, 45)
         ]);
         if(!empty($blockData['note'])) $blockData['note'] = '<div class="std">'.$blockData['note'].'</div>';

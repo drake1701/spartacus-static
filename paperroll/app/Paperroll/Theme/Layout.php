@@ -90,6 +90,8 @@ class Layout extends Generic
         $this->setData('baseurl', $baseUrl);
         $em = Registry::get('entityManager');
 
+        $this->setData('assetsurl', $baseUrl . Registry::get('version') . '/');
+
         $this->setData('date_year', date('Y'));
 
         $kindsHtml = [];
@@ -121,11 +123,14 @@ class Layout extends Generic
 
         /** @var Entry $entry */
         $topTen = '';
-        foreach($entryRepo->getTopTen() as $entry) {
-            $block = new Block('entry/topten');
-            $block->setData($entry->getBlockVariables());
-            $block->setData('publishedAt', $entry->getPublishedAt(true));
-            $this->_topTen[] = $entry->getId();
+        foreach($entryRepo->getTopTen() as $entryId) {
+            $block = new Block('entry/topten', $entryId);
+            if(!$block->isCached()) {
+                $entry = $entryRepo->find($entryId);
+                $block->setData($entry->getBlockVariables());
+                $block->setData('publishedAt', $entry->getPublishedAt('short'));
+            }
+            $this->_topTen[] = $entryId;
             $topTen .= $block->toHtml();
         }
         $this->setData('tag_10', $topTen);

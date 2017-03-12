@@ -67,7 +67,7 @@ img {
     margin: 0;
 }
 .entry-view .entry-date {
-    font-family: Courgette;
+    font-family: 'Courgette', sans-serif;
     font-size:15px;
     float: right;
 }
@@ -83,7 +83,7 @@ img {
 }
 
 .entry-view .entry-title {
-    font-family: Patua One;
+    font-family: 'Patua One', serif;
 }
 
 .entry-view .entry-title a {
@@ -94,7 +94,7 @@ img {
     font-size: 1.7em;
     font-weight: normal;
     margin:20px 0 5px;
-    font-family:Patua One;
+    font-family:'Patua One', serif;
 }
 .entry-images .image-box {
     padding:0 0 10px;
@@ -114,7 +114,7 @@ img {
 .entry-view strong {
     font-size:18px;
     margin: 5px 0;
-    font-family: Courgette;
+    font-family: 'Courgette', sans-serif;
     color: rgb(134,155,122);
 }
 .header-banner {
@@ -143,13 +143,13 @@ img {
     /*background: rgb(255,181,112);*/
 }
 .ad.top {
-    margin: -5px 0 0px;
+    margin: -5px 0 0;
 }
 .ad.middle{
     margin: -20px -15px 20px;
 }
 .ad.bottom {
-    margin: 50px 0 0px;
+    margin: 50px 0 0;
 }
 #sidebar .ad {
     padding: 0 0 15px;
@@ -251,7 +251,7 @@ img {
     margin: 0 0 -2px;
     border-top: 1px solid rgba(0,0,0,.5);
     padding-top: 6px;
-    font-family: Courgette;
+    font-family: ''Courgette', sans-serif', sans-serif;
 }
 #sidebar .section-head:first-of-type,
 #sidebar .social-contact:first-of-type {
@@ -260,7 +260,7 @@ img {
 }
 
 #sidebar a {
-    font-size:14px;
+    font-size: 14px;
     text-decoration:none;
 }
 
@@ -327,7 +327,7 @@ img {
 #main .random-entries h3 {
     margin: 30px 0 -10px;
     padding: 0 5px;
-    font-family: Patua One;
+    font-family: 'Patua One', serif;
 }
 
 .top-nav {
@@ -690,6 +690,10 @@ td {
     }
     .entry-title {
         float: none
+    }
+    .entry-title a {
+        white-space:nowrap;
+        font-size:18px;
     }
     .entry-view .entry-date {
         float: none;
