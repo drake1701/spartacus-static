@@ -1,0 +1,37 @@
+.ui-selected, .not-name { background-color: #4A5404; }
+.ui-helper-hidden-accessible {display:none;}
+.ui-autocomplete { background-color: #282F02; }
+#tags-element {width:333px;}
+.calendar {
+    clear:both;
+    overflow:auto;
+    width:100%;
+    border-bottom: 1px solid #A4B070;
+}
+.calendar > div {
+    width: 5%;
+    vertical-align: top;
+    float:left;
+    border: 1px solid rgb(222,209,167);
+    border-width: 1px 1px 0 0;
+    padding: 0 5px;
+}
+.calendar > div:nth-child(7n-5), .calendar > div:nth-child(7n-2), .calendar > div:nth-child(7n) {
+    width: 25%;
+}
+.calendar > div:nth-child(7n-6) {
+    width: 10%;
+}
+.calendar.reposts > div {
+    width:14%;
+}
+.calendar .entry-title {
+    font-size:.9em;
+}
+.calendar > div.live {
+    opacity:.3;
+}
+.button, button {
+    background-color: rgb(68,114,88);
+    border:none;
+}

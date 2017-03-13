@@ -373,6 +373,7 @@ HTML;
             $entryContent = '';
             /** @var Entry $entry */
             foreach($tag->getEntries() as $entry) {
+                if($entry->getPublished() == false) continue;
                 $template = count($entry->getMobileImages()) ? 'entry/mobile/tag' : 'entry/tag';
                 $entryBlock = new Block($template, $entry->getId());
                 if(!$entryBlock->isCached()) {
@@ -447,6 +448,7 @@ HTML;
             foreach($kindRepo->getEntries($kind) as $row) {
                 /** @var Entry $entry */
                 $entry = array_pop($row);
+                if($entry->getPublished() == false) continue;
                 if(!isset($entryContent[$entry->getYear()])) $entryContent[$entry->getYear()] = '';
                 $entryBlock = new Block($template);
                 $entryBlock->setData($entry->getBlockVariables());

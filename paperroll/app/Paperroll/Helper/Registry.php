@@ -18,7 +18,8 @@ class Registry
     public static function &get($name) {
 
         if (!isset(self::$_objects[$name])) {
-            throw new \Exception(sprintf('Requested "%s" instance is not in the registry', $name));
+            return false;
+            //throw new \Exception(sprintf('Requested "%s" instance is not in the registry', $name));
         }
 
         return self::$_objects[$name];

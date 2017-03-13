@@ -8,19 +8,32 @@
 namespace Paperroll\Helper;
 
 
+use Doctrine\Common\Proxy\Autoloader;
+use Doctrine\ORM\Configuration;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\Tools\Setup;
 
 class Entity {
 
     public static function init() {
-        echo "init db\n";
 
         $devMode = strpos(BASEDIR, 'development');
-        $config = Setup::createAnnotationMetadataConfiguration(
-            [ BASEDIR . "/app/Paperroll/Model" ],
-            $devMode
-        );
+
+        $proxyDir = BASEDIR . '/var/db/proxies';
+        $proxyNS = 'Proxies';
+
+        $cache = new \Doctrine\Common\Cache\ArrayCache;
+
+        $config = new Configuration();
+        $config->setMetadataCacheImpl($cache);
+        $driverImpl = $config->newDefaultAnnotationDriver(BASEDIR . "/app/Paperroll/Model");
+        $config->setMetadataDriverImpl($driverImpl);
+        $config->setQueryCacheImpl($cache);
+        $config->setProxyDir($proxyDir);
+        $config->setProxyNamespace($proxyNS);
+        $config->setAutoGenerateProxyClasses(true);
+
+        Autoloader::register($proxyDir, $proxyNS);
 
         // database configuration parameters
         $conn = [

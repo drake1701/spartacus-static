@@ -36,7 +36,7 @@ class Image
 
     /**
      * @var Entry
-     * @ManyToOne(targetEntity="Paperroll\Model\Entry", inversedBy="images")
+     * @ManyToOne(targetEntity="Paperroll\Model\Entry", inversedBy="images", fetch="EAGER")
      * @JoinColumn(name="entry_id", referencedColumnName="id", onDelete="CASCADE")
      */
     private $entry;

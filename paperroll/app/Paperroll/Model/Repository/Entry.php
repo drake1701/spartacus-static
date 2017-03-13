@@ -33,7 +33,7 @@ class Entry extends Generic
     public function getPublishable($all = false) {
         $qb = $this->createQueryBuilder('e');
         $query = $qb
-            ->where("e.publishedAt < date('now')")
+            ->where("date(e.publishedAt) <= date('now')")
             ->orderBy('e.publishedAt', 'DESC');
 
         if($all) {
@@ -218,6 +218,35 @@ class Entry extends Generic
         }
 
         return $query->getQuery()->iterate();
+    }
+
+    /**
+     * @param null $type
+     * @return Model\Entry
+     */
+    public function getLastEntry($type = null) {
+        $qb = $this->createQueryBuilder('e');
+        $query = $qb
+            ->orderBy('e.publishedAt', 'DESC')
+            ->setMaxResults(1);
+
+        if($type)
+            $query->where($qb->expr()->eq('e.queue', $type));
+
+        return array_pop($query->getQuery()->getResult());
+    }
+
+    public function getPublishedAt($marker) {
+        if(!is_string($marker))
+            $marker = $marker->format('Y-m-d');
+        $qb = $this->createQueryBuilder('e');
+
+        $query = $qb
+            ->where($qb->expr()->eq('date(e.publishedAt)', "date('{$marker}')"))
+            ->orderBy('e.publishedAt', 'DESC')
+            ->setMaxResults(1);
+
+        return array_pop($query->getQuery()->getResult());
     }
 
 }

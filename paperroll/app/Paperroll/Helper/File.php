@@ -105,6 +105,16 @@ class File {
         return $url;
     }
 
+    public static function codeToName($code) {
+        if(preg_match("#-[ivxlm]*\$#", $code)){
+            $parts = explode("-", $code);
+            $roman = strtoupper(array_pop($parts));
+            array_push($parts, $roman);
+            $code = implode("-", $parts);
+        }
+        return trim(ucwords(preg_replace("#(-|_)#", " ", $code)));
+    }
+
     public static function transcode($string) {
         $key = ['0' => 'a', '-' => 'y', '_' => '4', 'a' => '0', 'b' => 'c', 'c' => 'b', 'd' => '3', 'e' => '6', 'f' => 'n', 'g' => 'o', 'h' => 'm', 'i' => 'j', 'j' => 'i', 'k' => 'q', 'l' => '9', 'm' => 'h', 'n' => 'f', 'o' => 'g', 'p' => 't', 'q' => 'k', 'r' => 'w', 's' => '8', 't' => 'p', 'u' => '1', 'v' => '2', 'w' => 'r', 'x' => 'z', 'y' => '-', 'z' => 'x', '1' => 'u', '2' => 'v', '3' => 'd', '4' => '_', '5' => '7', '6' => 'e', '7' => '5', '8' => 's', '9' => 'l', '/' => '/'];
 

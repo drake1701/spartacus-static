@@ -5,6 +5,7 @@
  * @link      http://www.spartacuswallpaper.com/
  */
 
+session_start();
 require_once __DIR__ . "/vendor/autoload.php";
 
 const BASEDIR = __DIR__;

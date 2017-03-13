@@ -17,3 +17,4 @@
 /paperroll/vendor/
 !/gallery/cache/.htaccess
 !/gallery/cache/cache.php
+/paperroll/admin/phpliteadmin.php

@@ -30,8 +30,8 @@ $queue = new Queue();
             check.prop('checked', check.prop('checked') ? '' : 'checked');
         });
 		var availableTags = [
-			<?php 
-    			$tags = $db->query('SELECT slug FROM tag t;'); 
+			<?php
+    			$tags = $db->query('SELECT slug FROM tag t;');
     			while($tag = $tags->fetchArray()) {
         			echo '"'.$tag['slug'].'", ';
     			}
@@ -85,7 +85,7 @@ $queue = new Queue();
             }
         });
         jQuery('.calendar > div').height('25px');
-        jQuery('.calendar > div:gt(6)').height(height);  
+        jQuery('.calendar > div:gt(6)').height(height);
         jQuery('.calendar > div:nth-child(7n+1)').css({
             clear:'left',
             borderLeft: '1px solid #A4B070'
