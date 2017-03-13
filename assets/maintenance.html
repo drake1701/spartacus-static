@@ -3,23 +3,41 @@
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1">
-
+        <link href="https://fonts.googleapis.com/css?family=Courgette|Patua+One" rel="stylesheet">
         <title>Desktop Backgrounds | Spartacus Wallpaper</title>
-        <link href="/css/bootstrap.min.css" media="screen" rel="stylesheet" type="text/css" />
-        <link href="/css/custom.css" media="screen" rel="stylesheet" type="text/css" />
+        <style type="text/css">
+            body {
+                background: rgb(36,24,26);
+                font-weight:400;
+                font-family: 'Courgette',sans-serif;
+                color:rgb(222,209,167);
+                padding:0;
+                margin:0;
+            }
+            #main {
+                border: 10px solid rgb(134,155,122);
+                text-align: center;
+                padding:7em 0 10em;
+                width:80%;
+                margin: 0 auto;
+            }
+            #main img {
+                width:100%;
+            }
+            @media screen and (max-width: 475px) {
+                #main {
+                    width:100%;
+                    padding:2em 0;
+                    border-width:10px 0;
+                }
+            }
+        </style>
     </head>
 
-    <body style="border:none;">
-        <div class="container-fluid" style="border: 10px solid rgb(134,155,122)">
-            <div class="row">
-                <div class="col-xs-2"></div>
-                <div class="col-xs-8">
-                    <div id="main" style="text-align: center; padding:7em 0 10em;">
-                        <img src="/images/maintenance.jpg" alt="Spartacus Wallpaper">
-                        <h1 class="content-title">Site is undergoing maintenance, please check back in a few minutes.</h1>
-                    </div>
-                </div>
-            </div>
+    <body>
+        <div id="main">
+            <img src="/images/maintenance.jpg" alt="Spartacus Wallpaper">
+            <h1 class="content-title">Site is undergoing maintenance, please check back in a few minutes.</h1>
         </div>
 	</body>
 </html>

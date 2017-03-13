@@ -260,7 +260,7 @@ class Entry
      */
     public function getPublishedAt($format = '') {
         if($format)
-            return $this->publishedAt->format('short' ? "M j, Y" : "l, F jS, Y");
+            return $this->publishedAt->format($format == 'short' ? "M j, Y" : "l, F jS, Y");
         else
             return $this->publishedAt;
     }

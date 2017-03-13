@@ -210,7 +210,11 @@ HTML;
 
             $entryPage->setData('title', $entry->getTitle() . ' | ');
 
-            $entryBlock = new Block('entry/default');
+            if(count($entry->getMobileImages()))
+                $entryBlock = new Block('entry/mobile/default');
+            else
+                $entryBlock = new Block('entry/default');
+
             $entryData = $entry->getBlockVariables();
                         
             $next = $entryRepo->getNext($entry);
@@ -563,12 +567,70 @@ HTML;
 
     private function buildHome() {
         $this->logger->debug('Build Homepage');
+        /** @var \Paperroll\Model\Repository\Entry $entryRepo */
+        $entryRepo = $this->entityManger->getRepository(Entry::class);
+        if($this->getArg('a') || $this->getArg('h')) {
+            $entries = $entryRepo->getPublished(true);
+            $year = '2000';
+            $month = '3';
+        } else {
+            $entries = $entryRepo->getPublished();
+            $year = date('Y');
+            $month = date('n');
+        }
 
-        copy(BASEDIR . "/assets/.htaccess", File::siteDir().'/.htaccess');
+        $homePage = new Layout('default');
+        $homePage->loadLayout();
+        $entriesHtml = [];
+        $entryCount = 1;
+        $lastPage = '';
+        foreach($entries as $row) {
+            /** @var Entry $entry */
+            $entry = array_pop($row);
+            if($entry->getPublishedAt()->format('n') != $month) {
+                krsort($entriesHtml);
+                $html = implode($entriesHtml);
+                if($lastPage) {
+                    $homePage->setData('pager', '<a href="' . $lastPage . '" title="Previous Month">Previous Month</a>');
+                }
+                $homePage->setData('content', $html);
+                File::writePage("$year/$month", $homePage);
+                $lastPage = $this->siteUrl . "$year/$month";
+                $year = $entry->getPublishedAt()->format('Y');
+                $month = $entry->getPublishedAt()->format('n');
+                $homePage->setTemplate('default');
+                $entriesHtml = [];
+            }
+            $template = count($entry->getMobileImages()) ? 'entry/mobile/home' : 'entry/home';
+            $entryBlock = new Block($template);
+            $entryBlock->setData($entry->getBlockVariables());
+            $tags = [];
+            foreach($entry->getTags() as $tag) {
+                $tags[($tag->getName() ? 0 : 1)][] = "<a href='{$tag->getUrl()}' title='{$tag->getTitle()}'>{$tag->getTitle()}</a>";
+            }
+            $tagsHtml = '<span>';
+            if(!empty($tags[0]))
+                $tagsHtml .= 'Featuring '.implode(', ', $tags[0]).'. ';
+            if(!empty($tags[1]))
+                $tagsHtml .= 'Tagged '.implode(', ', $tags[1]).'. ';
+            $tagsHtml .= '</span>';
+            $entryBlock->setData('tags', $tagsHtml);
+            $entriesHtml[$entryCount++] = $entryBlock->toHtml();
+        }
+        if(is_array($entriesHtml)) {
+            krsort($entriesHtml);
+            $entriesHtml = implode($entriesHtml);
+        }
+        $homePage->setData('pager', '<a href="'.$lastPage.'" title="Previous Month">Previous Month</a>');
+        $homePage->setData('content', $entriesHtml);
+        File::writePage("$year/$month", $homePage);
+        File::writePage("", $homePage);
+
     }
 
     private function logReport() {
 
+        copy(BASEDIR . "/assets/.htaccess", File::siteDir().'/.htaccess');
         $repository = $this->entityManger->getRepository(Entry::class);
         $entries = $repository->findBy(['published' => null]);
 

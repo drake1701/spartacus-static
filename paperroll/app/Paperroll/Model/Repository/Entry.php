@@ -202,4 +202,22 @@ class Entry extends Generic
         return $logs;
     }
 
+    /**
+     * @param bool $all
+     * @return \Doctrine\ORM\Internal\Hydration\IterableResult
+     */
+    public function getPublished($all = false) {
+        $qb = $this->createQueryBuilder('e');
+        $query = $qb
+            ->where($qb->expr()->eq('e.published', 1))
+            ->addOrderBy('e.publishedAt', 'asc');
+
+        if($all == false) {
+            $lookback = date('Y-m-01');
+            $query->andWhere("date(e.publishedAt) > date('$lookback')");
+        }
+
+        return $query->getQuery()->iterate();
+    }
+
 }
