@@ -8,22 +8,26 @@
 namespace Paperroll\Model\Repository;
 
 use Doctrine\ORM\Query\Expr;
+use Paperroll\Admin\Controller\Queue;
 use Paperroll\Model;
 
 class Entry extends Generic
 {
     /**
+     * @param null $type
      * @return Model\Entry
      */
-    public function getLastPublishedEntry() {
+    public function getLastPublishedEntry($type = null) {
         $qb = $this->createQueryBuilder('e');
         $query = $qb
             ->where($qb->expr()->isNotNull('e.published'))
             ->orderBy('e.publishedAt', 'DESC')
-            ->setMaxResults(1)
-            ->getQuery();
+            ->setMaxResults(1);
 
-        return array_pop($query->getResult());
+        if($type)
+            $query->andWhere($qb->expr()->eq('e.queue', $type));
+
+        return array_pop($query->getQuery()->getResult());
     }
 
     /**
@@ -77,26 +81,7 @@ class Entry extends Generic
      */
     public function getLastPublishedCalendar()
     {
-        $qb = $this->createQueryBuilder('e');
-        $query = $qb
-            ->addSelect('k.path as kind')
-            ->join(Model\Image::class, 'i', Expr\Join::WITH, 'i.entryId = e.id')
-            ->join(Model\ImageKind::class, 'k', Expr\Join::WITH, 'i.kind = k.id')
-            ->where("e.queue = 2 AND date(e.publishedAt) <= date('now')")
-            ->orderBy('k.position', 'ASC')
-            ->addOrderBy('e.publishedAt', 'DESC')
-            ->setMaxResults(1)
-            ->getQuery();
-
-        $row = array_pop($query->getResult());
-        if(count($row)) {
-            $entry = array_shift($row);
-            foreach($row as $key => $value)
-                $entry->$key = $value;
-
-            return $entry;
-        }
-        return false;
+        return $this->getLastPublishedEntry(Model\Queue::CALENDAR);
     }
 
     /**
@@ -243,10 +228,11 @@ class Entry extends Generic
 
         $query = $qb
             ->where($qb->expr()->eq('date(e.publishedAt)', "date('{$marker}')"))
-            ->orderBy('e.publishedAt', 'DESC')
-            ->setMaxResults(1);
+            ->orderBy('e.publishedAt', 'DESC');
 
-        return array_pop($query->getQuery()->getResult());
+        $results = $query->getQuery()->getResult();
+
+        return count($results) > 1 ? $results : array_pop($results);
     }
 
 }

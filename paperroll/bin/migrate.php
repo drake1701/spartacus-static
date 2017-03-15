@@ -25,7 +25,7 @@ class MySqlite extends SQLite3 {
     }
 }
 
-$old = new MySqlite("/var/www/development/spartacuswallpaper.com/spartacus");
+$old = new MySqlite("/var/www/spartacuswallpaper.com/spartacus");
 
 unlink("/var/www/development/spartacuswallpaper.com/paperroll/var/db/spartacus");
 exec("vendor/bin/doctrine orm:schema-tool:create");

@@ -33,15 +33,19 @@ class Entity {
         $config->setProxyNamespace($proxyNS);
         $config->setAutoGenerateProxyClasses(true);
 
-        Autoloader::register($proxyDir, $proxyNS);
-
         // database configuration parameters
         $conn = [
             'driver' => 'pdo_sqlite',
             'path'   => BASEDIR . '/var/db/spartacus'
         ];
 
-        return EntityManager::create( $conn, $config );
+        $em = EntityManager::create( $conn, $config );
+
+        Autoloader::register($proxyDir, $proxyNS, function($dir, $ns, $class){
+            echo $dir."<br/>".$ns."<br/>".$class."<br/>";
+        });
+
+        return $em;
     }
 
 }

@@ -13,13 +13,15 @@ use Paperroll\Helper\Registry;
 use Paperroll\Helper\File;
 use Paperroll\Model\Entry;
 use Paperroll\Model\Image;
+use Paperroll\Theme\Block;
 
 class Queue extends Router
 {
     /** @var  \Paperroll\Model\Repository\Entry */
-    private $_entryRepo;
+    protected $_entryRepo;
     /** @var EntityManager */
-    private $_entityManager;
+    protected $_entityManager;
+    protected $_logger;
 
     /**
      * Queue constructor.
@@ -27,7 +29,25 @@ class Queue extends Router
     public function __construct() {
         parent::__construct();
         $this->_entityManager = Registry::get('entityManager');
+        $this->_logger = Registry::get('logger');
         $this->_entryRepo = $this->_entityManager->getRepository(Entry::class);
+    }
+
+    public function reorder() {
+        $data = $_POST;
+        foreach($data['entry_id'] as $queueId => $entryIds) {
+            $queue = new \Paperroll\Model\Queue($queueId);
+            foreach($entryIds as $entryId) {
+                $entry = $this->_entryRepo->find($entryId);
+                $next = $queue->getNext();
+                $this->_logger->debug("Set $entryId to publish on ".$next->format('Y-m-d'));
+                $entry->setPublishedAt($next);
+                $entry->setPublished(null);
+                $this->_entityManager->flush();
+            }
+        }
+        $_SESSION['messages'][] = 'Reordered entries.';
+        $this->_goBack();
     }
 
     public function index() {
@@ -41,82 +61,61 @@ class Queue extends Router
 
         $marker = $marker->sub(new \DateInterval('P' . $now->format('w') . 'D'));
         $increment = new \DateInterval('P1D');
-        $month = $marker->format('m');
-        $html = <<<'QUEUE'
 
-        <form id="calendar" action="\reorder" method="post">
-            <div class="calendar">
-                <div>Su</div>
-                <div>M</div>
-                <div>Tu</div>
-                <div>W</div>
-                <div>Th</div>
-                <div>F</div>
-                <div>Sa</div>
-QUEUE;
-                while ($marker < $last) {
-                    for ($day = 0; $day < 7; $day++) {
-                        /** @var \Paperroll\Model\Entry $entry */
-                        $entry = $this->_entryRepo->getPublishedAt($marker);
-                        $class = $entry ? 'item' : '';
-                        $class .= $entry && $entry->getPublished() ? ' live' : '';
-                        $html .= '<div' . ($class ? (' class="' . $class . '"') : '') . '>';
-                        if ($day == 0) {
-                            $html .= $marker->format('F d') . '<br/>';
-                        }
-                        if ($entry) {
-                            if ($entry->getPublishedAt() > $now) {
-                                $html .= '<input type = "hidden" name = "entry_id[' . $entry->getQueue() . '][]" value = "' . $entry->getId() . '" />';
-                            }
-                            $html .= '
-                                <img src="' . $entry->getMainImage()->getUrl(340) . '"/>
-                                <a href="/edit?id=' . $entry->getId() . '">
-                                    <span class="entry-title">' . $entry->getTitle() . '</span>
-                                </a>
-                                <div class="clearfix"></div>
-                                ' . ($entry->getQueue() == 1 ? 'Normal' : 'Calendar') . '<br/>';
-                            foreach ($entry->getTags() as $tag) {
-                                $html .= '<a href="/showall&tag=' . $tag->getSlug() . '">' . $tag->getTitle() . '</a><br/>';
-                            }
-                            $html .= '<div class="clearfix"></div>';
-                            if ($entry->getPublished()) {
-                                $html .= '<a href="' . $entry->getUrl() . '">View</a>&nbsp;|&nbsp;';
-                            }
-                            $html .= '
-                                <a href="\edit?id=' . $entry->getId() . '">Edit</a>&nbsp;|&nbsp;
-                                <a href="\delete?id=' . $entry->getId() . '">Delete</a>';
-                        } else {
-                            $html .= '&nbsp;';
-                        }
-                        /*while($entry = $entries->fetchArray()): ?>
-                        <?php if($entry->getPublishedAt() > $now): ?>
-                            <input type="hidden" name="entry_id[' . $entry['queue'] . '][]" value="' . $entry->getId() . '" />
-                        <?php endif; ?>
-                    <?php endwhile;*/
-                        $html .= '</div>';
-                        $marker->add($increment);
+        $qTable = new Block('admin/queue/view');
+        $qRows = [];
+        $qRow = new Block('admin/queue/row');
+        while($marker->format('Y-m-d') <= $last->format('Y-m-d')) {
+            /** @var Entry $entry */
+            $entry = $this->_entryRepo->getPublishedAt($marker);
+            if(is_array($entry)) {
+                $others = $entry;
+                $entry = array_pop($others);
+            }
+            $html = '<td>'.($marker->format('w') == 0 ? $marker->format('F d') : '&nbsp;').'</td>';
+            if($entry) {
+                if($entry->getPublished())
+                    $qItem = new Block('admin/queue/itemlive');
+                else
+                    $qItem = new Block('admin/queue/item');
+                $qItem->setData($entry->getBlockVariables());
+                $tags = '';
+                foreach($entry->getTags() as $tag) {
+                    $tags .= '<a href="showall?tag='.$tag->getId().'">'.$tag->getTitle().'</a><br/>';
+                }
+                $qItem->setData('tags', $tags);
+                $html = $qItem->toHtml();
+                if(isset($others)) {
+                    foreach($others as $otherEntry) {
+                        $html .= '<input type="hidden" name="entry_id['.$otherEntry->getQueue().'][]" value="'.$otherEntry->getId().'">';
                     }
                 }
-        $html .= '</div>
-            <button type="submit" class="btn-lg"><span>Save</span></button>
-        </form>';
+            }
+            $qRow->setData('cell_'.$marker->format('w'), $html);
+            if($marker->format('w') == 6) {
+                $qRows[] = $qRow->toHtml();
+                $qRow = new Block('admin/queue/row');
+            }
+            $marker->add($increment);
+        }
+        $qRows[] = $qRow->toHtml();
+        $qTable->setData('rows', implode($qRows));
 
+        $menu = new Block('admin/header');
+        $html = $menu->toHtml();
+        $html .= $qTable->toHtml();
         $html .= $this->_getReposts();
         $html .= $this->_getUnqueued();
 
         $this->getPage()->setData('content', $html);
-        echo $this->getPage();
+        echo $this->getPage()->toHtml();
     }
 
     protected function _getUnqueued() {
-        $html = '
-        <h1>New Images</h1>
-        <p>Normal Queue:   ' . $this->_entryRepo->getLastEntry(1)->getPublishedAt('short') . '</p>
-        <p>Calendar Queue: ' . $this->_entryRepo->getLastEntry(1)->getPublishedAt('short') . '</p>
-        ';
 
-        chdir(BASEDIR.'/gallery/widescreen/');
-        $files = glob('*.jpg');
+        $newBlock = new Block('admin/new');
+        $newBlock->setData('next_1', $this->_entryRepo->getLastEntry(1)->getPublishedAt('short'));
+        $newBlock->setData('next_2', $this->_entryRepo->getLastEntry(2)->getPublishedAt('short'));
 
         $images = [];
         $imageRows = $this->_entityManager->getRepository(Image::class)->findBy(['kindId' => 8]);
@@ -124,20 +123,47 @@ QUEUE;
         foreach($imageRows as $image) {
             $images[] = $image->getFilename();
         }
+
+        chdir(BASEDIR.'/gallery/widescreen/');
+        $files = glob('*.jpg');
         $images = array_diff($files, $images);
 
-        $html .= '<div class="row">';
+        $newHtml = '';
         foreach ($images as $image) {
-            $url = '/newprocess?' . http_build_query(['image' => $image]);
-            $html .= '<div class="col-xs-6 col-sm-4 col-md-3">
-            <p class="entry-title"><a href="' . $url . '">' . $image . '</a></p>
-            <div class="entry-image"><a href="' . $url . '"><img src="' . File::getCacheUrl('widescreen / ' . $image, Image::MOBILE_THUMB) . '" alt="' . File::codeToName(str_replace(".jpg", '', strtolower($image))) . '"/></a></div>
-            </div>';
+            $entryBlock = new Block('admin/item');
+            $entryBlock->setData([
+                'url'   => '/edit/newprocess?' . http_build_query(['image' => $image]),
+                'thumb' => File::getCacheUrl('widescreen/'.$image, Image::THUMB),
+                'title' => File::codeToName(str_replace(".jpg", '', strtolower($image)))
+            ]);
+            $newHtml .= $entryBlock->toHtml();
         }
-        return $html;
+        $newBlock->setData('items', $newHtml);
+        return $newBlock->toHtml();
     }
 
     protected function _getReposts() {
+        $qb = $this->_entryRepo->createQueryBuilder('e');
+        $qb
+            ->where($qb->expr()->lt('date(e.publishedAt)', "date('".date('Y-m-d')."')"))
+            ->andWhere($qb->expr()->isNull('e.published'))
+            ->orderBy('e.publishedAt', 'asc');
 
+        $entryHtml = '';
+        $requeueBlock = new Block('admin/requeue');
+        foreach($qb->getQuery()->iterate() as $row) {
+            /** @var Entry $entry */
+            $entry = array_pop($row);
+            $entryBlock = new Block('admin/item');
+            $entryBlock->setData($entry->getBlockVariables());
+            $entryBlock->setData('url', '/edit?id='.$entry->getId());
+            $entryHtml .= $entryBlock->toHtml();
+        }
+        if(strlen($entryHtml)) {
+            $requeueBlock->setData('items', $entryHtml);
+            return $requeueBlock->toHtml();
+        } else {
+            return '';
+        }
     }
 }

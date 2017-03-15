@@ -9,21 +9,18 @@ namespace Paperroll\Helper;
 
 use Monolog\Handler\StreamHandler;
 
-class Logger extends \Monolog\Logger {
+class Logger {
 
-    public function __construct($name = 'Paper', $handlers = [], $processors = [])
-    {
-        parent::__construct($name, $handlers, $processors);
-        $this->pushHandler(new StreamHandler('var/log/system.log'));
-        $this->pushHandler(new StreamHandler('var/log/error.log', LOG_ERR));
-    }
+    /**
+     * @return \Monolog\Logger
+     */
+    static public function init() {
 
-    public function addRecord($level, $message, array $context = [])
-    {
-        if (php_sapi_name() == "cli") {
-            echo $message . "\n";
-        }
-        return parent::addRecord($level, $message, $context);
+        $log = new \Monolog\Logger('paper');
+        $log->pushHandler(new StreamHandler('php://stdout'));
+        $log->pushHandler(new StreamHandler(BASEDIR . '/var/log/system.log'));
+        $log->pushHandler(new StreamHandler(BASEDIR . '/var/log/error.log', \Monolog\Logger::ERROR));
+        return $log;
     }
 
 }

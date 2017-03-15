@@ -23,6 +23,8 @@ class Router
      */
     public function __construct() {
         $this->_validateSession();
+        if(!isset($_SESSION['messages']))
+            $_SESSION['messages'] = [];
     }
 
     private function _validateSession() {
@@ -34,7 +36,7 @@ class Router
         if(is_array($_POST) && !empty($_POST['password'])) {
             if(sha1($_POST['password']) == Registry::get('pass')) {
                 $_SESSION['loggedIn'] = true;
-                header('Location: /');
+                $this->_goBack();
             }
         }
 
@@ -50,11 +52,13 @@ class Router
 
     public function execute() {
         try {
-            $request = $_SERVER['REQUEST_URI'];
-            $parts = explode('/', $request);
-            $controller = array_shift($parts) ?: 'queue';
+            $request = $_SERVER['REDIRECT_URL'];
+            $parts = explode('/', trim($request, '/'));
+            $controller = array_shift($parts);
+            if(strlen($controller) == 0) $controller = 'queue';
             $class = "\\Paperroll\\Admin\\Controller\\" . ucwords($controller);
-            $action = array_shift($parts) ?: 'index';
+            $action = array_shift($parts);
+            if(strlen($action) == 0) $action = 'index';
             $route = new $class();
             $route->$action();
         } Catch (\Exception $e) {
@@ -70,7 +74,16 @@ class Router
         if(!$this->page) {
             $this->page = new Layout('admin');
             $this->page->loadLayout();
+            if(count($_SESSION['messages'])) {
+                $this->page->setData('messages', '<div class="messages">'.implode('<br/>', $_SESSION['messages']).'</div>');
+                $_SESSION['messages'] = [];
+            }
         }
         return $this->page;
+    }
+
+    protected function _goBack() {
+        header('Location: /');
+        exit;
     }
 }

@@ -3,14 +3,13 @@ require_once __DIR__ . '/../bootstrap.php';
 header('content-type: text/javascript');
 ?>
 jQuery(function() {
-    jQuery( ".calendar" ).sortable({
+    jQuery( "#queue tbody" ).sortable({
         stop: function() {
             jQuery('#calendar').submit();
         },
         items:'.item'
-    });
-    jQuery( ".calendar" ).disableSelection();
-    jQuery('.entry img').click(function(){
+    }).disableSelection();
+    jQuery('#queue .item img').click(function(){
         jQuery(this).parent().toggleClass('ui-selected');
         var check = jQuery(this).parent().find('input[type=checkbox]');
         check.prop('checked', check.prop('checked') ? '' : 'checked');
@@ -30,11 +29,11 @@ jQuery(function() {
         return split( term ).pop();
     }
 
-    $( ".tags" )
+    jQuery( ".tags" )
     // don't navigate away from the field on tab when selecting an item
         .bind( "keydown", function( event ) {
-            if ( event.keyCode === $.ui.keyCode.TAB &&
-                $( this ).autocomplete( "instance" ).menu.active ) {
+            if ( event.keyCode === jQuery.ui.keyCode.TAB &&
+                jQuery( this ).autocomplete( "instance" ).menu.active ) {
                 event.preventDefault();
             }
         })
@@ -42,7 +41,7 @@ jQuery(function() {
             minLength: 0,
             source: function( request, response ) {
 // delegate back to autocomplete, but extract the last term
-                response( $.ui.autocomplete.filter(
+                response( jQuery.ui.autocomplete.filter(
                     availableTags, extractLast( request.term ) ) );
             },
             focus: function() {

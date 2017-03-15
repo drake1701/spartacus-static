@@ -54,12 +54,14 @@ class Entry
     /**
      * @var \DateTime
      * @Column(name="created_at", type="datetime", nullable=true)
+     * @HasLifecycleCallbacks()
      */
     private $createdAt;
 
     /**
      * @var \DateTime
      * @Column(name="modified_at", type="datetime", nullable=true)
+     * @HasLifecycleCallbacks()
      */
     private $modifiedAt;
 
@@ -90,6 +92,7 @@ class Entry
     /**
      * @var ArrayCollection
      * @OneToMany(targetEntity="Paperroll\Model\Image", mappedBy="entry", fetch="EAGER")
+     * @JoinColumn(name="entry_id", referencedColumnName="id", onDelete="CASCADE")
      */
     private $images;
 
@@ -209,12 +212,10 @@ class Entry
 
     /**
      * Set createdAt
-     * @param \DateTime $createdAt
-     * @return Entry
+     * @PrePersist
      */
-    public function setCreatedAt($createdAt) {
-        $this->createdAt = $createdAt;
-        return $this;
+    public function setCreatedAt() {
+        $this->createdAt = new \DateTime();
     }
 
     /**
@@ -226,13 +227,10 @@ class Entry
     }
 
     /**
-     * Set modifiedAt
-     * @param \DateTime $modifiedAt
-     * @return Entry
+     * @PreUpdate
      */
-    public function setModifiedAt($modifiedAt) {
-        $this->modifiedAt = $modifiedAt;
-        return $this;
+    public function setModifiedAt() {
+        $this->modifiedAt = new \DateTime();
     }
 
     /**
@@ -405,13 +403,7 @@ class Entry
      * @return array
      */
     public function getBlockVariables() {
-        $data = get_object_vars($this);
-        $blockData = [];
-        foreach($data as $key => $value) {
-            if(is_string($value) or is_numeric($value)) {
-                $blockData[$key] = $value;
-            }
-        }
+        $data = $this->getData();
         $i = 1;
         foreach($this->getMobileImages() as $image) {
             $blockData["mobile_$i"] = $image->getUrl();
@@ -443,6 +435,17 @@ class Entry
      */
     public function setTags($tags) {
         $this->tags = $tags;
+    }
+
+    public function getData() {
+        $data = get_object_vars($this);
+        $blockData = [];
+        foreach($data as $key => $value) {
+            if(is_string($value) or is_numeric($value)) {
+                $blockData[$key] = $value;
+            }
+        }
+        return $blockData;
     }
 
 
