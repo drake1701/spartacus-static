@@ -9,12 +9,11 @@
 /migrate/db.php
 /migrate/spartacus
 /spartacus
-/phpliteadmin.php
 *.log
 /var/
 
 /paperroll/composer.lock
 /paperroll/vendor/
+/paperroll/admin/phpliteadmin.php
 !/gallery/cache/.htaccess
 !/gallery/cache/cache.php
-/paperroll/admin/phpliteadmin.php

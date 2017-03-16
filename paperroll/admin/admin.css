@@ -35,9 +35,13 @@ input, select, textarea {
     overflow:auto;
 }
 .items-grid .item {
-    width:20%;
+    width:19%;
     float:left;
-    padding-right:1%;
+    margin:1% 1% 0 0;
+    padding:1%;
+}
+.items-grid .item:nth-of-type(5n+1) {
+    clear:both;
 }
 .new .item {
     width:25%;
@@ -63,5 +67,4 @@ input, select, textarea {
 .button, button {
     background-color: rgb(68,114,88);
     border:none;
-    float:right;
 }

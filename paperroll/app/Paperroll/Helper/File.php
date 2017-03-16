@@ -153,4 +153,23 @@ class File {
         }
     }
 
+    public static function fileToTitle($filename) {
+        $file = pathinfo($filename);
+        return self::codeToName($file['filename']);
+    }
+
+    public static function fileToTag($filename) {
+        $file = pathinfo($filename);
+        if(!empty($file['filename']))
+            $filename = $file['filename'];
+
+        if(preg_match("#-[ivxlm]*\$#", $filename)){
+            $parts = explode("-", $filename);
+            array_pop($parts);
+            $filename = implode("-", $parts);
+        }
+
+        return $filename;
+    }
+
 }

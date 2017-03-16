@@ -16,6 +16,7 @@ use Paperroll\Helper\File;
  *
  * @Table(name="entry")
  * @Entity(repositoryClass="Paperroll\Model\Repository\Entry")
+ * @HasLifecycleCallbacks()
  */
 class Entry
 {
@@ -228,6 +229,7 @@ class Entry
 
     /**
      * @PreUpdate
+     * @PrePersist
      */
     public function setModifiedAt() {
         $this->modifiedAt = new \DateTime();
@@ -403,7 +405,7 @@ class Entry
      * @return array
      */
     public function getBlockVariables() {
-        $data = $this->getData();
+        $blockData = $this->getData();
         $i = 1;
         foreach($this->getMobileImages() as $image) {
             $blockData["mobile_$i"] = $image->getUrl();
@@ -446,6 +448,15 @@ class Entry
             }
         }
         return $blockData;
+    }
+
+    public function setData($data) {
+        $fields = get_object_vars($this);
+        foreach($fields as $field => $value) {
+            if(!empty($data[$field]))
+                $this->$field = $data[$field];
+        }
+        return $this;
     }
 
 

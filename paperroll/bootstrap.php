@@ -5,7 +5,7 @@
  * @link      http://www.spartacuswallpaper.com/
  */
 
-error_reporting(E_WARNING);
+//error_reporting(E_WARNING);
 session_start();
 require_once __DIR__ . "/vendor/autoload.php";
 

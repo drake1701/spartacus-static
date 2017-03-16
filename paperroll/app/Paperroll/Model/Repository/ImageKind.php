@@ -41,4 +41,13 @@ class ImageKind extends Generic
         return $query->iterate();
     }
 
+    public function getIds() {
+        $kinds = $this->findAll();
+        $mapped = [];
+        foreach($kinds as $kind) {
+            $mapped[$kind->getPath()] = $kind->getId();
+        }
+        return $mapped;
+    }
+
 }

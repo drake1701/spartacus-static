@@ -2,7 +2,7 @@
 <a href="#" class="col-xs-6 pull-right" onclick="window.open('{{mainImage}}', '','toolbar=no, scrollbars=yes, resizable=yes, top=10, left=10, width=960, height=600');">
     <img src="{{preview}}">
 </a>
-<form enctype="application/x-www-form-urlencoded" action="?action=save" method="post">
+<form enctype="application/x-www-form-urlencoded" action="/entry/save" method="post">
     <dl class="zend_form">
         
         <dd>{{publishedAt}}</dd>
@@ -27,7 +27,7 @@
         </dd>
         <dt id="url_path-label"><label for="url_path" class="required">url path:</label></dt>
         <dd id="url_path-element">
-            <input type="text" name="url_path" id="url_path" value="{{urlPath}}">
+            <input type="text" name="urlPath" id="url_path" value="{{urlPath}}">
         </dd>
         <dt id="filename-label">&nbsp;</dt>
         <dd id="filename-element">
@@ -37,7 +37,8 @@
         </dd>
         <dt id="save-label">&nbsp;</dt>
         <dd id="save-element">
-            <input class="btn-lg" type="submit" value="save">
+            <a href="\"><span>Back</span></a>
+            <button class="btn-lg" type="submit" value="save"><span>Save</span></button>
         </dd>
     </dl>
 </form> 

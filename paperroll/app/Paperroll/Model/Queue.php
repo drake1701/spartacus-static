@@ -36,9 +36,14 @@ class Queue
     public function __construct($type) {
         $this->_type = $type;
         $this->_entryRepo = Registry::get('entityManager')->getRepository(Entry::class);
-        $this->_lastPublished = $this->_entryRepo->getLastPublishedEntry($type);
+        $this->_lastPublished = $this->_entryRepo->getLastEntry($type);
         $this->_next = $this->_lastPublished->getPublishedAt();
         $this->logger = Registry::get('logger');
+    }
+
+    public function reset() {
+        $this->_lastPublished = $this->_entryRepo->getLastPublishedEntry($this->_type);
+        $this->_next = $this->_lastPublished->getPublishedAt();
     }
 
     public function getNext() {

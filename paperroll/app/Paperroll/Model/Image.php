@@ -43,7 +43,7 @@ class Image
 
     /**
      * @var string
-     * @Column(name="path", type="string", length=255, nullable=true)
+     * @Column(name="path", type="string", length=255, nullable=true, options={"collation":"binary"})
      */
     private $path;
 
@@ -154,9 +154,11 @@ class Image
 
     /**
      * @param int $kindId
+     * @return Image
      */
     public function setKindId($kindId) {
         $this->kindId = $kindId;
+        return $this;
     }
 
     /**
@@ -164,6 +166,24 @@ class Image
      */
     public function getPosition() {
         return $this->getKind()->getPosition();
+    }
+
+    /**
+     * @param Entry $entry
+     * @return $this
+     */
+    public function setEntry($entry) {
+        $this->entry = $entry;
+        return $this;
+    }
+
+    /**
+     * @param ImageKind $kind
+     * @return $this
+     */
+    public function setKind($kind) {
+        $this->kind = $kind;
+        return $this;
     }
 
 }

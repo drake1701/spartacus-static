@@ -37,6 +37,7 @@ class Queue extends Router
         $data = $_POST;
         foreach($data['entry_id'] as $queueId => $entryIds) {
             $queue = new \Paperroll\Model\Queue($queueId);
+            $queue->reset();
             foreach($entryIds as $entryId) {
                 $entry = $this->_entryRepo->find($entryId);
                 $next = $queue->getNext();
@@ -72,16 +73,17 @@ class Queue extends Router
                 $others = $entry;
                 $entry = array_pop($others);
             }
-            $html = '<td>'.($marker->format('w') == 0 ? $marker->format('F d') : '&nbsp;').'</td>';
+            $html = '<td>'.$marker->format('F d').'</td>';
             if($entry) {
                 if($entry->getPublished())
                     $qItem = new Block('admin/queue/itemlive');
                 else
                     $qItem = new Block('admin/queue/item');
                 $qItem->setData($entry->getBlockVariables());
+                $qItem->setData('queueLabel', $entry->getQueue() == \Paperroll\Model\Queue::CALENDAR ? 'Calendar' : 'Normal');
                 $tags = '';
                 foreach($entry->getTags() as $tag) {
-                    $tags .= '<a href="showall?tag='.$tag->getId().'">'.$tag->getTitle().'</a><br/>';
+                    $tags .= '<a href="tag/entries?tag='.$tag->getId().'">'.$tag->getTitle().'</a><br/>';
                 }
                 $qItem->setData('tags', $tags);
                 $html = $qItem->toHtml();
@@ -132,7 +134,7 @@ class Queue extends Router
         foreach ($images as $image) {
             $entryBlock = new Block('admin/item');
             $entryBlock->setData([
-                'url'   => '/edit/newprocess?' . http_build_query(['image' => $image]),
+                'url'   => '/entry/newprocess?' . http_build_query(['image' => $image]),
                 'thumb' => File::getCacheUrl('widescreen/'.$image, Image::THUMB),
                 'title' => File::codeToName(str_replace(".jpg", '', strtolower($image)))
             ]);
@@ -156,7 +158,7 @@ class Queue extends Router
             $entry = array_pop($row);
             $entryBlock = new Block('admin/item');
             $entryBlock->setData($entry->getBlockVariables());
-            $entryBlock->setData('url', '/edit?id='.$entry->getId());
+            $entryBlock->setData('url', '/entry/edit?id='.$entry->getId());
             $entryHtml .= $entryBlock->toHtml();
         }
         if(strlen($entryHtml)) {

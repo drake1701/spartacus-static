@@ -235,4 +235,34 @@ class Entry extends Generic
         return count($results) > 1 ? $results : array_pop($results);
     }
 
+    /**
+     * @param Model\Entry $entry
+     */
+    public function updateImages($entry)
+    {
+        $collection = $entry->getImages();
+        $existingNames = [];
+        /** @var Model\Image $image */
+        foreach($collection as $image) {
+            $existingNames[] = $image->getPath();
+        }
+
+        $fileImages = glob(BASEDIR . '/gallery/*/' . $entry->getFilename());
+
+        $newImages = array_diff($fileImages, $existingNames);
+
+        $kindRepo = $this->getEntityManager()->getRepository(Model\ImageKind::class);
+
+        foreach($newImages as $file) {
+            echo basename(dirname($file))."\n";
+            $newImage = new Model\Image();
+            $newImage
+                ->setEntry($entry)
+                ->setFilename(basename($file))
+                ->setKind(array_pop($kindRepo->findBy(['path' => basename(dirname($file))])));
+            $this->getEntityManager()->persist($newImage);
+        }
+        $this->getEntityManager()->flush();
+    }
+
 }

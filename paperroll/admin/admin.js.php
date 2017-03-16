@@ -9,7 +9,7 @@ jQuery(function() {
         },
         items:'.item'
     }).disableSelection();
-    jQuery('#queue .item img').click(function(){
+    jQuery('.item.toggle img').click(function(){
         jQuery(this).parent().toggleClass('ui-selected');
         var check = jQuery(this).parent().find('input[type=checkbox]');
         check.prop('checked', check.prop('checked') ? '' : 'checked');

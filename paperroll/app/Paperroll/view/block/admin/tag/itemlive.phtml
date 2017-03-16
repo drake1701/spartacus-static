@@ -1,15 +1,14 @@
-<td class="item toggle">
-    <input type="hidden" name="entry_id[{{queue}}][]" value="{{id}}">
-    <img src="{{thumb}}">
+<div class="item toggle live">
+    <input class="no-display" type="checkbox" name="entry[{{id}}]" />
     <a href="/entry/edit?id={{id}}">
         <span class="entry-title">{{title}}</span>
     </a>
-    <div class="entry-date">{{publishedAt_short}}</div>
+    <img src="{{thumb}}">
     <div class="clearfix"></div>
-
     {{queueLabel}}<br />
     {{tags}}
     <div class="clearfix"></div>
+    <a href="{{url}}">View</a>&nbsp;|&nbsp;
     <a href="/entry/edit?id={{id}}">Edit</a>&nbsp;|&nbsp;
     <a href="/entry/delete?id={{id}}">Delete</a>
-</td>
+</div>
