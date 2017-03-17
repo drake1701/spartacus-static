@@ -62,5 +62,3 @@ foreach($tables as $table){
     }
     echo "$i rows.\n";
 }
-
-?>

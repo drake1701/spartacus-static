@@ -55,10 +55,12 @@ class Router
             $request = $_SERVER['REDIRECT_URL'];
             $parts = explode('/', trim($request, '/'));
             $controller = array_shift($parts);
+            if($controller == 'back') $this->_goBack();
             if(strlen($controller) == 0) $controller = 'queue';
             $class = "\\Paperroll\\Admin\\Controller\\" . ucwords($controller);
             $action = array_shift($parts);
             if(strlen($action) == 0) $action = 'index';
+            $action .= "Action";
             $route = new $class();
             $route->$action();
         } Catch (\Exception $e) {
@@ -82,8 +84,11 @@ class Router
         return $this->page;
     }
 
-    protected function _goBack() {
-        header('Location: /');
+    protected function _goBack($home = false) {
+        if($home || !isset($_SERVER['HTTP_REFERER']))
+            header('Location: /');
+        else
+            header('Location: '.$_SERVER['HTTP_REFERER']);
         exit;
     }
 }

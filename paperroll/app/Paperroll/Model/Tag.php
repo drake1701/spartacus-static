@@ -16,7 +16,7 @@ use Paperroll\Helper\File;
  * @Table(name="tag")
  * @Entity(repositoryClass="Paperroll\Model\Repository\Tag")
  */
-class Tag
+class Tag extends Generic
 {
     /**
      * @var integer
@@ -24,52 +24,52 @@ class Tag
      * @Id
      * @GeneratedValue(strategy="IDENTITY")
      */
-    private $id;
+    protected $id;
 
     /**
      * @var string
      * @Column(name="title", type="string", length=255, nullable=false)
      */
-    private $title;
+    protected $title;
 
     /**
      * @var string
      * @Column(name="slug", type="string", length=255, nullable=true)
      */
-    private $slug;
+    protected $slug;
 
     /**
      * @var boolean
      * @Column(name="list", type="boolean", nullable=true)
      */
-    private $list;
+    protected $list;
 
     /**
      * @var integer
      * @Column(name="count", type="integer", nullable=true)
      */
-    private $count;
+    protected $count;
 
     /**
      * @var string
      * @Column(name="thumb", type="string", length=255, nullable=true)
      */
-    private $thumb;
+    protected $thumb;
 
     /**
      * @var boolean
      * @Column(name="name", type="boolean", nullable=true)
      */
-    private $name;
+    protected $name;
 
     /**
      * @var ArrayCollection
      * @ManyToMany(targetEntity="Paperroll\Model\Entry", mappedBy="tags")
      * @OrderBy({"publishedAt"="DESC"})
      */
-    private $entries;
+    protected $entries;
 
-    private $entryIds;
+    protected $entryIds;
 
     /**
      * Get id

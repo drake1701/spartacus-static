@@ -18,7 +18,7 @@ use Paperroll\Helper\File;
  * @Entity(repositoryClass="Paperroll\Model\Repository\Entry")
  * @HasLifecycleCallbacks()
  */
-class Entry
+class Entry extends Generic
 {
     /**
      * @var integer
@@ -26,76 +26,76 @@ class Entry
      * @Id
      * @GeneratedValue(strategy="IDENTITY")
      */
-    private $id;
+    protected $id;
 
     /**
      * @var string
      * @Column(name="title", type="string", length=255, nullable=false)
      */
-    private $title;
+    protected $title;
 
     /**
      * @var string
      * @Column(name="content", type="text", nullable=true)
      */
-    private $note;
+    protected $note;
 
     /**
      * @var string
      * @Column(name="filename", type="string", length=255, nullable=false)
      */
-    private $filename;
+    protected $filename;
 
     /**
      * @var string
      * @Column(name="url_path", type="string", length=255, nullable=true)
      */
-    private $urlPath;
+    protected $urlPath;
 
     /**
      * @var \DateTime
      * @Column(name="created_at", type="datetime", nullable=true)
      * @HasLifecycleCallbacks()
      */
-    private $createdAt;
+    protected $createdAt;
 
     /**
      * @var \DateTime
      * @Column(name="modified_at", type="datetime", nullable=true)
      * @HasLifecycleCallbacks()
      */
-    private $modifiedAt;
+    protected $modifiedAt;
 
     /**
      * @Column(name="published_at", type="datetime", nullable=true)
      * @var \DateTime
      */
-    private $publishedAt;
+    protected $publishedAt;
 
     /**
      * @var integer
      * @Column(name="queue", type="integer", nullable=true)
      */
-    private $queue;
+    protected $queue;
 
     /**
      * @Column(name="published", type="boolean", nullable=true)
      * @var boolean
      */
-    private $published;
+    protected $published;
 
     /**
      * @var string
      * @Column(name="thumb", type="text", nullable=true)
      */
-    private $thumb;
+    protected $thumb;
 
     /**
      * @var ArrayCollection
      * @OneToMany(targetEntity="Paperroll\Model\Image", mappedBy="entry", fetch="EAGER")
      * @JoinColumn(name="entry_id", referencedColumnName="id", onDelete="CASCADE")
      */
-    private $images;
+    protected $images;
 
     /**
      * @var ArrayCollection
@@ -105,23 +105,23 @@ class Entry
      *      inverseJoinColumns={@JoinColumn(name="tag_id", referencedColumnName="id")}
      *      )
      */
-    private $tags;
+    protected $tags;
 
     /**
      * @var array
      */
-    private $desktopImages;
+    protected $desktopImages;
 
     /**
      * @var array
      */
-    private $mobileImages;
+    protected $mobileImages;
 
     /** @var  Image */
-    private $mainImage;
-    private $visibleImages;
-    private $next;
-    private $prev;
+    protected $mainImage;
+    protected $visibleImages;
+    protected $next;
+    protected $prev;
 
     /**
      * Entry constructor.
@@ -438,26 +438,5 @@ class Entry
     public function setTags($tags) {
         $this->tags = $tags;
     }
-
-    public function getData() {
-        $data = get_object_vars($this);
-        $blockData = [];
-        foreach($data as $key => $value) {
-            if(is_string($value) or is_numeric($value)) {
-                $blockData[$key] = $value;
-            }
-        }
-        return $blockData;
-    }
-
-    public function setData($data) {
-        $fields = get_object_vars($this);
-        foreach($fields as $field => $value) {
-            if(!empty($data[$field]))
-                $this->$field = $data[$field];
-        }
-        return $this;
-    }
-
 
 }

@@ -14,9 +14,10 @@ use Paperroll\Theme\Block;
 class Tag extends Queue
 {
 
-    public function entries() {
+    public function entriesAction() {
         $entryHtml = '';
         $requeueBlock = new Block('admin/tag/view');
+        $requeueBlock->setData('back', $_SERVER['HTTP_REFERER']);
         if(!empty($_REQUEST['tag'])) {
             $tag = $this->_entityManager->getRepository(Model\Tag::class)->find($_REQUEST['tag']);
         }
@@ -45,13 +46,12 @@ class Tag extends Queue
         echo $this->getPage();
     }
 
-    public function save() {
+    public function saveAction() {
         if(empty($_POST)) $this->_goBack();
 
         try {
 
             if (!empty($_POST['entry']) && !empty($_POST['tags'])) {
-                print_r($_POST);
                 /** @var Model\Repository\Tag $tagRepo */
                 $tagRepo = $this->_entityManager->getRepository(Model\Tag::class);
                 $newTags = $tagRepo->buildArray($_POST['tags']);
@@ -66,6 +66,7 @@ class Tag extends Queue
                         $tagCollection->add($newTag);
                     $entry->setTags($tagCollection);
                     $entry->setPublished(null);
+                    $i++;
                 }
                 $this->_entityManager->flush();
                 $_SESSION['messages'][] = "Added tags to $i entries.";
@@ -74,5 +75,52 @@ class Tag extends Queue
         } Catch (\Exception $e) {
             $_SESSION['messages'][] = $e->getMessage();
         }
+    }
+
+    public function listingAction() {
+
+        $listBlock = new Block('admin/tag/list');
+        $itemsHtml = '';
+        /** @var Model\Tag $tag */
+        foreach($this->_entityManager->getRepository(Model\Tag::class)->findBy([], ['id'=>'desc']) as $tag) {
+            $tagBlock = new Block('admin/tag/listitem');
+            $tagBlock->setData($tag->getData());
+            $tagBlock->setData('class', $tag->getName() ? 'name' : 'not-name');
+            $itemsHtml .= $tagBlock->toHtml();
+        }
+        $listBlock->setData('items', $itemsHtml);
+        $this->getPage()->setData('content', $listBlock->toHtml());
+        echo $this->getPage();
+
+    }
+
+    public function deleteAction() {
+        if(empty($_REQUEST['id'])) $this->_goBack();
+        try {
+            $tag = $this->_entityManager->getRepository(Model\Tag::class)->find($_REQUEST['id']);
+            if ($tag) {
+                $tag->delete();
+                $this->_entityManager->flush();
+                $_SESSION['messages'][] = 'Tag ID ' . $_REQUEST['id'] . ' deleted.';
+            }
+        } catch (\Exception $e) {
+            $_SESSION['messages'][] = $e->getMessage();
+        }
+        $this->_goBack();
+    }
+
+    public function switchAction() {
+        if(empty($_REQUEST['id'])) $this->_goBack();
+        try {
+            $tag = $this->_entityManager->getRepository(Model\Tag::class)->find($_REQUEST['id']);
+            if ($tag) {
+                $tag->setName($tag->getName() ? 0 : 1);
+                $this->_entityManager->flush();
+                $_SESSION['messages'][] = 'Tag ID ' . $_REQUEST['id'] . ' switched.';
+            }
+        } catch (\Exception $e) {
+            $_SESSION['messages'][] = $e->getMessage();
+        }
+        $this->_goBack();
     }
 }

@@ -251,18 +251,21 @@ class Entry extends Generic
 
         $newImages = array_diff($fileImages, $existingNames);
 
-        $kindRepo = $this->getEntityManager()->getRepository(Model\ImageKind::class);
-
-        foreach($newImages as $file) {
-            echo basename(dirname($file))."\n";
-            $newImage = new Model\Image();
-            $newImage
-                ->setEntry($entry)
-                ->setFilename(basename($file))
-                ->setKind(array_pop($kindRepo->findBy(['path' => basename(dirname($file))])));
-            $this->getEntityManager()->persist($newImage);
+        if(count($newImages)) {
+            $kindRepo = $this->getEntityManager()->getRepository(Model\ImageKind::class);
+            foreach ($newImages as $file) {
+                $newImage = new Model\Image();
+                $newImage
+                    ->setEntry($entry)
+                    ->setFilename(basename($file))
+                    ->setKind(array_pop($kindRepo->findBy(['path' => basename(dirname($file))])));
+                $this->getEntityManager()->persist($newImage);
+                if (is_array($_SESSION['messages']))
+                    $_SESSION['messages'][] = 'Added ' . basename(dirname($file)) . ' version to ' . $entry->getTitle();
+                $this->logger->debug('Added ' . basename(dirname($file)) . ' version to ' . $entry->getTitle());
+            }
+            $this->getEntityManager()->flush();
         }
-        $this->getEntityManager()->flush();
     }
 
 }

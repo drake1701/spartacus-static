@@ -22,7 +22,7 @@ class Entry extends \Paperroll\Admin\Controller\Queue
         return $this->page;
     }
 
-    public function newprocess() {
+    public function newprocessAction() {
         if(!isset($_REQUEST['image'])) $this->_goBack();
         $image = $_REQUEST['image'];
 
@@ -38,7 +38,7 @@ class Entry extends \Paperroll\Admin\Controller\Queue
         echo $this->getPage()->toHtml();
     }
 
-    public function edit() {
+    public function editAction() {
         if(!isset($_REQUEST['id'])) $this->_goBack();
 
         /** @var \Paperroll\Model\Entry $entry */
@@ -48,7 +48,8 @@ class Entry extends \Paperroll\Admin\Controller\Queue
         $form->setData($entry->getData());
         $form->setData([
             'preview'                   => File::getCacheUrl($entry->getMainImage()->getUrl(), Image::PREVIEW),
-            'queue_'.$entry->getQueue() => ' selected="selected"'
+            'queue_'.$entry->getQueue() => ' selected="selected"',
+            'back'                      => $_SERVER['HTTP_REFERER']
         ]);
         $tags = [];
         foreach($entry->getTags() as $tag) {
@@ -59,7 +60,7 @@ class Entry extends \Paperroll\Admin\Controller\Queue
         echo $this->getPage()->toHtml();
     }
 
-    public function save() {
+    public function saveAction() {
         if(empty($_POST)) $this->_goBack();
         echo "<pre>";
 
@@ -73,21 +74,31 @@ class Entry extends \Paperroll\Admin\Controller\Queue
                 $entry->setPublishedAt($queue->getNext());
             }
             $entry->setData($data);
-            $entry->setTags($this->_entityManager->getRepository(Tag::class)->buildArray($data['tags']));
+            $tags = $this->_entityManager->getRepository(Tag::class)->buildArray($data['tags']);
+            $entry->setTags($tags);
             $entry->setPublished(null);
 
             $this->_entityManager->persist($entry);
             $this->_entityManager->flush();
 
             $this->_entryRepo->updateImages($entry);
+            $this->_entityManager->getRepository(Tag::class)->updateCounts($tags);
 
             $_SESSION['messages'][] = 'Saved '.$entry->getTitle().' - '.$entry->getId().'.';
-            $this->_goBack();
+            $this->_goBack(true);
 
         } Catch (\Exception $e) {
             $_SESSION['messages'][] = $e->getMessage();
             $this->_goBack();
         }
+    }
+
+    public function imagesAction() {
+
+        foreach($this->_entryRepo->findAll() as $entry) {
+            $this->_entryRepo->updateImages($entry);
+        }
+        $this->_goBack();
     }
 
 }

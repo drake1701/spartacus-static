@@ -30,7 +30,7 @@ class Tag extends Generic
      */
     public function buildArray($slugs) {
         $tags = new ArrayCollection();
-        $slugs = explode(',', $slugs);
+        $slugs = explode(',', strtolower($slugs));
         foreach($slugs as $slug) {
             $slug = trim($slug);
             if(strlen($slug) < 2) continue;
@@ -43,8 +43,29 @@ class Tag extends Generic
                 $tag->setTitle(File::codeToName($slug));
                 $this->getEntityManager()->persist($tag);
                 $tags->add($tag);
+                if(is_array($_SESSION['messages']))
+                    $_SESSION['messages'][] = 'Created new tag "'.$slug.'".';
             }
         }
         return $tags;
+    }
+
+    /**
+     * @param string|ArrayCollection $tags
+     */
+    public function updateCounts($tags) {
+        if(is_string($tags))
+            $tags = explode(',', $tags);
+
+        foreach($tags as $tag) {
+            if(is_string($tag)) {
+                $tag = trim($tag);
+                if (strlen($tag) < 2) continue;
+                /** @var Model\Tag $tag */
+                $tag = $this->findBy(['slug' => $tag]);
+            }
+            $tag->setCount($tag->getEntries()->count());
+        }
+        $this->getEntityManager()->flush();
     }
 }

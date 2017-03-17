@@ -11,9 +11,9 @@
         <dd id="title-element">
             <input type="text" name="title" id="title" value="{{title}}">
         </dd>
-        <dt id="content-label"><label for="content" class="optional">content:</label></dt>
+        <dt id="content-label"><label for="note" class="optional">content:</label></dt>
         <dd id="content-element">
-            <textarea name="content" id="content" cols="40" rows="5">{{note}}</textarea>
+            <textarea name="note" id="note" cols="40" rows="5">{{note}}</textarea>
         </dd>
         <dt id="queue-label"><label for="queue" class="optional">queue:</label></dt>
         <dd id="queue-element">
@@ -37,7 +37,7 @@
         </dd>
         <dt id="save-label">&nbsp;</dt>
         <dd id="save-element">
-            <a href="\"><span>Back</span></a>
+            <a href="{{back}}"><span>Back</span></a>
             <button class="btn-lg" type="submit" value="save"><span>Save</span></button>
         </dd>
     </dl>

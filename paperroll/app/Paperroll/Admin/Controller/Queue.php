@@ -33,7 +33,7 @@ class Queue extends Router
         $this->_entryRepo = $this->_entityManager->getRepository(Entry::class);
     }
 
-    public function reorder() {
+    public function reorderAction() {
         $data = $_POST;
         foreach($data['entry_id'] as $queueId => $entryIds) {
             $queue = new \Paperroll\Model\Queue($queueId);
@@ -51,7 +51,7 @@ class Queue extends Router
         $this->_goBack();
     }
 
-    public function index() {
+    public function indexAction() {
 
         $last = $this->_entryRepo->getLastEntry()->getPublishedAt();
 
