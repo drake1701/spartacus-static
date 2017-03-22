@@ -260,10 +260,11 @@ class Entry extends Generic
                     ->setFilename(basename($file))
                     ->setKind(array_pop($kindRepo->findBy(['path' => basename(dirname($file))])));
                 $this->getEntityManager()->persist($newImage);
-                if (is_array($_SESSION['messages']))
+                if (isset($_SESSION['messages']))
                     $_SESSION['messages'][] = 'Added ' . basename(dirname($file)) . ' version to ' . $entry->getTitle();
                 $this->logger->debug('Added ' . basename(dirname($file)) . ' version to ' . $entry->getTitle());
             }
+            $entry->setPublished(null);
             $this->getEntityManager()->flush();
         }
     }

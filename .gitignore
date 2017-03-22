@@ -1,6 +1,6 @@
 .DS_Store
 .idea/
-/access.php
+/admin/access.php
 /_site/
 /gallery
 /fetch/cache
@@ -12,8 +12,8 @@
 *.log
 /var/
 
-/paperroll/composer.lock
-/paperroll/vendor/
-/paperroll/admin/phpliteadmin.php
+/composer.lock
+/vendor/
+/admin/phpliteadmin.php
 !/gallery/cache/.htaccess
 !/gallery/cache/cache.php

@@ -416,7 +416,7 @@ input, select, textarea {
 ul {
     list-style: none outside none;
     padding: 0 0 0 10px;
-    margin: 0 0 10px;
+    margin: 10px;
 }
 
 table {
@@ -461,7 +461,6 @@ td {
     position:relative;
     display: block;
     float:left;
-    width: auto;
     padding: 5px 3px 0;
 }
 .entry-images .image span {
@@ -511,13 +510,13 @@ td {
         margin-top: 30px;
     }
 }
-@media screen and (min-width: 990px) {
+@media screen and (min-width: 992px) {
     body > .container-fluid > .row > :last-child {
         padding-left:0;
     }
     .entry-grid .col-md-6:nth-of-type(2n+1),
     .entry-grid .col-md-4:nth-of-type(3n+1) {
-        /* clear:left; */
+        clear:left;
     }
     #main {
         padding-right: 0;
@@ -528,6 +527,9 @@ td {
     body > .container-fluid {
         padding-left: 10px;
         padding-right: 10px;
+    }
+    #main {
+        padding:0;
     }
     #copy {
         margin-left:-10px;
@@ -553,8 +555,9 @@ td {
     }
 }
 @media screen and (min-width: 768px) and (max-width: 990px) {
-    .entry-grid .col-sm-6:nth-of-type(2n+1), .entry-grid .col-sm-4:nth-of-type(3n+1) {
-        /* clear:left; */
+    .entry-grid .col-sm-6:nth-of-type(2n+1),
+    .entry-grid .col-sm-4:nth-of-type(3n+1) {
+        clear:left;
     }
 }
 @media screen and (max-width: 767px) {
@@ -587,8 +590,8 @@ td {
     }
     .col-xs-6:nth-child(2n+1),
     .entry-images .mobile .image:nth-child(2n+1) {
-        padding-right: 3px; 
-        padding-left: 10px; 
+        padding-right: 3px;
+        padding-left: 10px;
     }
     .tops > div:nth-child(2n+1) {
         padding-left:0;

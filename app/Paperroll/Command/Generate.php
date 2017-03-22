@@ -60,7 +60,7 @@ class Generate extends Generic {
                 $em = $this->entityManger;
                 /** @var \Paperroll\Model\Repository\Entry $entryRepo */
                 $entryRepo = $em->getRepository(Entry::class);
-                $entries = $entryRepo->findBy(['id' => [3754,4102]]);
+                $entries = $entryRepo->findBy(['id' => [3754,4102,4139,4145]]);
                 /** @var \Paperroll\Model\Entry $entry */
                 foreach($entries as $entry)
                     $entryRepo->rePublish($entry);
@@ -146,7 +146,7 @@ class Generate extends Generic {
         File::writeFile(File::siteDir(). '/' . $vsn . "/js/banner.js", $bannerJs);
 
         /** @var Block $header */
-        $header = new Block('header');
+        $header = new Block('page/header');
         $testHtml = /** @lang html */
             <<<'HTML'
         <script type="text/javascript">
@@ -517,7 +517,7 @@ HTML;
             }
             if($month != $entry->getPublishedAt()->format('F')) {
                 $month = $entry->getPublishedAt()->format('F');
-                $entryContent .= '<h3 class="subtitle">'.$month.'</h3>';
+                $entryContent .= '</div><h3 class="subtitle">'.$month.'</h3><div class="row entry-grid">';
             }
             $template = count($entry->getMobileImages()) ? 'entry/mobile/tag' : 'entry/tag';
             $entryBlock = new Block($template, $entry->getId());
@@ -575,17 +575,20 @@ HTML;
             $entries = $entryRepo->getPublished(true);
             $year = '2000';
             $month = '3';
+            $lastPage = '';
         } else {
             $entries = $entryRepo->getPublished();
             $year = date('Y');
             $month = date('n');
+            $lastMonth = new \DateTime();
+            $lastMonth->sub(new \DateInterval('P1M'));
+            $lastPage = $this->siteUrl . $lastMonth->format('Y/n');
         }
 
         $homePage = new Layout('default');
         $homePage->loadLayout();
         $entriesHtml = [];
         $entryCount = 1;
-        $lastPage = '';
         foreach($entries as $row) {
             /** @var Entry $entry */
             $entry = array_pop($row);
@@ -598,9 +601,10 @@ HTML;
                 $homePage->setData('content', $html);
                 File::writePage("$year/$month", $homePage);
                 $lastPage = $this->siteUrl . "$year/$month";
+                $homePage->setTemplate('default');
+                $homePage->setData('content_title', $entry->getPublishedAt()->format('F, Y'));
                 $year = $entry->getPublishedAt()->format('Y');
                 $month = $entry->getPublishedAt()->format('n');
-                $homePage->setTemplate('default');
                 $entriesHtml = [];
             }
             $template = count($entry->getMobileImages()) ? 'entry/mobile/home' : 'entry/home';
@@ -625,6 +629,7 @@ HTML;
         }
         $homePage->setData('pager', '<a href="'.$lastPage.'" title="Previous Month">Previous Month</a>');
         $homePage->setData('content', $entriesHtml);
+        $homePage->setData('content_title', '');
         File::writePage("$year/$month", $homePage);
         File::writePage("", $homePage);
 
