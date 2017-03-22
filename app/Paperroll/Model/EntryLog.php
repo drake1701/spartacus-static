@@ -12,6 +12,7 @@ namespace Paperroll\Model;
  *
  * @Table(name="entry_log")
  * @Entity
+ * @HasLifecycleCallbacks()
  */
 class EntryLog
 {
@@ -95,12 +96,10 @@ class EntryLog
 
     /**
      * Set createdAt
-     * @param \DateTime $createdAt
-     * @return EntryLog
+     * @PrePersist
      */
-    public function setCreatedAt($createdAt) {
-        $this->createdAt = $createdAt;
-        return $this;
+    public function setCreatedAt() {
+        $this->createdAt = new \DateTime();
     }
 
     /**
@@ -117,5 +116,14 @@ class EntryLog
     public function getEntry()
     {
         return $this->entry;
+    }
+
+    /**
+     * @param Entry $entry
+     * @return $this
+     */
+    public function setEntry($entry) {
+        $this->entry = $entry;
+        return $this;
     }
 }

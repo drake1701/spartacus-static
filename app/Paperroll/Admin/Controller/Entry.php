@@ -9,6 +9,7 @@ namespace Paperroll\Admin\Controller;
 
 
 use Paperroll\Helper\File;
+use Paperroll\Model\EntryLog;
 use Paperroll\Model\Image;
 use Paperroll\Model\Queue;
 use Paperroll\Model\Tag;
@@ -76,6 +77,12 @@ class Entry extends \Paperroll\Admin\Controller\Queue
             $entry->setData($data);
             $tags = $this->_entityManager->getRepository(Tag::class)->buildArray($data['tags']);
             $entry->setTags($tags);
+            if($entry->getPublished()) {
+                $log = new EntryLog();
+                $log->setEntry($entry);
+                $log->setMessage("Edited");
+                $this->_entityManager->persist($log);
+            }
             $entry->setPublished(null);
 
             $this->_entityManager->persist($entry);

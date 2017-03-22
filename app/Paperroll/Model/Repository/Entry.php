@@ -161,7 +161,7 @@ class Entry extends Generic
         $logs = [];
         /** @var Model\Entry $entry */
         foreach($this->findBy(['published' => 1], ['publishedAt' => 'desc']) as $entry) {
-            $logs[$entry->getYear()][$entry->getPublishedAt('short')][] = [
+            $logs[$entry->getYear()][$entry->getPublishedAt()->format('Y-m-d')][] = [
                 'url' => $entry->getUrl(),
                 'title' => $entry->getTitle(),
                 'message' => 'Published.'
@@ -176,12 +176,16 @@ class Entry extends Generic
             /** @var Model\EntryLog $log */
             $log = array_pop($row);
             $entry = $log->getEntry();
-            if($entry->getPublishedAt() > new \DateTime('now')) continue;
-            $logs[$log->getCreatedAt()->format('Y')][$log->getCreatedAt()->format('M j, Y')][] = [
+            if($entry->getPublished() == false) continue;
+            $logs[$log->getCreatedAt()->format('Y')][$log->getCreatedAt()->format('Y-m-d')][] = [
                 'url' => $entry->getUrl(),
                 'title' => $entry->getTitle(),
                 'message' => $log->getMessage()
             ];
+        }
+
+        foreach($logs as $year => $entries) {
+            krsort($logs[$year]);
         }
 
         return $logs;
@@ -246,6 +250,7 @@ class Entry extends Generic
         foreach($collection as $image) {
             $existingNames[] = $image->getPath();
         }
+        $repost = $entry->getPublished();
 
         $fileImages = glob(BASEDIR . '/gallery/*/' . $entry->getFilename());
 
@@ -253,16 +258,29 @@ class Entry extends Generic
 
         if(count($newImages)) {
             $kindRepo = $this->getEntityManager()->getRepository(Model\ImageKind::class);
+            $newCount = 0;
             foreach ($newImages as $file) {
                 $newImage = new Model\Image();
+                /** @var Model\ImageKind $kind */
+                $kind = array_pop($kindRepo->findBy(['path' => basename(dirname($file))]));
                 $newImage
                     ->setEntry($entry)
                     ->setFilename(basename($file))
-                    ->setKind(array_pop($kindRepo->findBy(['path' => basename(dirname($file))])));
+                    ->setKind($kind);
                 $this->getEntityManager()->persist($newImage);
                 if (isset($_SESSION['messages']))
                     $_SESSION['messages'][] = 'Added ' . basename(dirname($file)) . ' version to ' . $entry->getTitle();
                 $this->logger->debug('Added ' . basename(dirname($file)) . ' version to ' . $entry->getTitle());
+                $newCount++;
+            }
+            if($repost) {
+                $log = new Model\EntryLog();
+                $log->setEntry($entry);
+                if($newCount > 1)
+                    $log->setMessage("Added $newCount image formats.");
+                else
+                    $log->setMessage("Added '".$kind->getLabel()."' image.");
+                $this->getEntityManager()->persist($log);
             }
             $entry->setPublished(null);
             $this->getEntityManager()->flush();

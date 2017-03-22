@@ -73,7 +73,7 @@ class Queue extends Router
                 $others = $entry;
                 $entry = array_pop($others);
             }
-            $html = '<td>'.$marker->format('F d').'</td>';
+            $html = '<td><div class="entry-date">'.$marker->format('M j').'</div></td>';
             if($entry) {
                 if($entry->getPublished())
                     $qItem = new Block('admin/queue/itemlive');
@@ -81,6 +81,7 @@ class Queue extends Router
                     $qItem = new Block('admin/queue/item');
                 $qItem->setData($entry->getBlockVariables());
                 $qItem->setData('queueLabel', $entry->getQueue() == \Paperroll\Model\Queue::CALENDAR ? 'Calendar' : 'Normal');
+                $qItem->setData('publishedAt_short', $entry->getPublishedAt()->format('M j'));
                 $tags = '';
                 foreach($entry->getTags() as $tag) {
                     $tags .= '<a href="tag/entries?tag='.$tag->getId().'">'.$tag->getTitle().'</a><br/>';

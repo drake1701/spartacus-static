@@ -53,8 +53,6 @@ class Generate extends Generic {
             $this->buildTagIndex();
             $this->buildKinds();
             $this->buildYears();
-            $this->buildHome();
-            $this->buildChangelog();
         } else {
             if($this->dev) {
                 $em = $this->entityManger;
@@ -76,17 +74,16 @@ class Generate extends Generic {
                 if($this->getArg('k')) $this->buildKinds();
                 if($this->getArg('y')) $this->buildYears();
                 if($this->getArg('c')) $this->buildChangelog();
-                $this->buildHome();
             } else {
                 $this->buildEntries();
                 $this->buildTagPages();
                 $this->buildTagIndex();
                 $this->buildKinds();
                 $this->buildYears();
-                $this->buildHome();
-                $this->buildChangelog();
             }
         }
+        $this->buildHome();
+        $this->buildChangelog();
         $this->logReport();
     }
 
@@ -552,7 +549,8 @@ HTML;
             $logHtml = '';
             foreach($dates as $date => $items) {
                 $dateBlock = new Block('log/view');
-                $dateBlock->setData('date', $date);
+                $formatDate = new \DateTime($date);
+                $dateBlock->setData('date', $formatDate->format('M j'));
                 $itemsHtml = '';
                 foreach($items as $item) {
                     $itemBlock = new Block('log/item');
