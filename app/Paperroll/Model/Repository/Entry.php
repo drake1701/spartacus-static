@@ -147,6 +147,7 @@ class Entry extends Generic
         $query = $qb
             ->where($qb->expr()->isNotNull('e.published'))
             ->andWhere($qb->expr()->notIn('e.id', $visibleIds))
+            ->orderBy('e.publishedAt', 'desc')
             ->setMaxResults($count * 5)
             ->getQuery();
 
@@ -159,8 +160,13 @@ class Entry extends Generic
     public function getChangeLog() {
 
         $logs = [];
-        /** @var Model\Entry $entry */
-        foreach($this->findBy(['published' => 1], ['publishedAt' => 'desc']) as $entry) {
+        $qb = $this->createQueryBuilder('e');
+        $query = $qb
+            ->where($qb->expr()->isNotNull('e.published'))
+            ->addOrderBy('e.publishedAt', 'desc');
+        foreach($query->getQuery()->iterate() as $row) {
+            /** @var Model\Entry $entry */
+            $entry = array_pop($row);
             $logs[$entry->getYear()][$entry->getPublishedAt()->format('Y-m-d')][] = [
                 'url' => $entry->getUrl(),
                 'title' => $entry->getTitle(),
@@ -198,12 +204,12 @@ class Entry extends Generic
     public function getPublished($all = false) {
         $qb = $this->createQueryBuilder('e');
         $query = $qb
-            ->where($qb->expr()->eq('e.published', 1))
+            ->where($qb->expr()->isNotNull('e.published'))
             ->addOrderBy('e.publishedAt', 'asc');
 
         if($all == false) {
             $lookback = date('Y-m-01');
-            $query->andWhere("date(e.publishedAt) > date('$lookback')");
+            $query->andWhere("date(e.publishedAt) >= date('$lookback')");
         }
 
         return $query->getQuery()->iterate();

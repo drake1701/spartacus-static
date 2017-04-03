@@ -36,7 +36,7 @@ class Entity {
         // database configuration parameters
         $conn = [
             'driver' => 'pdo_sqlite',
-            'path'   => BASEDIR . '/var/db/spartacus'
+            'path'   => BASEDIR . '/db/spartacus'
         ];
 
         $em = EntityManager::create( $conn, $config );

@@ -1,8 +1,10 @@
 .DS_Store
 .idea/
-/admin/access.php
+/access.php
 /_site/
 /gallery/*
+!/gallery/cache/.htaccess
+!/gallery/cache/cache.php
 /fetch/cache
 /fetch/index.sqlite
 /fetch/postpage.html
@@ -12,5 +14,3 @@
 /composer.lock
 /vendor/
 /admin/phpliteadmin.php
-!/gallery/cache/.htaccess
-!/gallery/cache/cache.php

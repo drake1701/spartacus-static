@@ -104,9 +104,7 @@ class Queue extends Router
         $qRows[] = $qRow->toHtml();
         $qTable->setData('rows', implode($qRows));
 
-        $menu = new Block('admin/header');
-        $html = $menu->toHtml();
-        $html .= $qTable->toHtml();
+        $html = $qTable->toHtml();
         $html .= $this->_getReposts();
         $html .= $this->_getUnqueued();
 

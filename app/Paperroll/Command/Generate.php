@@ -31,7 +31,7 @@ class Generate extends Generic {
     public function __construct( array $argv = [] ) {
         parent::__construct( $argv );
         $this->siteUrl = File::baseUrl();
-        if($this->getArg('a')) {
+        if($this->getArg('a') || $this->dev) {
             $version = 'v' . time();
             File::writeFile(BASEDIR . '/assets/vsn/version.txt', $version);
         } else {
@@ -44,6 +44,9 @@ class Generate extends Generic {
 
         $this->logger->debug('--- Beginning Site Generation ---');
 
+        if($this->getArg('l'))
+            $this->dev = false;
+
         if($this->getArg('a')) {
             $this->clearSite();
             $this->buildBanners();
@@ -54,6 +57,11 @@ class Generate extends Generic {
             $this->buildKinds();
             $this->buildYears();
         } else {
+            $this->assetsAndMaintenance();
+            $this->buildBanners();
+
+            $this->buildPages();
+            $this->buildEntries();
             if($this->dev) {
                 $em = $this->entityManger;
                 /** @var \Paperroll\Model\Repository\Entry $entryRepo */
@@ -63,19 +71,13 @@ class Generate extends Generic {
                 foreach($entries as $entry)
                     $entryRepo->rePublish($entry);
                 $em->flush();
-
-                if($this->getArg('b')) $this->buildBanners();
-                if($this->getArg('p')) $this->buildPages();
-                $this->buildEntries();
                 if($this->getArg('t')) {
                     $this->buildTagPages();
                     $this->buildTagIndex();
                 }
                 if($this->getArg('k')) $this->buildKinds();
                 if($this->getArg('y')) $this->buildYears();
-                if($this->getArg('c')) $this->buildChangelog();
             } else {
-                $this->buildEntries();
                 $this->buildTagPages();
                 $this->buildTagIndex();
                 $this->buildKinds();
@@ -88,7 +90,7 @@ class Generate extends Generic {
     }
 
     private function clearSite() {
-        $this->logger->debug('Clearing Site Files and Copying Assets');
+        $this->logger->debug('Clearing Site Files');
 
         if(is_dir(File::siteDir() . "/gallery"))
             exec("rm " . File::siteDir() . "/gallery");
@@ -106,6 +108,11 @@ class Generate extends Generic {
         if(!is_dir(File::siteDir() . "/gallery"))
             exec("ln -s " . BASEDIR . "/gallery " . File::siteDir() . "/gallery");
 
+        $this->assetsAndMaintenance();
+    }
+
+    private function assetsAndMaintenance() {
+        $this->logger->debug('Copying Assets');
         File::recurseCopy(BASEDIR . "/assets", File::siteDir());
         File::delTree(File::siteDir()."/vsn");
         File::recurseCopy(BASEDIR . "/assets/vsn", File::siteDir() . '/' . Registry::get('version') . '/');
@@ -346,7 +353,7 @@ HTML;
                         
             File::writePage($entry->getUrlPath(), $entryPage);
                         
-            $entry->setPublished(1);
+            $entry->setPublished(true);
         }
         $this->entityManger->flush();
     }
@@ -387,7 +394,7 @@ HTML;
     private function buildTagIndex() {
         $this->logger->debug('Build Tag Index');
 
-        $tagPage = new Layout('tag');
+        $tagPage = new Layout('default');
         $tagPage->loadLayout();
         $tagPage->setData('title', 'Names and Tags | ');
 
@@ -396,30 +403,27 @@ HTML;
         /** @var Tag $tag */
         $tagSection = new Block('tag/index');
         $tagSection->setData('title', 'Wallpaper by Featured Subject');
-        $names = array_chunk($names, ceil(count($names) / 3));
-        $i = 1;
-        foreach($names as $tags) {
-            $tagsList = '';
-            foreach($tags as $tag) {
-                $tagsList .= '<li><a href="' . $tag->getUrl() . '" title="Wallpaper featuring ' . $tag->getTitle() . '">' . $tag->getTitle() . '</a></li>';
-            }
-            $tagSection->setData("column_".$i++, $tagsList);
+        $tagSection->setData('class', 'tag-index');
+        $tagsList = '';
+        foreach($names as $tag) {
+            $tagsList .= '<li><a href="' . $tag->getUrl() . '" title="Wallpaper featuring ' . $tag->getTitle() . '">' . $tag->getTitle() . '</a></li>';
         }
+        $tagSection->setData("tags", $tagsList);
         $entryContent .= $tagSection->toHtml();
 
         $notnames = $this->entityManger->getRepository(Tag::class)->findBy(['name' => 0], ['title' => 'ASC']);
         /** @var Tag $tag */
         $tagSection = new Block('tag/index');
         $tagSection->setData('title', 'Other Tags');
-        $notnames = array_chunk($notnames, ceil(count($notnames) / 3));
-        $i = 1;
-        foreach($notnames as $tags) {
-            $tagsList = '';
-            foreach($tags as $tag) {
-                $tagsList .= '<li><a href="' . $tag->getUrl() . '" title="Wallpaper of ' . $tag->getTitle() . '">' . $tag->getTitle() . '</a></li>';
-            }
-            $tagSection->setData("column_".$i++, $tagsList);
+        $tagSection->setData('class', 'tag-cloud');
+        $tagsList = '';
+        foreach($notnames as $tag) {
+            $scale = 1 + ($tag->getCount() / 50.0);
+            $scale = $scale < 5 ? $scale : 5;
+            /** @noinspection CssInvalidPropertyValue */
+            $tagsList .= '<li style="font-size: '.$scale.'em;"><a href="' . $tag->getUrl() . '" title="Wallpaper of ' . $tag->getTitle() . '">' . $tag->getTitle() . '</a></li>';
         }
+        $tagSection->setData("tags", $tagsList);
         $entryContent .= $tagSection->toHtml();
 
         $tagPage->setData('content', $entryContent);
@@ -446,6 +450,11 @@ HTML;
                 /** @var Entry $entry */
                 $entry = array_pop($row);
                 if($entry->getPublished() == false) continue;
+                if(
+                    $this->dev == false
+                    && $this->getArg('a') == false
+                    && $entry->getYear() != date('Y')
+                ) continue;
                 if(!isset($entryContent[$entry->getYear()])) $entryContent[$entry->getYear()] = '';
                 $entryBlock = new Block($template);
                 $entryBlock->setData($entry->getBlockVariables());
@@ -504,6 +513,8 @@ HTML;
         /** @var Entry $entry */
         foreach($entryRepo->findBy(['published' => '1'], ['publishedAt' => 'DESC']) as $entry) {
             if($entry->getYear() != $year) {
+                if($this->dev == false && $this->getArg('a') == false)
+                    break;
                 $yearPage->setData('content', $entryContent);
                 File::writePage("tag/$year", $yearPage->toHtml());
                 $year = $entry->getYear();
@@ -562,6 +573,8 @@ HTML;
             }
             $logPage->setData('content', $logHtml);
             File::writePage("changelog/$year", $logPage->toHtml());
+            if($this->dev == false && $this->getArg('a') == false)
+                break;
         }
     }
 

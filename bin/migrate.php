@@ -25,11 +25,21 @@ class MySqlite extends SQLite3 {
     }
 }
 
+$baseDir = dirname(__DIR__);
+$newFile = "$baseDir/db/spartacus";
+
 $old = new MySqlite("/var/www/spartacuswallpaper.com/spartacus");
 
-unlink("/var/www/development/spartacuswallpaper.com/var/db/spartacus");
-exec("vendor/bin/doctrine orm:schema-tool:create");
-$new = new MySqlite("/var/www/development/spartacuswallpaper.com/var/db/spartacus");
+if(!is_dir(dirname($newFile))) {
+    mkdir(dirname($newFile), 1);
+    chmod(dirname($newFile), 0775);
+}
+
+if(file_exists($newFile))
+    unlink($newFile);
+
+exec("$baseDir/vendor/bin/doctrine orm:schema-tool:create");
+$new = new MySqlite($newFile);
 
 $tables = array('entry','tag','image_kind','entry_tag','image', 'entry_log');
 
@@ -62,3 +72,5 @@ foreach($tables as $table){
     }
     echo "$i rows.\n";
 }
+
+exec("sh bin/perms");
