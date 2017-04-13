@@ -61,7 +61,6 @@ class Generate extends Generic {
             $this->buildBanners();
 
             $this->buildPages();
-            $this->buildEntries();
             if($this->dev) {
                 $em = $this->entityManger;
                 /** @var \Paperroll\Model\Repository\Entry $entryRepo */
@@ -71,6 +70,7 @@ class Generate extends Generic {
                 foreach($entries as $entry)
                     $entryRepo->rePublish($entry);
                 $em->flush();
+                $this->buildEntries();
                 if($this->getArg('t')) {
                     $this->buildTagPages();
                     $this->buildTagIndex();
@@ -78,6 +78,7 @@ class Generate extends Generic {
                 if($this->getArg('k')) $this->buildKinds();
                 if($this->getArg('y')) $this->buildYears();
             } else {
+                $this->buildEntries();
                 $this->buildTagPages();
                 $this->buildTagIndex();
                 $this->buildKinds();
@@ -95,7 +96,6 @@ class Generate extends Generic {
         if(is_dir(File::siteDir() . "/gallery"))
             exec("rm " . File::siteDir() . "/gallery");
         File::delTree(File::siteDir());
-        File::delTree(BASEDIR."/var/cache");
 //        $caches = glob(BASEDIR."/gallery/cache/*", GLOB_ONLYDIR);
 //        foreach($caches as $cache)
 //            File::delTree($cache);
@@ -112,6 +112,7 @@ class Generate extends Generic {
     }
 
     private function assetsAndMaintenance() {
+        File::delTree(BASEDIR."/var/cache");
         $this->logger->debug('Copying Assets');
         File::recurseCopy(BASEDIR . "/assets", File::siteDir());
         File::delTree(File::siteDir()."/vsn");
@@ -229,8 +230,8 @@ HTML;
             }
             $prev = $entryRepo->getPrev($entry);
             if($prev) {
-                $entryData['prevLink'] = '<a href="'.$prev->getUrl().'" title="'.$prev->getTitle().'"><span>&laquo; Prev Wallpaper</span></a>';
-                $entryData['prev'] = '<a href="'.$prev->getUrl().'" title="'.$prev->getTitle().'"><span>Prev</span><img class="lazy" data-original="'.$prev->getMainImage()->getUrl(Image::MOBILE_THUMB).'" alt="'.$prev->getTitle().'" /><span>'.$prev->getTitle().'</span></a>';
+                $entryData['prevLink'] = '<a href="'.$prev->getUrl().'" title="'.$prev->getTitle().'"><span>&laquo; Previous Wallpaper</span></a>';
+                $entryData['prev'] = '<a href="'.$prev->getUrl().'" title="'.$prev->getTitle().'"><span>Previous</span><img class="lazy" data-original="'.$prev->getMainImage()->getUrl(Image::MOBILE_THUMB).'" alt="'.$prev->getTitle().'" /><span>'.$prev->getTitle().'</span></a>';
                 $visibleIds[] = $prev->getId();
             }
 
@@ -365,13 +366,14 @@ HTML;
         } else {
             $tags = $this->touchedTags;
         }
+        if(count($tags) == 0) return;
 
         $tagPage = new Layout('tag');
         $tagPage->loadLayout();
         /** @var Tag $tag */
         foreach($tags as $tag) {
             $tagPage->setTemplate('tag');
-            $tagPage->setData('title', $tag->getTitle() . ' | ');
+            $tagPage->setData('title', $tag->getTitle() . ' Wallpaper | ');
             $tagPage->setData('contentTitle', $tag->getTitle() . ' Wallpaper');
 
             $entryContent = '';
@@ -442,9 +444,11 @@ HTML;
         /** @var ImageKind $kind */
         foreach($kindRepo->findAll() as $kind) {
             $size = $kind->getPath() == 'ultrawide' ? Image::PREVIEW : Image::THUMB;
-            $template = $kind->getPath() == 'ultrawide' ? 'entry/ultrawide' : 'entry/tag';
+            $template = 'entry/tag';
+            if($kind->getPath() == 'ultrawide') $template = 'tag/kind/ultrawide';
+            if($kind->getMobile()) $template = 'tag/kind/mobile';
 
-            $entryCount = 0;
+                $entryCount = 0;
             $entryContent = [];
             foreach($kindRepo->getEntries($kind) as $row) {
                 /** @var Entry $entry */
@@ -463,12 +467,12 @@ HTML;
                 $entryContent[$entry->getYear()] .= $entryBlock->toHtml();
                 $entryCount++;
             }
-            if($entryCount > 50) {
+            if($kindRepo->getCount($kind) > 50) {
                 $menu = [];
-                foreach ($entryContent as $year => $content) {
-                    $menu[] = '<a href="' . $this->siteUrl . 'tag/' . $kind->getPath() . '/' . $year . '" title="' . $year . '">' . $year . '</a>';
+                foreach ($kindRepo->getYears($kind) as $year => $content) {
+                    $menu[] = '<li><a href="' . $this->siteUrl . 'tag/' . $kind->getPath() . '/' . $year . '" title="' . $year . '">' . $year . '</a></li>';
                 }
-                $menu = implode(',&nbsp;', $menu);
+                $menu = implode($menu);
                 $first = false;
                 foreach ($entryContent as $year => $content) {
                     $kindPage->setTemplate('tag');
@@ -571,9 +575,9 @@ HTML;
                 $dateBlock->setData('items', $itemsHtml);
                 $logHtml .= $dateBlock->toHtml();
             }
-            $logPage->setData('content', $logHtml);
+            $logPage->setData('content', '<dl class="changelog">'.$logHtml.'</dl>');
             File::writePage("changelog/$year", $logPage->toHtml());
-            if($this->dev == false && $this->getArg('a') == false)
+            if($this->getArg('a') == false)
                 break;
         }
     }

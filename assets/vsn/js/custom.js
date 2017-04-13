@@ -116,11 +116,11 @@ jQuery(document).ready(function(){
         });
     });
 
-    if(jQuery(window).width() <= 991) {
-        jQuery('#sidebar').insertAfter(jQuery('#main'));
-    } else {
-        jQuery('#sidebar').insertBefore(jQuery('#main'));
-    }
+    // if(jQuery(window).width() <= 991) {
+    //     jQuery('#sidebar').insertAfter(jQuery('#main'));
+    // } else {
+    //     jQuery('#sidebar').insertBefore(jQuery('#main'));
+    // }
 
     jQuery('.entry-images img').load(heightsFix);
 

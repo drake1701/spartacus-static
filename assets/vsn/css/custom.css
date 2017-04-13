@@ -15,7 +15,21 @@ img {
     background:rgb(68,114,88);
 }
 
+body > .container-fluid > .row-fluid {
+  -ms-box-orient: horizontal;
+  display: -webkit-box;
+  display: -moz-box;
+  display: -ms-flexbox;
+  display: -moz-flex;
+  display: -webkit-flex;
+  display: flex;
+  
+  -webkit-flex-flow: row;
+  flex-flow: row;
+}
+
 #main {
+    order:2;
     margin-top:15px;
     padding-top: 5px;
     position: relative;
@@ -86,22 +100,25 @@ img {
 }
 
 .entry-view .entry-title a {
-    color:rgb(68,114,88);
+    /* color:rgb(68,114,88); */
 }
 
 .content-title {
     font-size: 26px;
-    line-height: 56px;
     font-weight: normal;
-    margin: 0;
+    margin: .5em 0;
     font-family: 'Courgette', sans-serif;
     color:rgb(68,114,88);
     text-align:center;
 }
 .subtitle {
     font-family:'Patua One', serif;
-    margin-bottom:0;
+    margin: 25px 0 0;
     clear: both;
+    text-align: center;
+}
+.subtitle:first-of-type {
+    margin-top:0;
 }
 .entry-images .image-box {
     padding:0 0 10px;
@@ -153,7 +170,6 @@ img {
 }
 #sidebar .ad {
     padding: 0 0 15px;
-    min-height:450px;
 }
 
 .logo img {
@@ -199,6 +215,7 @@ img {
 }
 
 #sidebar {
+    order:1;
     background: rgba(68,114,88,.5);
     position: relative;
     color:rgb(134,155,122);
@@ -210,13 +227,12 @@ img {
     margin-bottom:8px;
 }
 #sidebar .social-contact {
-    margin:0 auto;
+    text-align: center;
     padding: 2px;
 }
 #sidebar .social-contact li {
-    display: block;
+    display: inline-block;
     text-indent: -9999px;
-    float:left;
     height: 32px;
     width: 32px;
     margin: 10px;
@@ -248,10 +264,10 @@ img {
 
 #sidebar .section-head, .social-contact {
     font-size: 18px;
-    margin: 0 0 -2px;
     border-top: 1px solid rgba(0,0,0,.5);
-    padding-top: 6px;
+    padding: 10px 0 6px;
     font-family: 'Courgette', sans-serif;
+    margin: 0;
 }
 #sidebar .section-head:first-of-type,
 #sidebar .social-contact:first-of-type {
@@ -267,7 +283,6 @@ img {
 #sidebar ul {
     list-style:none outside none;
     margin:0;
-    padding:2px 0 12px 5px;
     overflow:auto;
 }
 
@@ -277,11 +292,13 @@ img {
 }
 
 ul.years {
-    overflow: auto;
+    text-align: center;
+    margin: 0 auto 1em;
+    max-width: 400px;
 }
 
 ul.years li {
-    float:left;
+    display: inline-block;
     margin-right: 9px;
 }
 
@@ -292,7 +309,6 @@ ul.years li {
 .entry-grid {
     clear:both;
     list-style: none;
-    padding: 0;
 }
 .entry-grid > div {
     padding-left:7px;
@@ -320,6 +336,12 @@ ul.years li {
 .entry-grid .entry-date {
     font-size:13px;
 }
+.entry-item.ultrawide .entry-title {
+    height:auto;
+}
+.entry-item.ultrawide {
+    margin-bottom:25px;
+}
 
 .entry-grid .entry-image img {
     width: 100%;
@@ -335,7 +357,6 @@ ul.years li {
     padding:0;
     margin:0;
     display: block;
-    overflow: auto;
     text-indent:0;
 }
 
@@ -354,8 +375,8 @@ ul.years li {
 }
 
 .top-nav li {
-    float:left;
-    width: 20%;
+    display: inline-block;
+    margin-right: .1em;
 }
 
 
@@ -434,10 +455,10 @@ td {
     padding: 1px 5px;
 }
 .entry-images .col-xs-6:nth-of-type(even) {
-    padding-left:5px;
+    padding-left:.1em;
 }
 .entry-images .col-xs-6:nth-of-type(odd) {
-    padding-right:5px;
+    padding-right:.1em;
 }
 .pager {
     margin: 15px -5px;
@@ -531,6 +552,12 @@ td {
         margin-top: 30px;
         padding: 0 .3em;
     }
+    .changelog {
+        margin-left:3em;
+    }
+    #sidebar ul {
+        padding:2px 0 12px 5px;
+    }
 }
 @media screen and (min-width: 992px) {
     body > .container-fluid > .row > :last-child {
@@ -548,6 +575,9 @@ td {
         -moz-column-count:4;
         column-count:4;
     }
+    #sidebar .ad {
+        min-height:450px;
+    }
 }
 
 @media screen and (max-width: 990px) {
@@ -555,21 +585,44 @@ td {
         padding-left: 10px;
         padding-right: 10px;
     }
+    body > .container-fluid > .row-fluid {
+      flex-flow: column;
+    }
     #main {
+        order:1;
         padding:0;
+    }
+    #sidebar {
+        order:2;
     }
     #copy {
         margin-left:-10px;
         margin-right:-10px;
     }
     #sidebar .years {
-        width:50%;
+        width: 60%;
+    }
+    #sidebar .section-head, .social-contact {
+        text-align:center;
     }
     #sidebar .ad.long {
         display: none;
     }
     .header-banner.banner-border {
         margin: -10px -20px 0;
+    }
+    #sidebar .kinds > li {
+        margin:0 auto;
+        max-width: 450px;
+    }
+    #sidebar .calendar,
+    #sidebar .years {
+        text-align:center;
+    }
+    #sidebar .calendar > div,
+    #sidebar .years {
+        margin:0 auto;
+        float:none;
     }
     #sidebar li ul {
         -webkit-column-count: 2;
@@ -618,12 +671,15 @@ td {
     .col-xs-6:nth-child(2n),
     .entry-images .mobile .image:nth-child(2n) {
         padding-left: 3px;
-        padding-right: 10px;
+        padding-right: .3em;
     }
     .col-xs-6:nth-child(2n+1),
     .entry-images .mobile .image:nth-child(2n+1) {
         padding-right: 3px;
-        padding-left: 10px;
+        padding-left: .3em;
+    }
+    .entry-grid .col-xs-6:nth-of-type(2n+1) {
+        clear:left;
     }
     .tops > div:nth-child(2n+1) {
         padding-left:0;
@@ -640,8 +696,8 @@ td {
         margin-right:0 !important;
     }
     .entry-images {
-        margin-left: -7px;
-        margin-right: -7px;
+        margin-left: -.3em;
+        margin-right: -.3em;
         clear: both;
         overflow: auto;
     }
@@ -649,7 +705,7 @@ td {
         padding:0;
     }
     .entry-grid .entry-title {
-        font-size:18px;
+        font-size: 14px;
     }
     .entry-images .image-box {
         padding: 0 0 1px;
@@ -680,12 +736,9 @@ td {
         border: 0;
         width: 100%;
     }
-
-    .content.span9 {
-        padding-left: 5px;
-        padding-right: 5px;
+    .content-title {
+        font-size:22px;
     }
-
     .header-banner.banner-border {
         padding: 9px 0;
         margin: 0;
@@ -731,7 +784,7 @@ td {
         min-width: unset;
     }
     .entry-title {
-        float: none
+        /* float: none; */
     }
     .subtitle {
         text-align:center;
@@ -741,9 +794,12 @@ td {
         overflow: hidden;
         font-size: 12px;
     }
+    .entry-view .entry-title {
+        padding: 0;
+    }
     .entry-view .entry-date {
-        float: none;
-        bottom:0;
+        /* float: none; */
+        font-size: 12px;
     }
     .entry-view .row {
         margin-left: -10px;

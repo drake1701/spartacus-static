@@ -25,20 +25,35 @@ class ImageKind extends Generic
         return $kindsResult;
     }
 
-    /**
-     * @param \Paperroll\Model\ImageKind $kind
-     * @return \Doctrine\ORM\Internal\Hydration\IterableResult
-     */
-    public function getEntries($kind) {
+    protected function _getEntriesQuery($kind) {
         $qb = $this->getEntityManager()->getRepository(Model\Entry::class)->createQueryBuilder('e');
         $query = $qb
             ->join(Model\Image::class, 'i', 'WITH', 'i.entryId = e.id')
             ->join(Model\ImageKind::class, 'k', 'WITH', 'i.kind = k.id')
             ->where($qb->expr()->eq('k.id', $kind->getId()))
-            ->orderBy('e.publishedAt', 'DESC')
-            ->getQuery();
+            ->orderBy('e.publishedAt', 'DESC');
+        return $query;
+    }
 
-        return $query->iterate();
+    /**
+     * @param \Paperroll\Model\ImageKind $kind
+     * @return \Doctrine\ORM\Internal\Hydration\IterableResult
+     */
+    public function getEntries($kind) {
+        return $this->_getEntriesQuery($kind)->getQuery()->iterate();
+    }
+
+    public function getCount($kind) {
+        return $this->_getEntriesQuery($kind)->select('count(e)')->getQuery()->getSingleScalarResult();
+    }
+
+    public function getYears($kind) {
+        $years = [];
+        foreach($this->getEntries($kind) as $row) {
+            $entry = array_pop($row);
+            $years[$entry->getYear()] = [];
+        }
+        return $years;
     }
 
     public function getIds() {

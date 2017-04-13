@@ -260,7 +260,7 @@ class Entry extends Generic
      */
     public function getPublishedAt($format = '') {
         if($format)
-            return $this->publishedAt->format($format == 'short' ? "M j, Y" : "l, F jS, Y");
+            return $this->publishedAt->format($format == 'short' ? "j M y" : "D, j M y");
         else
             return $this->publishedAt;
     }
@@ -418,10 +418,12 @@ class Entry extends Generic
             'thumb'             => $this->getMainImage()->getUrl(Image::THUMB),
             'url'               => $this->getUrl(),
             'publishedAt'       => $this->getPublishedAt('long'),
-            'publishedAt_short' => $this->getPublishedAt('short'),
-            'short_content'     => substr(strip_tags($blockData['note']), 0, 45)
+            'publishedAt_short' => $this->getPublishedAt('short')
         ]);
-        if(!empty($blockData['note'])) $blockData['note'] = '<div class="std">'.$blockData['note'].'</div>';
+        if(!empty($blockData['note'])) {
+            $blockData['note'] = '<div class="std">' . $blockData['note'] . '</div>';
+            $blockData['short_content'] = substr(strip_tags($blockData['note']), 0, 45);
+        }
         return $blockData;
     }
 
