@@ -5,14 +5,15 @@ require __DIR__ . '/../access.php';
 <!DOCTYPE HTML>
 <html>
     <head>
+        <title>fetch</title>
         <script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
         <style type="text/css">
             body { 
                 font: 14px 'Menlo'; 
                 margin-bottom:20em;
             }
-            #search { margin: 20px auto; text-align: center; }
-            #search input { font-size:20px; }
+            form { margin: 20px auto; text-align: center; }
+            form input[type=text] { font-size:20px; }
             #results .item { 
                 width:11.5%; 
                 margin:0.5%; 
@@ -45,7 +46,7 @@ require __DIR__ . '/../access.php';
                 overflow: auto;
             }
             #results a.reject {
-                min-height: auto;
+                min-height: inherit;
                 position: absolute;
                 right: 0;
                 background: #eee;
@@ -64,6 +65,11 @@ require __DIR__ . '/../access.php';
                 jQuery('#search').submit(function(e) {
                     e.preventDefault();
                     search(true);
+                });
+                jQuery('#url').submit(function(e) {
+                    e.preventDefault();
+                    jQuery.get('/queue.php?' + jQuery('#url').serialize());
+                    jQuery('#url input').val('');
                 });
                 jQuery('input[type=checkbox]').click(function(e) {
                     search();
@@ -154,8 +160,9 @@ require __DIR__ . '/../access.php';
             <input type="checkbox" name="b" /> Bad
             <input type="checkbox" name="r" /> Reject            
         </form>
-        <form id="url" action="fetch.php" method="get">
+        <form id="url" action="queue.php" method="get">
             <input type="text" name="url" placeholder="URL Get" />
+            <a href="get.php" target="_blank">Watch</a>
         </form>
         <div id="results">
             

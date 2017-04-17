@@ -1,7 +1,7 @@
 <?php
 /**
- * @author     Dennis Rogers <dennis@drogers.net>
- * @address    www.drogers.net
+ * @author     Spartacus <spartacuswallpaper@gmail.com>
+ * @address    www.spartacuswallpaper.com
  *
  * Fetch, download and resize thumb images.
  */

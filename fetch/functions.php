@@ -1,11 +1,12 @@
 <?php
 
 function doCurl($url){
+	//slog('Curl '.$url);
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_AUTOREFERER, true);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-    curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)');
+    //curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)');
     return curl_exec($ch);
 }
 function sanitize($string)
@@ -37,10 +38,18 @@ function get_http_response_code($url) {
     $headers = get_headers($url);
     return substr($headers[0], 9, 3);
 }
-function fail($msg){
-    $er = fopen('error.log', 'a');
+function fail($msg, $die = false){
+	slog($msg);
+    $er = fopen('logs/error.log', 'a');
     fputs($er, date('c') . ': '.$msg."\n");
     fclose($er);
+    if($die) die($msg);
+}
+function slog($msg) {
+	if(is_array($msg)) $msg = print_r($msg, 1);
+	$er = fopen('logs/system.log', 'a');
+	fputs($er, date('c') . ': '.$msg."\n");
+	fclose($er);
 }
 function linkError($link){
     fail("Link error $link");
@@ -79,7 +88,8 @@ function parseTitle($title, $siteName){
     }
     $name = ucwords(strtolower($name));
     $title = trim($title);
-    if($name == "" || $title == "") die("name parse error\n");
+    slog("name '$name', title '$title'");
+    if($name == "" || $title == "") fail("name parse error", true);
     $dir = $baseDir . $name . "/" . $title . "/";
     return $dir;
 }

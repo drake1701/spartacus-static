@@ -2,14 +2,21 @@
 
 require_once 'functions.php';
 
-$url = $_GET['url'];
-$json = !empty($_GET['json']);
+if(!empty($_GET)) {
+	$url  = $_GET['url'];
+	$json = ! empty( $_GET['json'] );
+} else {
+    $cli = true;
+    $url = $argv[1];
+    $json = ! empty($argv[2]);
+}
 $baseDir = "/Volumes/Dropbox/scratch/";
 
 if(substr($url, 0, 10) == 'showthread')
     $url = 'http://celebutopia.net/forums/' . $url;
 
 $url = html_entity_decode($url);
+slog('Fetching '.$url);
 $headers = get_headers($url, 1);
 $urlParts = parse_url($url);
 $host = $urlParts['host'];
@@ -18,17 +25,18 @@ if($host == "www.theplace2.ru" || $host == "www.hotflick.net"){
 } else {
     $postPage = file_get_contents($url);
 }
-//file_put_contents("postpage.html", $postPage);
+file_put_contents("postpage.html", $postPage);
 //$postPage = file_get_contents("postpage.html");
 $postPage = str_replace("\n", " ", $postPage);
 $urlParts = parse_url($url);
 $host = $urlParts['host'];
+slog('Host '.$host);
 switch($host){
     // ! celebutopia blog post
     case "www.celebutopia.org":
     case "celebutopia.org":
         preg_match("#<title>(.+?)</title>#", $postPage, $title);
-        if(count($title) < 2 || count($title[1]) == 0) die("no title found for $url using $host\n");
+        if(count($title) < 2 || count($title[1]) == 0) fail("no title found for $url using $host\n");
         $title = $title[1];
         $dir = parseTitle($title, "Celebutopia");
         preg_match_all('#gallery-icon.+?href="(.+?)"#', $postPage, $links);
@@ -42,7 +50,7 @@ switch($host){
     case "celebutopia.net":
     case "www.celebutopia.net":
         preg_match("#<title>(.+?)</title>#", $postPage, $title);
-        if(count($title) < 2 || count($title[1]) == 0) die("no title found for $url using $host\n");
+        if(count($title) < 2 || count($title[1]) == 0) fail("no title found for $url using $host\n");
         $title = $title[1];
         if(preg_match("#fact of the day#i", $title)){
             fail("No images here.");
@@ -68,11 +76,11 @@ switch($host){
     // ! hawtcelebs post
     case "www.hawtcelebs.com":
         preg_match("#<title>(.+?)</title>#", $postPage, $title);
-        if(count($title) < 2 || count($title[1]) == 0) die("no title found for $url using $host\n");
+        if(count($title) < 2 || count($title[1]) == 0) fail("no title found for $url using $host\n");
         $title = $title[1];
         $dir = parseTitle($title, "HawtCelebs");
         preg_match('#class="postcontent".+?<!--Ad Injection:bottom#', $postPage, $post);
-        if(count($post) == 0) die("no post found for $url using $host\n");
+        if(count($post) == 0) fail("no post found for $url using $host\n");
         $post = array_pop($post);
         preg_match_all("#href=[\"|'](http.+?)[\"|']#", $post, $links);
         if(count($links) != 2){
@@ -86,21 +94,21 @@ switch($host){
     case "forums.lazygirls.info":
         if($host == 'forums.lazygirls.info'){
             preg_match("#<title>(.+?)</title>#", $postPage, $title);
-            if(count($title) < 2 || count($title[1]) == 0) die("no title found for $url using $host\n");
+            if(count($title) < 2 || count($title[1]) == 0) fail("no title found for $url using $host\n");
             $title = $title[1];
             $dir = parseTitle($title, "Lazygirls");
             preg_match_all('#<a href="([^"]+?)"><img#s', $postPage, $links);
         } else {
-            preg_match("#<title>(.+?) - .+?</title>#", $postPage, $title);
+            preg_match("#<title>(.+?) celebrity .+?</title>#", $postPage, $title);
             $name = $title[1];
             preg_match('#<div class="name".+?>(.+?)</div>#', $postPage, $title);
-            if(count($title) < 2 || count($title[1]) == 0) die("no title found for $url using $host\n");
+            if(count($title) < 2 || count($title[1]) == 0) fail("no title found for $url using $host\n");
             $title = $name . " " . $title[1];
             $dir = parseTitle($title, "Lazygirls");
-            preg_match('#title="post".+?</table>#', $postPage, $post);
-            if(count($post) == 0) die("no post found for $url using $host\n");
+            preg_match('#lz-bg-azure.+?</table>#', $postPage, $post);
+            if(count($post) == 0) fail("no post found for $url using $host\n");
             $post = array_pop($post);
-            preg_match_all('#href="(http.+?)"#', $post, $links);
+            preg_match_all('#href="(http://www.+?)"#', $post, $links);
             if(count($links) != 2){
                 fail("no images found for $url using $host");
                 continue;
@@ -131,7 +139,7 @@ switch($host){
     // !NCF
     case "www.nudecelebforum.com":
         preg_match("#<title>(.+?)</title>#", $postPage, $title);
-        if(count($title) < 2 || count($title[1]) == 0) die("no title found for $url using $host\n");
+        if(count($title) < 2 || count($title[1]) == 0) fail("no title found for $url using $host\n");
         $title = $title[1];
         $dir = parseTitle($title, "Nude Celeb Forum");
         preg_match_all('#<!-- message -->(.+?)<!-- / message -->#s', $postPage, $posts);
@@ -146,7 +154,7 @@ switch($host){
     // ! gotceleb post
     case "www.gotceleb.com":
         preg_match("#<title>(.+?)</title>#", $postPage, $title);
-        if(count($title) < 2 || count($title[1]) == 0) die("no title found for $url using $host\n");
+        if(count($title) < 2 || count($title[1]) == 0) fail("no title found for $url using $host\n");
         $title = $title[1];
         $dir = parseTitle($title, "Gotceleb");
         preg_match_all("#gallery-icon.+?href='(.+?)'#", $postPage, $links);
@@ -164,7 +172,7 @@ switch($host){
     case "fabzz.com":
     case "fabmansion.com":
         preg_match("#<title>(.+?)</title>#", $postPage, $title);
-        if(count($title) < 2 || count($title[1]) == 0) die("no title found for $url using $host\n");
+        if(count($title) < 2 || count($title[1]) == 0) fail("no title found for $url using $host\n");
         $title = $title[1];
         $dir = parseTitle($title, "Fabzz");
         preg_match_all("#gallery-icon.+?href='(.+?)'#", $postPage, $links);
@@ -180,11 +188,11 @@ switch($host){
     // ! carreck post
     case "www.carreck.com":
         preg_match("#posttitle.+?<a.+?>(.+?)</a>#", $postPage, $title);
-        if(count($title) < 2 || count($title[1]) == 0) die("no title found for $url using $host\n");
+        if(count($title) < 2 || count($title[1]) == 0) fail("no title found for $url using $host\n");
         $title = $title[1];
         $dir = parseTitle($title, "Carrek");
         preg_match('#<div class="postentry".+?</div>#', $postPage, $post);
-        if(count($post) == 0) die("no post found for $url using $host\n");
+        if(count($post) == 0) fail("no post found for $url using $host\n");
         $post = array_pop($post);
         preg_match_all('#href="(http.+?)"#', $post, $links);
         if(count($links) != 2){
@@ -196,7 +204,7 @@ switch($host){
     // ! superiorpics post
     case "forums.superiorpics.com":
         preg_match("#<title>(.+?)</title>#", $postPage, $title);
-        if(count($title) < 2 || count($title[1]) == 0) die("no title found for $url using $host\n");
+        if(count($title) < 2 || count($title[1]) == 0) fail("no title found for $url using $host\n");
         $title = $title[1];
         $dir = parseTitle($title, "SuperiorPics");
         $links = array();
@@ -208,21 +216,26 @@ switch($host){
     // ! listal
     case "www.listal.com":
         preg_match("#<title>(.+?)</title>#", $postPage, $title);
-        if(count($title) < 2 || count($title[1]) == 0) die("no title found for $url using $host\n");
+        if(count($title) < 2 || count($title[1]) == 0) fail("no title found for $url using $host\n");
         $dir = parseTitle($title[1], "Listal");
         $dirParts = array_reverse(explode('/', $dir));
         $name = strtolower(str_replace(' ', '-', $dirParts[2]));
         preg_match_all("#href='.+?\/viewimage\/(.+?)'#", $postPage, $pageLinks);
         $links = $pageLinks[1];
-        
+        preg_match("#&\\#187; (\\d*)#", $postPage, $lastPage);
+        if(empty($lastPage[1]))
+	        preg_match("#>(\\d*)</a>\\s<[^>]+?>Next#", $postPage, $lastPage);
+
+        $lastPage = empty($lastPage[1]) ? 100 : $lastPage[1];
+        slog('last Page is '.$lastPage);
         $page = 2;
         do {
             unset($pageLinks);
             $postPage = doCurl($url . '//' . $page++);
+            slog('Listal page '.$page);
             preg_match_all("#href='.+?\/viewimage\/(.+?)'#", $postPage, $pageLinks);
-            if(count($pageLinks[1]) == 0) break;
-            $links = array_merge($links, $pageLinks[1]);
-        } while (1);
+            $links = array_unique(array_merge($links, $pageLinks[1]));
+        } while ($page <= $lastPage);
         
         foreach($links as $id => $value){
             $links[$id] = 'http://iv1.lisimg.com/image/' . $value . '/10000full-' . $name . '.jpg';
@@ -231,7 +244,7 @@ switch($host){
     // ! rosemciversource.net :)
     case "rosemciversource.net":
         preg_match("#<title>(.+?) - RoseMcIverSource Gallery</title>#", $postPage, $title);
-        if(count($title) < 2 || count($title[1]) == 0) die("no title found for $url using $host\n");
+        if(count($title) < 2 || count($title[1]) == 0) fail("no title found for $url using $host\n");
         $title = $title[1];
         $dir = parseTitle("Rose McIver - ".$title, "RoseMcIverSource");
         preg_match_all('#a href="displayimage.php[^"]+?pid=(\d+?)\##', $postPage, $links);
@@ -243,7 +256,7 @@ switch($host){
     // ! ravissante.org
     case 'www.ravissante.org':
         preg_match("#<title>(.+?)</title>#s", $postPage, $title);
-        if(count($title) < 2 || count($title[1]) == 0) die("no title found for $url using $host\n");
+        if(count($title) < 2 || count($title[1]) == 0) fail("no title found for $url using $host\n");
         $title = $title[1];
         $dir = parseTitle($title." Ravissante", "");
         preg_match_all('#href="(http://imgbox.+?)"#', $postPage, $links);
@@ -312,9 +325,10 @@ fail("$name - $title");
         }
         break;
     default:
-        die("no processing found for $host\n");
+        fail("no processing found for $host\n");
 }
 
+slog('found '.count($links).' links.');
 // ! -- image pages
 $largeImages = array();
 
@@ -382,7 +396,7 @@ foreach($links as $linkId => $link){
                 $largeImg = $link;
                 break;
             case "lazygirls.info":
-                preg_match('#<img.+?onclick="fullsize.+?src="(.+?)"#', $imagePage, $largeImg);
+                preg_match('#<img[^>]+?onclick="fullsize[^>]+?src="(.+?)"#', $imagePage, $largeImg);
                 break;
             case "gotceleb.com":
             case "fabzz.com":
@@ -419,6 +433,9 @@ foreach($links as $linkId => $link){
             case "oncelebrity.com":
                 preg_match('#<img.+?src="(.+?)".+?id="full_pic"#', $imagePage, $largeImg);
                 break;
+	        case "hotflick.net":
+		        preg_match('#<img.+?id="img".+?src="(.+?)"#', $imagePage, $largeImg);
+		        break;
             case "rosemciversource.net":
                 preg_match('#<img.+?src="(.+?)".+?id="fullsize_image"#', $imagePage, $largeImg);
                 $largeImg = "http://rosemciversource.net/gallery/".$largeImg[1];
@@ -468,9 +485,32 @@ foreach($links as $linkId => $link){
 // ! End Main Block
 // ! output
 if($json) {
-    header("Content-Type: application/json");
-    echo json_encode($largeImages);
-    
+	header( "Content-Type: application/json" );
+	echo json_encode( $largeImages );
+} elseif ($cli) {
+    $getDir = __DIR__ . '/get';
+    if(!is_dir($getDir)) {
+        mkdir($getDir, 0775);
+	    chmod($getDir, 0775);
+    }
+    $k = 1;
+    foreach($largeImages as $image) {
+        slog("url {$image['url']}");
+        $file = basename($image['file']);
+        $parts = explode('/', $image['file']);
+        array_pop($parts);
+        $shoot = array_pop($parts);
+        $name = array_pop($parts);
+        $dest = $getDir . '/' . $name . '/' . $shoot . '/';
+        if(!is_dir($dest)) {
+            mkdir($dest, 0775, true);
+	        chmod($dest, 0775);
+	        chmod($getDir . '/' . $name, 0775);
+        }
+        file_put_contents($dest . $file, doCurl($image['url']));
+        echo "$dest $file \n";
+        slog($file . ' (' . $k++ . ' of ' . count($largeImages) . ')');
+    }
 } else {
     $nameInfo = $largeImages[0]['file'];
     $nameInfo = dirname($nameInfo);

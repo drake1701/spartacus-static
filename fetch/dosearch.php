@@ -32,11 +32,11 @@ if(isset($_GET['q'])){
     <?php foreach($posts as $post): ?>
     <div class="item" id="<?php echo $post['id'] ?>" data-image="http://fetch.spartacuswallpaper.com/cache/<?php echo $post['id'] ?>" style="display:none;">
         <a class="reject">X</a>
-        <a class="name" href="http://fetch.spartacuswallpaper.com/fetch.php?url=<?php echo $post['url'] ?>" ><span ><?php echo $post['name'] ?></span></a>
+        <a class="name" href="http://fetch.spartacuswallpaper.com/queue.php?url=<?php echo $post['url'] ?>" ><span ><?php echo $post['name'] ?></span></a>
     </div>
     <?php endforeach;
 } elseif(isset($_GET['url'])) {
-    $ch = curl_init('http://fetch.spartacuswallpaper.com/fetch.php?url='.$_GET['url']);
+    $ch = curl_init('http://fetch.spartacuswallpaper.com/queue.php?url='.$_GET['url']);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_AUTOREFERER, true);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
