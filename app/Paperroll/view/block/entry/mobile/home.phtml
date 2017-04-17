@@ -1,0 +1,23 @@
+<div class="entry-view">
+	<h2 class="entry-title"><a href="{{url}}" title="{{title}}">{{title}}</a></h2>
+	<p class="entry-date">{{publishedAt}}</p>
+	<a href="{{url}}" class="entry-preview-image hidden-xs" title="{{title}}">
+        <img class="lazy" data-original="{{preview}}" alt="{{title}}"/>
+    </a>
+    <div class="entry-images visible-xs">
+        <div class="image-box col-xs-12 col-sm-4">
+            <a href="{{url}}" class="image col-xs-6" title="{{title}}">
+                <img class="lazy" data-original="{{mobile_1_thumb}}" alt="{{title}}" >
+            </a>
+            <a href="{{url}}" class="image col-xs-6" title="{{title}}">
+                <img class="lazy" data-original="{{mobile_2_thumb}}" alt="{{title}}" >
+            </a>
+        </div>
+    </div>
+    <div class="row-fluid">
+        <div class="entry-tags">
+            {{tags}}
+        </div>
+    </div>
+	<div class="entry-content">{{note}}</div>
+</div>

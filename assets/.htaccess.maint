@@ -1,6 +1,6 @@
 RewriteEngine On
 RewriteBase /
-RewriteCond %{REQUEST_URI} !^/images/logo\.png$
+RewriteCond %{REQUEST_URI} !^/images/maintenance\.jpg$
 RewriteCond %{REQUEST_URI} !^/css/.*$
 RewriteCond %{REQUEST_URI} !^/maintenance\.html$
 RewriteRule ^(.*)$ /maintenance.html [L]

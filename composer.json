@@ -1,0 +1,21 @@
+{
+  "name": "spartacus/paperroll",
+  "type": "project",
+  "authors": [
+    {
+      "name": "Spartacus",
+      "email": "spartacuswalls@gmail.com"
+    }
+  ],
+  "require": {
+    "php": ">=5.3.0",
+    "monolog/monolog": "~1.0",
+    "doctrine/orm": "2.4.*",
+    "beberlei/DoctrineExtensions": "^1.0"
+  },
+  "autoload": {
+    "psr-0": {
+      "": "app/"
+    }
+  }
+}

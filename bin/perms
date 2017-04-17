@@ -1,0 +1,8 @@
+#!/bin/bash
+sudo chown -R dennis:www-data .
+sudo chmod -R 664 .
+sudo chmod 775 .
+sudo chown -R dennis:www-data .git/
+find ./ -type d -exec sudo chmod 775 {} \;
+sudo chmod -R 777 ./var ./gallery
+sudo chmod +x vendor/bin/doctrine
