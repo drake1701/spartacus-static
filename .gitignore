@@ -9,6 +9,7 @@ gallery/*
 !gallery/cache/placeholder.jpg
 fetch/cache
 fetch/index.sqlite
+fetch/logs
 fetch/postpage.html
 *.log
 var/
