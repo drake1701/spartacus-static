@@ -16,15 +16,6 @@ jQuery(window).load(heightsFix).resize(function(){
 
 function heightsFix() {
     var width = jQuery(document).width();
-    // jQuery('#main').css('height', '');
-    // jQuery('#sidebar').css('height', '');
-    // if(width > 991) {
-    //     if(parseInt(jQuery('#sidebar').css('height')) < parseInt(jQuery('#main').css('height'))) {
-    //         jQuery('#sidebar').css('height', jQuery('#main').css('height'));
-    //     } else {
-    //         jQuery('#main').css('height', jQuery('#sidebar').css('height'));
-    //     }
-    // }
 
     if(jQuery('.entry-images .image').length){
         var desktop = jQuery('.entry-images .desktop');
@@ -32,7 +23,6 @@ function heightsFix() {
         var mobile = jQuery('.entry-images .mobile');
         var imagesM = mobile.find('.image');
         if(width > 767) {
-
             if(imagesD.length > 3) {
                 if(imagesD.length == 4) {
                     setHeights(desktop.find('.image:lt(2)'), desktop.width());
@@ -41,6 +31,8 @@ function heightsFix() {
                     setHeights(desktop.find('.image:lt(3)'), desktop.width());
                     setHeights(desktop.find('.image:gt(2)'), desktop.width());
                 }
+            } else if (imagesD.length == 1) {
+                setHeights(imagesD, desktop.width() / 2);
             } else {
                 setHeights(imagesD, desktop.width());
             }

@@ -65,7 +65,7 @@ class Generate extends Generic {
                 $em = $this->entityManger;
                 /** @var \Paperroll\Model\Repository\Entry $entryRepo */
                 $entryRepo = $em->getRepository(Entry::class);
-                $entries = $entryRepo->findBy(['id' => [3754,4102,4139,4145]]);
+                $entries = $entryRepo->findBy(['id' => [3754,4102,4139,4145,122]]);
                 /** @var \Paperroll\Model\Entry $entry */
                 foreach($entries as $entry)
                     $entryRepo->rePublish($entry);
