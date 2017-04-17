@@ -51,6 +51,12 @@ function slog($msg) {
 	fputs($er, date('c') . ': '.$msg."\n");
 	fclose($er);
 }
+function slog($msg) {
+	if(is_array($msg)) $msg = print_r($msg, 1);
+	$er = fopen('logs/system.log', 'a');
+	fputs($er, date('c') . ': '.$msg."\n");
+	fclose($er);
+}
 function linkError($link){
     fail("Link error $link");
 }

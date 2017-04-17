@@ -1,0 +1,44 @@
+<h1>Edit</h1>
+<a href="#" class="col-xs-6 pull-right" onclick="window.open('{{mainImage}}', '','toolbar=no, scrollbars=yes, resizable=yes, top=10, left=10, width=960, height=600');">
+    <img src="{{preview}}">
+</a>
+<form enctype="application/x-www-form-urlencoded" action="/entry/save" method="post">
+    <dl class="zend_form">
+        
+        <dd>{{publishedAt}}</dd>
+        
+        <dt id="title-label"><label for="title" class="required">title:</label></dt>
+        <dd id="title-element">
+            <input type="text" name="title" id="title" value="{{title}}">
+        </dd>
+        <dt id="content-label"><label for="note" class="optional">content:</label></dt>
+        <dd id="content-element">
+            <textarea name="note" id="note" cols="40" rows="5">{{note}}</textarea>
+        </dd>
+        <dt id="queue-label"><label for="queue" class="optional">queue:</label></dt>
+        <dd id="queue-element">
+            <select name="queue" id="queue">
+                <option value="1" {{queue_1}} label="Normal">Normal</option>
+                <option value="2" {{queue_2}} label="Calendar">Calendar</option>
+            </select></dd>
+        <dt id="tags-label"><label for="tags" class="required">tags:</label></dt>
+        <dd id="tags-element">
+            <textarea class="tags" name="tags" id="tags" cols="40" rows="5">{{tags}}</textarea>
+        </dd>
+        <dt id="url_path-label"><label for="url_path" class="required">url path:</label></dt>
+        <dd id="url_path-element">
+            <input type="text" name="urlPath" id="url_path" value="{{urlPath}}">
+        </dd>
+        <dt id="filename-label">&nbsp;</dt>
+        <dd id="filename-element">
+            <input type="hidden" name="filename" value="{{filename}}" id="filename">
+            <input type="hidden" name="thumb" value="{{thumb}}" id="thumb">
+            <input type="hidden" name="id" value="{{id}}" id="id">
+        </dd>
+        <dt id="save-label">&nbsp;</dt>
+        <dd id="save-element">
+            <a href="{{back}}"><span>Back</span></a>
+            <button class="btn-lg" type="submit" value="save"><span>Save</span></button>
+        </dd>
+    </dl>
+</form> 

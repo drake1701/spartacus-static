@@ -267,7 +267,7 @@ $postsCount = array_pop($db->query('SELECT count(*) FROM posts;')->fetch());
 print_r($report);
 // Cleanup
 $postsCount = array_pop($db->query('SELECT count(*) FROM posts WHERE `reject` = 1;')->fetch());
-$rejects = array('party', 'arrives', 'leaves', 'arriving', 'leaving', 'shopping', 'out', 'gala', 'award', 'awards', 'airport', 'premiere', 'at % in', 'candids', 'fashion show', 'on the set', 'heads to', 'press tour', 'benefit', 'live');
+$rejects = array('party', 'arrives', 'leaves', 'arriving', 'leaving', 'shopping', 'out', 'gala', 'award', 'awards', 'airport', 'premiere', 'at % in', 'candids', 'fashion show', 'on the set', 'heads to', 'press tour', 'benefit', 'live', 'caps', 'heading to', 'going to');
 foreach($rejects as $reject) {
     $sql = $db->prepare('UPDATE `posts` SET `reject` = 1 WHERE `name` NOT LIKE "%photoshoot%" AND `name` LIKE :name;');
     $sql->bindValue(':name', '% '.$reject.' %');

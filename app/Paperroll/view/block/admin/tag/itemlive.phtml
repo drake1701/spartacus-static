@@ -1,0 +1,14 @@
+<div class="item toggle live">
+    <input class="no-display" type="checkbox" name="entry[{{id}}]" />
+    <a href="/entry/edit?id={{id}}">
+        <span class="entry-title">{{title}}</span>
+    </a>
+    <img src="{{thumb}}">
+    <div class="clearfix"></div>
+    {{queueLabel}}<br />
+    {{tags}}
+    <div class="clearfix"></div>
+    <a href="{{url}}">View</a>&nbsp;|&nbsp;
+    <a href="/entry/edit?id={{id}}">Edit</a>&nbsp;|&nbsp;
+    <a href="/entry/delete?id={{id}}">Delete</a>
+</div>

@@ -2,11 +2,11 @@
 /**
  * Script to cache images 
  *
- * @author      Dennis Rogers <dennis@drogers.net>
- * @address     www.drogers.net
+ * @author      Spartacus <spartacuswallpaper@gmail.com>
+ * @address     www.spartacuswallpaper.com
  */
 
-require_once dirname(dirname(dirname(__FILE__))).'/app.php';
+require_once dirname(dirname(dirname(__FILE__))).'/bootstrap.php';
 
 // If script is called directly, give debug info
 $debug = isset($_SERVER['HTTP_REFERER']) ? false : true;
@@ -26,13 +26,13 @@ try {
     
     // get filename and type
     $fileParts = pathinfo(basename($requestedFile));
-    $filename = transcode($fileParts['filename']) . '.' . $fileParts['extension'];
-    $kind = transcode($pathParts[3]);
+    $filename = \Paperroll\Helper\File::transcode($fileParts['filename']) . '.' . $fileParts['extension'];
+    $kind = \Paperroll\Helper\File::transcode($pathParts[3]);
     
     // get width
     $width = $pathParts[2];
     
-    $originalFile = $base_dir . 'gallery/' . $kind . '/' . $filename;
+    $originalFile = BASEDIR . '/gallery/' . $kind . '/' . $filename;
     
     if(!file_exists($originalFile))
         throw new Exception("Not exists $originalFile");
@@ -47,7 +47,7 @@ try {
     $im->setImageFormat("jpg"); 
     $im->setCompressionQuality(75);
     
-    $cacheFile = $base_dir . implode('/', $pathParts);
+    $cacheFile = BASEDIR . '/' . implode('/', $pathParts);
     
     if(!is_dir(dirname($cacheFile))) {
         mkdir(dirname($cacheFile), 0775, 1);

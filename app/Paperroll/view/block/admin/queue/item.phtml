@@ -1,0 +1,15 @@
+<td class="item toggle">
+    <input type="hidden" name="entry_id[{{queue}}][]" value="{{id}}">
+    <div class="entry-date">{{publishedAt_short}}</div>
+    <img src="{{thumb}}">
+    <a href="/entry/edit?id={{id}}">
+        <span class="entry-title">{{title}}</span>
+    </a>
+    <div class="clearfix"></div>
+
+    {{queueLabel}}<br />
+    {{tags}}
+    <div class="clearfix"></div>
+    <a href="/entry/edit?id={{id}}">Edit</a>&nbsp;|&nbsp;
+    <a href="/entry/delete?id={{id}}">Delete</a>
+</td>
