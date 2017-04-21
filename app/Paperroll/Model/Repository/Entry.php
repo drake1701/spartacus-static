@@ -269,6 +269,7 @@ class Entry extends Generic
                 $newImage = new Model\Image();
                 /** @var Model\ImageKind $kind */
                 $kind = array_pop($kindRepo->findBy(['path' => basename(dirname($file))]));
+                if(empty($kind)) continue;
                 $newImage
                     ->setEntry($entry)
                     ->setFilename(basename($file))
