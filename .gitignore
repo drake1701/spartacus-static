@@ -13,6 +13,7 @@ fetch/logs
 fetch/postpage.html
 *.log
 var/
+db/
 
 composer.lock
 vendor/

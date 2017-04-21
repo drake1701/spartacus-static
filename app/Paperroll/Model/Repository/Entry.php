@@ -280,7 +280,7 @@ class Entry extends Generic
                 $this->logger->debug('Added ' . basename(dirname($file)) . ' version to ' . $entry->getTitle());
                 $newCount++;
             }
-            if($repost) {
+            if($repost && $newCount) {
                 $log = new Model\EntryLog();
                 $log->setEntry($entry);
                 if($newCount > 1)
