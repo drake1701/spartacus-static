@@ -76,7 +76,7 @@ class Router
         if(!$this->page) {
             $this->page = new Layout('admin');
             $this->page->loadLayout();
-            if(count($_SESSION['messages'])) {
+            if(!empty($_SESSION['messages'])) {
                 $this->page->setData('messages', '<div class="messages">'.implode('<br/>', $_SESSION['messages']).'</div>');
                 $_SESSION['messages'] = [];
             }

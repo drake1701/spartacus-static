@@ -91,9 +91,9 @@ class Layout extends Generic
         $this->setData('baseurl', $baseUrl);
         $em = Registry::get('entityManager');
 
-        if(Registry::get('version')) {
+        try {
             $this->setData('assetsurl', $baseUrl . Registry::get('version') . '/');
-        }
+        } Catch (\Exception $e) { }
 
         $this->setData('date_year', date('Y'));
 
