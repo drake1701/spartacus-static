@@ -9,11 +9,16 @@
   </ifModule>
 </IfModule>
 ## EXPIRES CACHING ###
+RewriteEngine On
+RewriteCond %{REMOTE_ADDR} !=67.236.81.245
+RewriteRule ^(.*)$ http://spartacuswallpaper.com/$1 [R=301,L]
 
-#RewriteEngine On
-#RewriteCond %{REMOTE_ADDR} !=67.236.81.245
-#RewriteRule ^([^?]*)$ http://spartacuswallpaper.com/ [R=301,L]
+RewriteCond %{HTTP_HOST} spartacus\.drogers\.net$ [NC]
+RewriteRule ^[0-9]{4}/[0-9]{2}/(.*)$ http://spartacuswallpaper.com/$1 [R=301,L]
+
+RewriteCond %{HTTP_HOST} spartacus\.drogers\.net$ [NC]
+RewriteRule ^(.*)$ http://spartacuswallpaper.com/$1 [R=301,L]
 
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^([^?]*)$ http://spartacuswallpaper.com/ [NC,L,R=301]
+RewriteRule ^([^?]*)$ /page/404.html [NC,L,QSA]

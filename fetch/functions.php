@@ -44,12 +44,7 @@ function fail($msg, $die = false){
     fputs($er, date('c') . ': '.$msg."\n");
     fclose($er);
     if($die) die($msg);
-}
-function slog($msg) {
-	if(is_array($msg)) $msg = print_r($msg, 1);
-	$er = fopen('logs/system.log', 'a');
-	fputs($er, date('c') . ': '.$msg."\n");
-	fclose($er);
+    if($die) die($msg);
 }
 function slog($msg) {
 	if(is_array($msg)) $msg = print_r($msg, 1);

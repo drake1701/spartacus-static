@@ -1,6 +1,7 @@
 <?php
+error_reporting(E_ALL);
 session_start();
-require __DIR__ . '/../access.php';
+require __DIR__ . '/access.php';
 ?>
 <!DOCTYPE HTML>
 <html>

@@ -52,7 +52,7 @@ class Router
 
     public function execute() {
         try {
-            $request = $_SERVER['REDIRECT_URL'];
+            $request = !empty($_SERVER['REDIRECT_URL']) ? $_SERVER['REDIRECT_URL'] : "" ;
             $parts = explode('/', trim($request, '/'));
             $controller = array_shift($parts);
             if($controller == 'back') $this->_goBack();
@@ -85,7 +85,7 @@ class Router
     }
 
     protected function _goBack($home = false) {
-        if($home || !isset($_SERVER['HTTP_REFERER']))
+        if($home || empty($_SERVER['HTTP_REFERER']))
             header('Location: /');
         else
             header('Location: '.$_SERVER['HTTP_REFERER']);

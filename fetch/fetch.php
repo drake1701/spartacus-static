@@ -187,11 +187,18 @@ switch($host){
         break;
     // ! carreck post
     case "www.carreck.com":
-        preg_match("#posttitle.+?<a.+?>(.+?)</a>#", $postPage, $title);
+        preg_match('#entry-title">([^<]+?)<#', $postPage, $title);
         if(count($title) < 2 || count($title[1]) == 0) fail("no title found for $url using $host\n");
         $title = $title[1];
+        $parts = explode(' ', $title);
+        $name = array_shift($parts);
+        preg_match_all('/((?:^|[A-Z])[a-z]+)/', $name, $nameParts);
+        if(count($nameParts) == 2 && count($nameParts[0]) == 2) {
+            $name = implode(' ', $nameParts[0]);
+        }
+        $title = $name . implode(' ', $parts);
         $dir = parseTitle($title, "Carrek");
-        preg_match('#<div class="postentry".+?</div>#', $postPage, $post);
+        preg_match('#"entry-content".+?\.entry-content#', $postPage, $post);
         if(count($post) == 0) fail("no post found for $url using $host\n");
         $post = array_pop($post);
         preg_match_all('#href="(http.+?)"#', $post, $links);
@@ -324,6 +331,34 @@ fail("$name - $title");
             $links[$linkid] = $link;
         }
         break;
+    case "www.instagram.com":
+        slog("instagram");
+        $linkParts = array_reverse(explode('/', $url));
+        $title = trim($linkParts[0]);
+        $dir = $baseDir . "instagram/" . $title;
+        $links = array();
+        $lastId = 0;
+        do {
+            slog("Page starting at $lastId");
+            $media = json_decode(doCurl("https://www.instagram.com/{$title}/media/?max_id={$lastId}"));
+            foreach ($media->items as $item) {
+                $lastId = $item->id;
+                $link = $item->images->standard_resolution->url;
+                $linkParts = explode('/', $link);
+                $newLink = array_slice($linkParts, 0, 4);
+                $linkParts = array_slice($linkParts, 4);
+                do {
+                    $top = array_shift($linkParts);
+                } while (preg_match("#e\d\d#", $top) == false and count($linkParts));
+                $newLink[] = $top;
+
+                if (count($linkParts))
+                    $link = implode('/', $newLink) . '/' . implode('/', $linkParts);
+                $links[] = $link;
+            }
+            sleep(rand(0,3));
+        } while ($media->more_available == true);
+        break;
     default:
         fail("no processing found for $host\n");
 }
@@ -349,7 +384,7 @@ foreach($links as $linkId => $link){
         linkError($link);
         continue;
     }
-    if($linkHost == 'www.theplace2.ru') {
+    if($linkHost == 'www.theplace2.ru' || strpos($linkHost, 'cdninstagram') != false) {
         $largeImg = $link;
         $destfile = $dir . '/' . basename($link);
         $largeImages[] = array(
@@ -508,6 +543,7 @@ if($json) {
 	        chmod($getDir . '/' . $name, 0775);
         }
         file_put_contents($dest . $file, doCurl($image['url']));
+        sleep(rand(0,1));
         echo "$dest $file \n";
         slog($file . ' (' . $k++ . ' of ' . count($largeImages) . ')');
     }

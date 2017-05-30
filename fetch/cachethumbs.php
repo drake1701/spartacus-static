@@ -6,7 +6,7 @@
  * Fetch, download and resize thumb images.
  */
 
-    
+require_once __DIR__ . '/functions.php';
 
 $debug = isset($argv[2]) && !empty($argv[2]);
 $urlId = false;
@@ -21,9 +21,9 @@ if(php_sapi_name() == "cli" && !empty($argv[1])){
 } else {
     $sql = $db->prepare("SELECT * FROM `posts` WHERE `thumb` IS NOT NULL AND `bad` != 1 AND `cached` IS NULL ORDER BY `id` DESC LIMIT 1000;");
 }
-echo "-- Start Thumbs Cache --\n";
+slog("-- Start Thumbs Cache --");
 date_default_timezone_set('EST');
-echo date(DATE_RFC2822) . "\n";
+slog(date(DATE_RFC2822));
 
 $sql->execute();
 $posts = $sql->fetchAll();
@@ -39,10 +39,10 @@ $i = 0;
 foreach($posts as $post){
     $thumb = $post['thumb'];
     if($debug)
-        echo "\n".$post['id'].' - '.$thumb."\n";
+        slog($post['id'].' - '.$thumb);
     if(file_exists(dirname(__FILE__) . '/cache/' . $post['id'])){
         if($debug)
-            echo "cached\n";
+            slog("cached");
         $stats['Already Cached'] += 1;
         $sql = $db->prepare('UPDATE `posts` SET `cached` = 1 WHERE `id` = :id;');
         $sql->bindValue(':id',  $post['id']);
@@ -56,7 +56,7 @@ foreach($posts as $post){
         $thumb = $thumb->url;
         if(substr($thumb, 0, 4) != 'http') {
             if($debug)
-                echo "no thumb set or found\n";
+                slog("no thumb set or found");
             $stats['No Thumb'] += 1;
             $sql = $db->prepare('UPDATE `posts` SET `bad` = 1, `thumb` = "fail" WHERE `id` = :id;');
             $sql->bindValue(':id',  $post['id']);    
@@ -72,7 +72,7 @@ foreach($posts as $post){
     $headers = get_headers($thumb);
     if(empty($headers) || preg_match("#404 Not Found#", $headers[0]) || (isset($headers[1]) && preg_match("#404 Not Found#", $headers[1]))) {
         if($debug)
-            echo "bad thumb url\n";
+            slog("bad thumb url");
         $stats['Bad Url'] += 1;
         $sql = $db->prepare('UPDATE `posts` SET `bad` = 1 WHERE `id` = :id;');
         $sql->bindValue(':id', $post['id']);    
@@ -86,7 +86,7 @@ foreach($posts as $post){
     $image = doCurl($thumb);
     if($image == '') {
         if($debug)
-            echo "no image found\n";
+            slog("no image found");
         $stats['No Image'] += 1;
         $sql = $db->prepare('UPDATE `posts` SET `bad` = 1 WHERE `id` = :id;');
         $sql->bindValue(':id', $post['id']);    
@@ -98,7 +98,7 @@ foreach($posts as $post){
         continue;
     }
     if($debug)
-        "new file\n";
+        "new file";
     $stats['New Cache'] += 1;
     $filename = dirname(__FILE__) . '/cache/' . $post['id'];
     file_put_contents($filename, $image);
@@ -106,7 +106,7 @@ foreach($posts as $post){
     //check dimensions
     $info = getimagesize($filename);
     if($info[0] > 0 && $info[1] > 0 && ($info[0] < 1000 && $info[1] < 1000)){
-        if($debug) echo "No dimensions or image too small " . $info[0] . 'x' . $info[1] . ".\n";
+        if($debug) slog("No dimensions or image too small " . $info[0] . 'x' . $info[1] . ".");
         $sql = $db->prepare('UPDATE `posts` SET `cached` = 1, `reject` = 1, `thumb` = :thumb WHERE `id` = :id;');
         $stats['Too Small'] += 1;
         unlink($filename);
@@ -119,19 +119,10 @@ foreach($posts as $post){
     $sql->execute();
 }
 if($debug)
-    echo dirname(__FILE__) . '/cache/' . $post['id'];
+    slog(dirname(__FILE__) . '/cache/' . $post['id']);
     
 
 $stats['Remaining'] = array_pop($db->query('SELECT count(*) FROM posts WHERE `thumb` IS NOT NULL AND `bad` != 1 AND `cached` IS NULL;')->fetch());
 
-print_r($stats);
+slog($stats);
 
-function doCurl($url){
-    $ch = curl_init($url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_AUTOREFERER, true);
-    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-    curl_setopt($ch, CURLOPT_USERAGENT, 'Googlebot/2.1 (+http://www.google.com/bot.html)');
-    return curl_exec($ch);
-}
-?>

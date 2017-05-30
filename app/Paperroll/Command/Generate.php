@@ -88,6 +88,7 @@ class Generate extends Generic {
         $this->buildHome();
         $this->buildChangelog();
         $this->logReport();
+        $this->maintenanceOff();
     }
 
     private function clearSite() {
@@ -651,13 +652,17 @@ HTML;
     }
 
     private function logReport() {
-
-        copy(BASEDIR . "/assets/.htaccess", File::siteDir().'/.htaccess');
         $repository = $this->entityManger->getRepository(Entry::class);
         $entries = $repository->findBy(['published' => null]);
 
         $this->logger->debug(count($entries) . ' left in queue');
+    }
 
+    private function maintenanceOff() {
+        if($this->dev)
+            copy(BASEDIR . "/assets/.htaccess.dev", File::siteDir().'/.htaccess');
+        else
+            copy(BASEDIR . "/assets/.htaccess", File::siteDir().'/.htaccess');
     }
 
 }

@@ -64,7 +64,8 @@ class Tag extends Generic
                 /** @var Model\Tag $tag */
                 $tag = $this->findBy(['slug' => $tag]);
             }
-            $tag->setCount($tag->getEntries()->count());
+            if($tag->getEntries())
+                $tag->setCount($tag->getEntries()->count());
         }
         $this->getEntityManager()->flush();
     }
