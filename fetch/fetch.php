@@ -282,13 +282,12 @@ switch($host){
         else
             $dir = $baseDir . "Imgur Gallery/" . sanitize($urlParts['path']) . "/";
             
-        preg_match_all('#property="og:image" content="([^"]*)"#', $postPage, $links);
+        preg_match_all('#<a href="([^"]+?)" class="zoom">#', $postPage, $links);
         $links = array_pop($links);
         foreach($links as $linkid => $link) {
-            $link = str_replace('.jpg', '', $link);
-            $link = str_replace('.png', '', $link);
-            $links[basename($link)] = "http:$link";
+            $links[$linkid] = "http:$link";
         }
+        slog($links);
         break;
     case "www.theplace2.ru":
         preg_match("#m_title.><span>([^<]+?)</span>#s", $postPage, $match);

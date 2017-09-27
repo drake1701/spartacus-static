@@ -420,9 +420,11 @@ class Entry extends Generic
             'publishedAt'       => $this->getPublishedAt('long'),
             'publishedAt_short' => $this->getPublishedAt('short')
         ]);
+        $blockData['description'] = $blockData['title'];
         if(!empty($blockData['note'])) {
             $blockData['note'] = '<div class="std">' . $blockData['note'] . '</div>';
             $blockData['short_content'] = substr(strip_tags($blockData['note']), 0, 45);
+            $blockData['description'] = $blockData['note'];
         }
         return $blockData;
     }

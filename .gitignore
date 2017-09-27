@@ -10,6 +10,7 @@ gallery/*
 fetch/cache
 fetch/index.sqlite
 fetch/logs
+fetch/get
 fetch/postpage.html
 *.log
 var/

@@ -538,6 +538,7 @@ td {
         z-index:999;
         width:100%;
         opacity: 0;
+        left: 0;
     }
     .entry-images,
     .entry-images .desktop,
