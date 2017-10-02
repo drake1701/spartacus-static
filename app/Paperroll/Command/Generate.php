@@ -245,7 +245,7 @@ HTML;
                     $this->logger->error('No file found at '.$image->getPath());
                     continue;
                 }
-                $thumbWidth = $image->getKind()->getPath() == 'ultrawide' ? 575 : 430;
+                $thumbWidth = $image->getKind()->getPath() == 'ultrawide' ? Image::ULTRAWIDE_THUMB : Image::BIG_THUMB;
                 $imageBlock = new Block('entry/image');
                 $imageData = [
                     'title'     => $entry->getTitle(),
@@ -444,7 +444,7 @@ HTML;
         $kindPage->loadLayout();
         /** @var ImageKind $kind */
         foreach($kindRepo->findAll() as $kind) {
-            $size = $kind->getPath() == 'ultrawide' ? Image::PREVIEW : Image::THUMB;
+            $size = $kind->getPath() == 'ultrawide' ? Image::PREVIEW : Image::BIG_THUMB;
             $template = 'entry/tag';
             if($kind->getPath() == 'ultrawide') $template = 'tag/kind/ultrawide';
             if($kind->getMobile()) $template = 'tag/kind/mobile';

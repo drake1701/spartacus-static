@@ -14,6 +14,20 @@ jQuery(window).load(heightsFix).resize(function(){
     }
 });
 
+function getWidths() {
+    var sizes = [];
+    var images = jQuery('img');
+    images.each(function() {
+        var image = $(this);
+        if(sizes[image.width()] == undefined) {
+            sizes[image.width()] = 1;
+        } else {
+            sizes[image.width()] = sizes[image.width()] + 1;
+        }
+    });
+    console.log(sizes);
+}
+
 function heightsFix() {
     var width = jQuery(document).width();
 

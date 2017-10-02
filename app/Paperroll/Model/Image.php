@@ -17,8 +17,11 @@ use Paperroll\Helper\File;
 class Image
 {
     CONST PREVIEW = 924;
-    CONST THUMB = 460;
-    CONST MOBILE_THUMB = 340;
+    const ULTRAWIDE_THUMB = 575;
+    CONST BIG_THUMB = 460;
+	CONST THUMB = 300;
+    CONST MOBILE_THUMB = 210;
+	CONST MOBILE_BIG_THUMB = 360;
 
     /**
      * @var integer

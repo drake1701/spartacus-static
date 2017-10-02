@@ -410,12 +410,16 @@ class Entry extends Generic
         foreach($this->getMobileImages() as $image) {
             $blockData["mobile_$i"] = $image->getUrl();
             $blockData["mobile_{$i}_thumb"] = $image->getUrl(Image::MOBILE_THUMB);
+	        $blockData["mobile_{$i}_big_thumb"] = $image->getUrl(Image::MOBILE_BIG_THUMB);
             $i++;
         }
         $blockData = array_merge($blockData, [
             'mainImage'         => $this->getMainImage()->getUrl(),
             'preview'           => $this->getMainImage()->getUrl(Image::PREVIEW),
             'thumb'             => $this->getMainImage()->getUrl(Image::THUMB),
+            'big_thumb'         => $this->getMainImage()->getUrl(Image::BIG_THUMB),
+            'mobile_thumb'      => $this->getMainImage()->getUrl(Image::MOBILE_THUMB),
+            'mobile_big_thumb'  => $this->getMainImage()->getUrl(Image::MOBILE_BIG_THUMB),
             'url'               => $this->getUrl(),
             'publishedAt'       => $this->getPublishedAt('long'),
             'publishedAt_short' => $this->getPublishedAt('short')
