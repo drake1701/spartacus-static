@@ -464,7 +464,7 @@ HTML;
                 $entryBlock = new Block($template);
                 $entryBlock->setData($entry->getBlockVariables());
                 $image = File::baseUrl() . 'gallery/' . $kind->getPath() . '/' . $entry->getFilename();
-                $entryBlock->setData('thumb', File::getCacheUrl($image, $size));
+                $entryBlock->setData('mobile_big_thumb', File::getCacheUrl($image, $size));
                 $entryContent[$entry->getYear()] .= $entryBlock->toHtml();
                 $entryCount++;
             }

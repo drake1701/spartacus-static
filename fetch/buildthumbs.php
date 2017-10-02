@@ -78,7 +78,7 @@ foreach($posts as $post){
         }
         $filename = dirname(__FILE__) . '/cache/' . $post['id'];
         file_put_contents($filename, $image);
-        exec('convert '.($debug?'':' -verbose').' -quality 75 -strip -channel RGB -resize "320>" '.$filename . ' ' . $filename );
+        exec('convert '.($debug?'':' -verbose').' -quality 75 -strip -channel RGB -resize "200>" '.$filename . ' ' . $filename );
 
         $stats['New Cache'] += 1;
         $sql = $db->prepare('UPDATE `posts` SET `cached` = 1, `bad` = 0, `thumb` = :thumb WHERE `id` = :id;');
