@@ -94,12 +94,12 @@ class Generate extends Generic {
     private function clearSite() {
         $this->logger->debug('Clearing Site Files');
 
-        if(is_dir(File::siteDir() . "/gallery"))
-            exec("rm " . File::siteDir() . "/gallery");
+        if(is_dir(File::siteDir() . "/gallery/cache")) {
+        $caches = glob(File::siteDir()."/gallery/cache/*", GLOB_ONLYDIR);
+        foreach($caches as $cache)
+            File::delTree($cache);
+        }
         File::delTree(File::siteDir());
-//        $caches = glob(BASEDIR."/gallery/cache/*", GLOB_ONLYDIR);
-//        foreach($caches as $cache)
-//            File::delTree($cache);
 
         if(!is_dir(File::siteDir())) {
             mkdir( File::siteDir(), 0775 );
