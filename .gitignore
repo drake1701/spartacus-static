@@ -2,9 +2,9 @@
 .idea/
 access.php
 _site/
-gallery/*
-!gallery/cache/.htaccess
-!gallery/cache/cache.php
+/gallery/
+!/gallery/cache/.htaccess
+!/gallery/cache/cache.php
 !gallery/cache/placeholder.png
 !gallery/cache/placeholder.jpg
 fetch/cache
