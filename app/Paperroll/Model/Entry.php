@@ -422,9 +422,9 @@ class Entry extends Generic
         ]);
         $blockData['description'] = $blockData['title'];
         if(!empty($blockData['note'])) {
+	        $blockData['description'] = strip_tags($blockData['note']);
             $blockData['note'] = '<div class="std">' . $blockData['note'] . '</div>';
             $blockData['short_content'] = substr(strip_tags($blockData['note']), 0, 45);
-            $blockData['description'] = $blockData['note'];
         }
         return $blockData;
     }
