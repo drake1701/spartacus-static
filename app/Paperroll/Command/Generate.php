@@ -226,13 +226,13 @@ HTML;
             $next = $entryRepo->getNext($entry);
             if($next) {
                 $entryData['nextLink'] = '<a href="'.$next->getUrl().'" title="'.$next->getTitle().'"><span>Next Wallpaper &raquo;</span></a>';
-                $entryData['next'] = '<a href="'.$next->getUrl().'" title="'.$next->getTitle().'"><span>Next</span><img class="lazy" data-original="'.$next->getMainImage()->getUrl(Image::MOBILE_THUMB).'" alt="'.$next->getTitle().'" /><span>'.$next->getTitle().'</span></a>';
+                $entryData['next'] = '<a href="'.$next->getUrl().'" title="'.$next->getTitle().'"><span>Next</span><img class="lazy" data-original="'.$next->getMainImage()->getUrl(Image::THUMB).'" alt="'.$next->getTitle().'" /><span>'.$next->getTitle().'</span></a>';
                 $visibleIds[] = $next->getId();
             }
             $prev = $entryRepo->getPrev($entry);
             if($prev) {
                 $entryData['prevLink'] = '<a href="'.$prev->getUrl().'" title="'.$prev->getTitle().'"><span>&laquo; Previous Wallpaper</span></a>';
-                $entryData['prev'] = '<a href="'.$prev->getUrl().'" title="'.$prev->getTitle().'"><span>Previous</span><img class="lazy" data-original="'.$prev->getMainImage()->getUrl(Image::MOBILE_THUMB).'" alt="'.$prev->getTitle().'" /><span>'.$prev->getTitle().'</span></a>';
+                $entryData['prev'] = '<a href="'.$prev->getUrl().'" title="'.$prev->getTitle().'"><span>Previous</span><img class="lazy" data-original="'.$prev->getMainImage()->getUrl(Image::THUMB).'" alt="'.$prev->getTitle().'" /><span>'.$prev->getTitle().'</span></a>';
                 $visibleIds[] = $prev->getId();
             }
 

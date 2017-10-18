@@ -250,7 +250,7 @@ switch($host){
         break;
     // ! rosemciversource.net :)
     case "rosemciversource.net":
-        preg_match("#<title>(.+?) - RoseMcIverSource Gallery</title>#", $postPage, $title);
+        preg_match("#<title>(.+?) - Rose McIver Source#", $postPage, $title);
         if(count($title) < 2 || count($title[1]) == 0) fail("no title found for $url using $host\n");
         $title = $title[1];
         $dir = parseTitle("Rose McIver - ".$title, "RoseMcIverSource");
