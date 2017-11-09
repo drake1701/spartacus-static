@@ -321,6 +321,9 @@ ul.years li {
 .entry-grid .entry-item {
     float:left;
 }
+.col-xs-6.entry-item:not([class*=col-md]):nth-of-type(2n+1) {
+    clear:left;
+}
 
 .entry-grid .entry-title {
     font-size:14px;
