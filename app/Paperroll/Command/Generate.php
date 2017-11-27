@@ -69,6 +69,7 @@ class Generate extends Generic {
                 /** @var \Paperroll\Model\Entry $entry */
                 foreach($entries as $entry)
                     $entryRepo->rePublish($entry);
+                $entryRepo->rePublish($entryRepo->getLastPublishedEntry());
                 $em->flush();
                 $this->buildEntries();
                 if($this->getArg('t')) {
@@ -225,8 +226,17 @@ HTML;
                         
             $next = $entryRepo->getNext($entry);
             if($next) {
-                $entryData['nextLink'] = '<a href="'.$next->getUrl().'" title="'.$next->getTitle().'"><span>Next Wallpaper &raquo;</span></a>';
-                $entryData['next'] = '<a href="'.$next->getUrl().'" title="'.$next->getTitle().'"><span>Next</span><img class="lazy" data-original="'.$next->getMainImage()->getUrl(Image::THUMB).'" alt="'.$next->getTitle().'" /><span>'.$next->getTitle().'</span></a>';
+            	$nextUrl = $next->getPublished() ? '<a href="'.$next->getUrl().'" title="'.$next->getTitle().'">' : '';
+	            $entryData['nextLink'] =
+		            $nextUrl .
+		            '<span>Next Wallpaper &raquo;</span>' .
+		            ($nextUrl ? '</a>' : '');
+                $entryData['next'] =
+	                $nextUrl .
+	                '<span>Next</span>' .
+	                '<img class="lazy" data-original="'.$next->getMainImage()->getUrl(Image::THUMB).'" alt="'.$next->getTitle().'" />' . 
+	                '<span>'.$next->getTitle().'</span>' .
+	                ($nextUrl ? '</a>' : '');
                 $visibleIds[] = $next->getId();
             }
             $prev = $entryRepo->getPrev($entry);
