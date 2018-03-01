@@ -358,6 +358,33 @@ fail("$name - $title");
             sleep(rand(0,3));
         } while ($media->more_available == true);
         break;
+    case 'hq-pictures.com': // coppermine galleries
+    case 'www.hqdiesel.net':
+        slog('coppermine');
+        preg_match('/files on (\d+?) page\(s\)/', $postPage, $pages);
+	    preg_match("#<title>(.+?) \(#s", $postPage, $title);
+	    if(count($title) < 2 || count($title[1]) == 0) fail("no title found for $url using $host\n");
+	    $title = $title[1];
+	    $dir = parseTitle($title." ".$host, "");
+        if(count($pages))
+            $pageCount = array_pop($pages);
+        else
+            $pageCount = 1;
+        preg_match('#(http.+?/)thumbnails.php#', $url, $baseUrl);
+        $baseUrl = array_pop($baseUrl);
+        $links = array();
+        for($page = 1; $page <= $pageCount; $page++) {
+            if($page > 1)
+	            $postPage = file_get_contents($url . '&page=' . $page);
+            slog("Page $page");
+            //http://hq-pictures.com/albums/userpics/10013/thumb_6~13.jpg
+	        preg_match_all('#albums/userpics/.+?/thumb_.+?\.jpg#', $postPage, $pageLinks);
+	        $pageLinks = array_pop($pageLinks);
+	        foreach($pageLinks as $k => $v) {
+	            $links[] = $baseUrl . str_replace('thumb_', '', $v);
+            }
+        }
+        break;
     default:
         fail("no processing found for $host\n");
 }

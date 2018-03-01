@@ -234,7 +234,7 @@ HTML;
                 $entryData['next'] =
 	                $nextUrl .
 	                '<span>Next</span>' .
-	                '<img class="lazy" data-original="'.$next->getMainImage()->getUrl(Image::THUMB).'" alt="'.$next->getTitle().'" />' . 
+	                '<img class="lazy" data-original="'.$next->getMainImage()->getUrl(Image::THUMB).'" alt="'.$next->getTitle().'" />' .
 	                '<span>'.$next->getTitle().'</span>' .
 	                ($nextUrl ? '</a>' : '');
                 $visibleIds[] = $next->getId();
@@ -459,7 +459,7 @@ HTML;
             if($kind->getPath() == 'ultrawide') $template = 'tag/kind/ultrawide';
             if($kind->getMobile()) $template = 'tag/kind/mobile';
 
-                $entryCount = 0;
+            $entryCount = 0;
             $entryContent = [];
             foreach($kindRepo->getEntries($kind) as $row) {
                 /** @var Entry $entry */

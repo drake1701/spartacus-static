@@ -259,7 +259,13 @@ class Entry extends Generic
         $repost = $entry->getPublished();
 
         $fileImages = glob(BASEDIR . '/gallery/*/' . $entry->getFilename());
-
+        if(
+        	$entry->getQueue() == Model\Queue::CALENDAR
+	        && !in_array(BASEDIR . '/gallery/calendar/' . $entry->getFilename(), $fileImages)
+        ) {
+        	copy(BASEDIR . '/gallery/widescreen/' . $entry->getFilename(), BASEDIR . '/gallery/calendar/');
+        	$fileImages[] = BASEDIR . '/gallery/calendar/' . $entry->getFilename();
+        }
         $newImages = array_diff($fileImages, $existingNames);
 
         if(count($newImages)) {
