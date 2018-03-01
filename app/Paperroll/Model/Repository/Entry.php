@@ -263,7 +263,7 @@ class Entry extends Generic
         	$entry->getQueue() == Model\Queue::CALENDAR
 	        && !in_array(BASEDIR . '/gallery/calendar/' . $entry->getFilename(), $fileImages)
         ) {
-        	copy(BASEDIR . '/gallery/widescreen/' . $entry->getFilename(), BASEDIR . '/gallery/calendar/');
+        	copy(BASEDIR . '/gallery/widescreen/' . $entry->getFilename(), BASEDIR . '/gallery/calendar/' . $entry->getFilename());
         	$fileImages[] = BASEDIR . '/gallery/calendar/' . $entry->getFilename();
         }
         $newImages = array_diff($fileImages, $existingNames);
