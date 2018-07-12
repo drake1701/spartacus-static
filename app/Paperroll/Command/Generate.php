@@ -531,6 +531,7 @@ HTML;
         $entryContent = '<h3 class="subtitle">'.$month.'</h3>';
         /** @var Entry $entry */
         foreach($entryRepo->findBy(['published' => '1'], ['publishedAt' => 'DESC']) as $entry) {
+            if($entry->getAdult()) $yearPage->noAds();
             if($entry->getYear() != $year) {
                 if($this->dev == false && $this->getArg('a') == false)
                     break;
