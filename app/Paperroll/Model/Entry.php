@@ -85,6 +85,12 @@ class Entry extends Generic
     protected $published;
 
     /**
+     * @Column(name="adult", type="boolean", nullable=true)
+     * @var boolean
+     */
+    protected $adult;
+
+    /**
      * @var string
      * @Column(name="thumb", type="text", nullable=true)
      */
@@ -446,5 +452,21 @@ class Entry extends Generic
     public function setTags($tags) {
         $this->tags = $tags;
     }
+
+    /**
+     * @return Boolean
+     */
+    public function getAdult() {
+        return $this->adult == true;
+    }
+
+    /**
+     * @param Boolean $adult
+     */
+    public function setAdult($adult) {
+        $this->adult = ($adult == true);
+    }
+
+
 
 }

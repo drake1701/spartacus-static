@@ -5,5 +5,7 @@
  */
 
 jQuery(document).ready(function(){
-    jQuery('.ad').css('background-image', 'none');
+    function adBlockNotDetected() {
+        jQuery('.ad').css('background-image', 'none');
+    }
 });

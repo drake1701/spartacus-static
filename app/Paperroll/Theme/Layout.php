@@ -42,6 +42,11 @@ class Layout extends Generic
         $this->_html = File::readFile($this->_template);
     }
 
+    public function noAds() {
+        $this->_html = preg_replace('#{{%ad/.+?}}#', '', $this->_html);
+        echo $this->_html;
+    }
+
     /**
      * @return string
      */
