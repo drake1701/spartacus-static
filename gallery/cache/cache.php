@@ -4,7 +4,6 @@
  *
  * @author      Spartacus <spartacuswallpaper@gmail.com>
  * @address     www.spartacuswallpaper.com
- * 2017
  */
 
 require_once dirname(dirname(dirname(__FILE__))).'/bootstrap.php';

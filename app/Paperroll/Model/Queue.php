@@ -31,7 +31,10 @@ class Queue
 
     /**
      * Queue constructor.
+     *
      * @param $type
+     *
+     * @throws \Exception
      */
     public function __construct($type) {
         $this->_type = $type;
@@ -46,6 +49,10 @@ class Queue
         $this->_next = $this->_lastPublished->getPublishedAt();
     }
 
+    /**
+     * @return \DateTime|string
+     * @throws \Exception
+     */
     public function getNext() {
         $date = $this->_next;
         switch($this->_type){
@@ -53,9 +60,9 @@ class Queue
                 do {
                     $last_dow = $date->format("w");
                     if ($last_dow == 1) {
-                        $date->add(new \DateInterval("P3D"));
+                        $date->add(new \DateInterval("P4D"));
                     } else {
-                        $date->add(new \DateInterval("P2D"));
+                        $date->add(new \DateInterval("P3D"));
                     }
                 } while($date->format("d") == 1);
                 break;
