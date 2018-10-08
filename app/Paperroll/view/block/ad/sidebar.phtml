@@ -1,12 +1,15 @@
 <div class="ad">
     <!-- Content Sidebar -->
-    <ins class="adsbygoogle"
-         style="display:block"
-         data-ad-client="ca-pub-9622612302631221"
-         data-ad-slot="8884749054"
-         data-ad-format="auto"></ins>
-    <script>
-        (adsbygoogle = window.adsbygoogle || []).push({});
+    <script type="text/javascript">
+        ( function() {
+            var width = jQuery('#sidebar .ad').width();
+            if(width < 300) width = 300;
+            if (window.CHITIKA === undefined) { window.CHITIKA = { 'units' : [] }; };
+            var unit = {"calltype":"async[2]","publisher":"spartacuswallpaper","width":width,"height":472,"sid":"Chitika Default"};
+            var placement_id = window.CHITIKA.units.length;
+            window.CHITIKA.units.push(unit);
+            document.write('<div id="chitikaAdBlock-' + placement_id + '"></div>');
+        }());
     </script>
 </div>
 <div class="random-entries hidden-sm">

@@ -43,7 +43,7 @@ class Layout extends Generic
     }
 
     public function noAds() {
-        $this->_html = preg_replace('#{{%ad/.+?}}#', '', $this->_html);
+        //$this->_html = preg_replace('#{{%ad/.+?}}#', '', $this->_html);
     }
 
     /**

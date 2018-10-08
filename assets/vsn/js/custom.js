@@ -122,11 +122,13 @@ jQuery(document).ready(function(){
         });
     });
 
-    // if(jQuery(window).width() <= 991) {
-    //     jQuery('#sidebar').insertAfter(jQuery('#main'));
-    // } else {
-    //     jQuery('#sidebar').insertBefore(jQuery('#main'));
-    // }
+    setTimeout(function () {
+        if (typeof window.Goog_AdSense_getAdAdapterInstance !== 'undefined'
+            || typeof CHITIKA_ADS !== 'undefined'
+        ) {
+            jQuery('.ad').css('background-image', 'none');
+        }
+    }, 500);
 
     jQuery('.entry-images img').load(heightsFix);
 
